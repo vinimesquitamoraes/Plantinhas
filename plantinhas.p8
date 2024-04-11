@@ -1,11 +1,11 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
---ed rocha te amo ==============
+--ed rocha te amo =================================================================================================================================================================+
 function _init()
- --inicia o mouse
+ --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
- --cus =========================================================================
+ --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento  = 0
  
  cu1 = nil
@@ -27,23 +27,24 @@ function _init()
  str7 = ""
  str8 = ""
  str9 = ""
-	
+
+ --status -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+	
  --[[
  status
  1 para a tela principal
  2 para loja
  3 para o deposito
  ]]
- status = 1
+ status = 3
 
- --auxiliares
+ --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo  = 1
  saldo     = 8000
  grav      = 1.75
  atl_wait  = false
  timer_atl = 0
 		
- --init de selecao
+ --init de selecao ----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  sel_tst ={["val"]=false,["qual"]=nil}
  sel_vas ={["val"]=false,["qual"]=nil}
  sel_bts ={["val"]=false,["qual"]=nil}
@@ -53,10 +54,10 @@ function _init()
  sel_inv ={["val"]=false,["qual"]=nil}
  sel_atl ={["val"]=false,["qual"]=nil}
  sel_jrd ={["val"]=false,["qual"]=nil}
- atribui ={["val"]=false,["atl"]={}}	
- semear  ={["val"]=false,["qual"]={}}	
+ atribui ={["val"]=false,["atl" ]={} }	
+ semear  ={["val"]=false,["qual"]={} }	
 
- --listas
+ --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst     = {["tipo"]="teste"}
  ls_vas     = {["tipo"]="vaso"}
  ls_bts     = {["tipo"]="botao"}
@@ -69,74 +70,77 @@ function _init()
  ls_prt     = {["tipo"]="prateleiras"}
  ls_vas_atv = {["tipo"]="vaso com planta"}
 
- --listas de particulas
+ --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
  pat_sem = {["tipo"]="particulas sementes"}
 
- --init de palavras
+ --init de palavras ---------------------------------------------------------------------------------------------------------------------------------------------------------------+
  p1={192,193,193,194,240}
  p2={208,193,192,240}
  p3={208,194,195,209,192,240} 
  p4={210,194,193,241,211,224,240}
  p5={208,224,227,243,211}
+ p5={208,224,227,243,211}
  p6={225,226,242}
  p7={244,245,246}
- tools   = init_palavra(11, 4 ,p1)
- pots    = init_palavra(11,32 ,p2)
- plants  = init_palavra(11,60 ,p3)
- flowers = init_palavra(11,88 ,p4)
- price   = init_palavra(17,120,p5)
- buy     = init_palavra(99,118,p6) 
- buy_atv = init_palavra(99,118,p7) 
  
- --instancias ===================
+ tools   = criar_obj("palavra",0,ls_plv,p1,11,  4)
+ pots    = criar_obj("palavra",0,ls_plv,p2,11, 32)
+ plants  = criar_obj("palavra",0,ls_plv,p3,11, 60)
+ flowers = criar_obj("palavra",0,ls_plv,p4,11, 88)
+ price   = criar_obj("palavra",0,ls_plv,p5,17,120)
+ buy     = criar_obj("palavra",0,ls_plv,p6,99,118)
+ buy_atv = criar_obj("palavra",0,ls_plv,p7,99,118)
  
- --cursor
+ --instancias ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+ 
+ --cursor .........................................................................................................................................................................+
  mouse = criar_obj("mouse",0)
 	
- --botoes
- bt_loja = criar_obj("botao",1)
- bt_volt = criar_obj("botao",2)
- bt_comp = criar_obj("botao",3)
- bt_dept = criar_obj("botao",4)	
- bt_skip = criar_obj("botao",5)	
+ --botoes .........................................................................................................................................................................+
+ bt_loja = criar_obj("botao",1,ls_bts)
+ bt_volt = criar_obj("botao",2,ls_bts)
+ bt_comp = criar_obj("botao",3,ls_bts)
+ bt_dept = criar_obj("botao",4,ls_bts)
+ bt_skip = criar_obj("botao",5,ls_bts)
 
- --espacos da lojinha
+ --espacos da lojinha .............................................................................................................................................................+
  for i=1,4 do criar_esps(4) end
+ enfileirar_esp(ls_esp[1],11,10)
+ enfileirar_esp(ls_esp[2],11,38)
+ enfileirar_esp(ls_esp[3],11,66)
+ enfileirar_esp(ls_esp[4],11,94)
  
-	enfileirar_esp(ls_esp[1],11,10)
-	enfileirar_esp(ls_esp[2],11,38)
-	enfileirar_esp(ls_esp[3],11,66)
-	enfileirar_esp(ls_esp[4],11,94)
+ --atalhos ........................................................................................................................................................................+
+ init_atl(6,60)
  
- //atalhos
-	init_atl()
+ --prateleiras ....................................................................................................................................................................+
+ criar_prateleiras(4)
 	
-	//prateleiras
-	criar_prateleiras(4)
-	
-	--testes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	ls_teste = {}
-	vaso_change = 5
+ --testes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+
+ vaso_change = 5
  que_planta  = 9
  aux_x = 10
-	for i=1, 4 do
-		add_um_item(criar_obj("item",vaso_change,nil,5 ,80),1)
-		vaso_change += 1
-		if(vaso_change>8)vaso_change=5
- 	ls_jrd.coisas[i].planta = (criar_obj("item",que_planta)).fases
-		que_planta += 1
-		ls_jrd.coisas[i].x = aux_x
- 	add(ls_vas_atv,ls_jrd.coisas[i])
+ for i=1, 4 do
+  teste = criar_obj("item",vaso_change,ls_jrd.coisas,nil, 5 ,80)
+  vaso_change += 1
+  if(vaso_change>8)vaso_change=5
+  teste.planta = (criar_obj("item",que_planta)).fases
+  que_planta += 1
+  teste.x = aux_x
+  add(ls_vas_atv,teste)
   aux_x += 20
-	end
+ end
+ criar_obj("item",2,ls_inv.coisas,nil, 60 ,50)
+ criar_obj("item",3,ls_inv.coisas,nil, 60 ,50)
+ criar_obj("item",4,ls_inv.coisas,nil, 60 ,50)
+ criar_obj("item",5,ls_inv.coisas,nil, 60 ,50)
 
 end
 
---update ===========================================================================================================+
+
+--update ==========================================================================================================================================================================+
 function _update()
 
- cu1 = 	ls_jrd.coisas[1].x
- cu2 = 	ls_jrd.coisas[1].y
  mouse:att()
  cool_down(10)
  if(not ls_atl.show) att_particulas(pat_sem)
@@ -241,8 +245,10 @@ function _update()
   if(sel_inv.qual != nil)then		
    if(not atribui.val)then
     sel_inv.qual:mov_cur_esq(sel_inv,"retg")	
+ 		
+	 		
    elseif(atl_wait)then
-	atribuicao()
+	   atribuicao()
    end
   end
   
@@ -286,9 +292,9 @@ function _draw()
  end
 
  mouse:des()
+	if(true) pos_mouse(10)
 
 	if(false) then
-	 pos_mouse(10)
 	 format(cu1,str1)
 	 format(cu2,str2)
 	 format(cu3,str3)
@@ -311,7 +317,7 @@ end
 
 -->8
 --classes ==========================================================================================================+
-function criar_obj(que_classe,subtipo,ls_guardar,xop,yop)
+function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
  novo_obj = {
   --atributos ------------------------------------------------------------------------------------------------------+
   cla      = que_classe,
@@ -326,17 +332,20 @@ function criar_obj(que_classe,subtipo,ls_guardar,xop,yop)
   yoff     = 0,
   hoff     = 0,
   woff     = 0,
+ 	y_vel    = 1,
   movable  = false,
   contble  = false,
   sel      = false,
   ct       = 0,
   id       = 0,
+  ls_aux   = ls_aux or nil,
   --metodos--------------------------------------------------------------------------------------------------------+
   --mover objeto ..................................................................................................+
   mov = function(self, newx, newy)
    self.x = newx
    self.y = newy
   end,
+  
   --controlar objeto...............................................................................................+]
   cont = function(self,sair_tela,vel)
    if(btn(⬅️)) self.x -= vel
@@ -358,19 +367,18 @@ function criar_obj(que_classe,subtipo,ls_guardar,xop,yop)
 	 
 	 --mover com o cursor
 	 mov_cur = function(self,mouse)
-	 	self.x = stat(32) - flr(self.w/2)
-	 	self.y = stat(33) - flr(self.w/2)
+	 	self:mov((stat(32) - flr(self.w/2))& ~1,(stat(33) - flr(self.w/2))& ~1)
 			n_sai_tela(self)
 	 end,
-	 
+
 	 //checa colisao entre algo e 
 		//o cursor
   col_mouse =	function(self,tipo)
 			if(tipo == "retg")then
 				//checar entre direita e esquerda, cim e baixo
-				esq = self.x+self.xoff
+				esq =  self.x+self.xoff
 				dir = (self.x+self.xoff)+(self.w-self.woff)
-				cim = self.y+self.yoff
+				cim =  self.y+self.yoff
 				bax = (self.y+self.yoff)+(self.h-self.hoff)
 	
 				//checar entre direita e esquerda
@@ -406,9 +414,8 @@ function criar_obj(que_classe,subtipo,ls_guardar,xop,yop)
 					self.sel     = true
 					controle.val = true
 				else
-  			self.x =	self.x & ~1
- 				self.y = self.y & ~1
-					self.sel     = false
+				//self:mov(self.x & ~1,self.y & ~1)
+  			self.sel     = false
 					controle.val = false
 				end									
 			end
@@ -426,262 +433,216 @@ function criar_obj(que_classe,subtipo,ls_guardar,xop,yop)
 	
  def_tip(novo_obj,subtipo,ls_guardar) 
 
- 
+ add(ls_guardar,novo_obj)
+
  return novo_obj
-end
-
-//palavras
-function init_palavra(x,y,ls_let)
-	 newplv = {
-  cla  = "palavra",
-	 x    = x,
-	 y    = y,
-		w    = count(ls_let),
-		h    = 4,
-	 xoff = 0,
-	 yoff = 0,
-	 hoff = 0,
-	 woff = 0,
-		s    = ls_let,
-		sel  = false,
-		cor1 = 5,
-		cor2 = 5,
-	 //desenha palavras
-	 des = function(self)
-			aux = 0
-			for i in all(self.s)do
-					spr(i,self.x+aux,self.y)
-					aux +=5
-			end
-		end
- }
- 
- return newplv
-end
-
---atalho =======================
-function init_atl()	
-	angulo = 0
-	for i=1,4 do
-  	new_atl      =	criar_obj("espaco",3)  
- 	 new_atl.x    =	new_atl.x - 25 * sin(angulo/360)
- 	 new_atl.y    =	new_atl.y - 25 * cos(angulo/360) 	 
- 	 new_atl.item = nil
-			new_atl.cor1 = 1 	
-			new_atl.cor2 = 7
-			new_atl.cor3 = 1
-			new_atl.id   = i
-			new_atl.r    = 8.5
-	 	add(ls_atl.atls,new_atl)
-	 	angulo+=90
-	end
 end
 -->8
 --def_tipos ====================
-function def_tip(qual,subtipo,ls_guardar)
+function def_tip(self,subtipo,ls_guardar)
 	ls_guardar = ls_guardar or nil
 --mouse ========================		 
-	if(qual.cla == "mouse")then
-  qual.ativ      = true
- 	qual.s         = 0
+	if(self.cla == "mouse")then
+  self.ativ      = true
+ 	self.s         = 0
 		--esperando ==================
- 	qual.esq_esper = false
- 	qual.mei_esper = false
- 	qual.dir_esper = false
+ 	self.esq_esper = false
+ 	self.mei_esper = false
+ 	self.dir_esper = false
 		
 		--pressionado ================
- 	qual.esq_press = false
- 	qual.mei_press = false
- 	qual.dir_press = false
+ 	self.esq_press = false
+ 	self.mei_press = false
+ 	self.dir_press = false
 		
 		--estado atual ======================
- 	qual.esq = false
- 	qual.mei = false
- 	qual.dir = false
+ 	self.esq = false
+ 	self.mei = false
+ 	self.dir = false
 
 		--solto ======================
- 	qual.esq_solto = false
-		qual.mei_solto = false
-		qual.dir_solto = false
+ 	self.esq_solto = false
+		self.mei_solto = false
+		self.dir_solto = false
 		
 		--estado =====================
-		--qual botao?
-	function qual:get_estado(qual_mouse)
+		--self botao?
+	function self:get_estado(self_mouse)
 	 	local estado_atual = stat(34)
 			--esquerda ==================
-			if(qual_mouse == 1)	then
+			if(self_mouse == 1)	then
 				return estado_atual==1
 			--meio ======================
-			elseif(qual_mouse == 4) then
+			elseif(self_mouse == 4) then
 				return estado_atual==4
 			--direira ===================
-			elseif(qual_mouse == 2)then
+			elseif(self_mouse == 2)then
 				return estado_atual==2
 			end
 		end
 		
 	--desenhar mouse ==============
- function qual:des()
-  spr(qual.s,stat(32),stat(33))
+ function self:des()
+  spr(self.s,stat(32),stat(33))
  end
  
  --atualizar mouse =============
-function qual:att()
+function self:att()
  	--att posicao ================
- 	qual.x = stat(32)
- 	qual.y = stat(33)
+ 	self.x = stat(32)
+ 	self.y = stat(33)
  	--att posicao ================
-		qual.esq=qual:get_estado(1)
-		qual.mei=qual:get_estado(4)
-		qual.dir=qual:get_estado(2)
+		self.esq=self:get_estado(1)
+		self.mei=self:get_estado(4)
+		self.dir=self:get_estado(2)
 		
 		--comportamento esquerdo ||||
 		--se o mouse esq foi apertado
-		if(qual.esq)then
+		if(self.esq)then
 			--se ele estava solto
-			if(qual.esq_solto)then
+			if(self.esq_solto)then
 				--agora nao esta mais
-				qual.esq_solto=false
+				self.esq_solto=false
 			end
 			
 			--se ele nao estava pressio
 			--nado
-			if(not qual.esq_press)then
+			if(not self.esq_press)then
 		 	--se nao estava esperando
-				if(not qual.esq_esper) then
+				if(not self.esq_esper) then
 		 		--agora esta pressionado
 		 		--e esperando
-					qual.esq_press = true
-					qual.esq_esper = true
+					self.esq_press = true
+					self.esq_esper = true
 				end
 			--se ja estava pressionado
 			else
 				--agora no esta mais
-				qual.esq_press = false
+				self.esq_press = false
 			end
 			
 		--se o mouse esq nao foi
 		--apertado
 		else
 		--se estava pressionado
-			if (qual.esq_press) then
+			if (self.esq_press) then
 				--agora nao esta mais
-				qual.esq_press=false
+				self.esq_press=false
 			end
 			
 			--se nao esatava solto
-			if(not qual.esq_solto)then
+			if(not self.esq_solto)then
 				--se estava esperando
-				if(qual.esq_esper)then
+				if(self.esq_esper)then
 					--agora esta solto
-					qual.esq_solto = true
+					self.esq_solto = true
 					--e nao esta mais esperando
-     qual.esq_esper = false
+     self.esq_esper = false
     end
    --se estava solto
    else
    	--agora nao esta mais
-   	qual.esq_solto = false
+   	self.esq_solto = false
    end
 	 end
 		
  	--comportamento meio ||||||||
 		--se o mouse mei foi apertado
-		if(qual.mei)then
+		if(self.mei)then
 			--se ele estava solto
-			if(qual.mei)then
+			if(self.mei)then
 				--agora nao esta mais
-				qual.mei_solto=false
+				self.mei_solto=false
 			end
 			
 			--se ele nao estava pressio
 			--nado
-			if(not qual.mei_press)then
+			if(not self.mei_press)then
 		 	--se nao estava esperando
-				if(not qual.mei_esper) then
+				if(not self.mei_esper) then
 		 		--agora esta pressionado
 		 		--e esperando
-					qual.mei_press = true
-					qual.mei_esper = true
+					self.mei_press = true
+					self.mei_esper = true
 				end
 			--se ja estava pressionado
 			else
 				--agora no esta mais
-				qual.mei_press = false
+				self.mei_press = false
 			end
 			
 		--se o mouse mei nao foi
 		--apertado
 		else
 		--se estava pressionado
-			if (qual.mei_press) then
+			if (self.mei_press) then
 				--agora nao esta mais
-				qual.mei_press=false
+				self.mei_press=false
 			end
 			
 			--se nao esatava solto
-			if(not qual.mei_solto)then
+			if(not self.mei_solto)then
 				--se estava esperando
-				if(qual.mei_esper)then
+				if(self.mei_esper)then
 					--agora esta solto
-					qual.mei_solto = true
+					self.mei_solto = true
 					--e nao esta mais esperando
-     qual.mei_esper = false
+     self.mei_esper = false
     end
    --se estava solto
    else
    	--agora nao esta mais
-   	qual.mei_solto = false
+   	self.mei_solto = false
    end
 	 end
 	 
  	--comportamento direita ||||||
 		--se o mouse dir foi apertado
-		if(qual.dir)then
+		if(self.dir)then
 			--se ele estava solto
-			if(qual.dir)then
+			if(self.dir)then
 				--agora nao esta mais
-				qual.dir_solto=false
+				self.dir_solto=false
 			end
 			
 			--se ele nao estava pressio
 			--nado
-			if(not qual.dir_press)then
+			if(not self.dir_press)then
 		 	--se nao estava esperando
-				if(not qual.dir_esper) then
+				if(not self.dir_esper) then
 		 		--agora esta pressionado
 		 		--e esperando
-					qual.dir_press = true
-					qual.dir_esper = true
+					self.dir_press = true
+					self.dir_esper = true
 				end
 			--se ja estava pressionado
 			else
 				--agora no esta mais
-				qual.dir_press = false
+				self.dir_press = false
 			end
 			
 		--se o mouse dir nao foi
 		--apertado
 		else
 		--se estava pressionado
-			if (qual.dir_press) then
+			if (self.dir_press) then
 				--agora nao esta mais
-				qual.dir_press=false
+				self.dir_press=false
 			end
 			
 			--se nao esatava solto
-			if(not qual.dir_solto)then
+			if(not self.dir_solto)then
 				--se estava esperando
-				if(qual.dir_esper)then
+				if(self.dir_esper)then
 					--agora esta solto
-					qual.dir_solto = true
+					self.dir_solto = true
 					--e nao esta mais esperando
-     qual.dir_esper = false
+     self.dir_esper = false
     end
    --se estava solto
    else
    	--agora nao esta mais
-   	qual.dir_solto = false
+   	self.dir_solto = false
    end
 	 end
 	end
@@ -699,142 +660,140 @@ exemplo:
 	o ponto inicial
 ]]
 --teste ========================
-	elseif(qual.cla == "teste")then
-		qual.s        = 216
-  qual.x        = 64
-	 qual.y        = 60
-	 qual.xoff     = 2
-  qual.yoff     = 2
-  qual.hoff     = 4
-  qual.woff     = 4
-  qual.h,qual.w = 16,16
-  add(ls_tst,qual)
---particula ====================
-	elseif(qual.cla == "particula")then
-		qual.vx    = rnd(2) - 1
- 	qual.vy    = 1
-		qual.x_max = 128
-		qual.x_mix = 0
-		qual.w     = 0
-		qual.h     = 0
-		qual.ls    = ls_guardar
-		add(ls_guardar,qual)
-		
-		function qual:att()
-			
-				qual.x +=	qual.vx
-				qual.y += qual.vy 
+	elseif(self.cla == "teste")then
+		self.s        = 216
+  self.x        = 64
+	 self.y        = 60
+	 self.xoff     = 2
+  self.yoff     = 2
+  self.hoff     = 4
+  self.woff     = 4
+  self.h,self.w = 16,16
 
-				if(qual.x>qual.x_max)then
-					qual.x = qual.x_max
+--particula ====================
+	elseif(self.cla == "particula")then
+		self.vx    = rnd(2) - 1
+ 	self.vy    = 1
+		self.x_max = 128
+		self.x_mix = 0
+		self.w     = 0
+		self.h     = 0
+		self.ls    = ls_guardar	
+		function self:att()
+			
+				self.x +=	self.vx
+				self.y += self.vy 
+
+				if(self.x>self.x_max)then
+					self.x = self.x_max
 					
-				elseif(qual.x<qual.x_min)then
-					qual.x  = qual.x_min
-					qual.vx = -qual.vx
+				elseif(self.x<self.x_min)then
+					self.x  = self.x_min
+					self.vx = -self.vx
 				end
 				
-				if(saiu(qual))then
+				if(saiu(self))then
  				semear.val = false
-					qual:del()
+					self:del()
 				end
 		end
 		
-		function qual:des()
-	  pset(qual.x,qual.y,qual.cor)
+		function self:des()
+	  pset(self.x,self.y,self.cor)
 	 end
 	 
-	 function qual:del()
-			if(qual)then
-		 del(qual.ls, qual)
-	  qual = nil
+	 function self:del()
+			if(self)then
+		 del(self.ls, self)
+	  self = nil
 			end
 	 end
 	
 --botao ========================		 
-	elseif(qual.cla == "botao")then
-		add(ls_bts,qual)
+	elseif(self.cla == "botao")then
+
 		//lojinha
 		if(subtipo == 1)then
- 		qual.tip       = 1
-			qual.x		       = 1
-			qual.y         = 113
-	  qual.w,qual.h  = 16,16
-	  qual.tam       = 2
-	  qual.s,qual.sr = 14,14
-		 qual.sp        = 46
-		 qual.ct        = 1
+ 		self.tip       = 1
+			self.x		       = 1
+			self.y         = 113
+	  self.w,self.h  = 16,16
+	  self.tam       = 2
+	  self.s,self.sr = 14,14
+		 self.sp        = 46
+		 self.ct        = 1
 		 
 	 //voltar
 		elseif(subtipo == 2)then
-			qual.tip       = 2
-			qual.x		       = 1
-			qual.y         = 113			
-	  qual.w,qual.h  = 16,16
-	  qual.tam       = 2
-	  qual.s,qual.sr = 12,12
-		 qual.sp        = 44
-		 qual.ct        = 0
+			self.tip       = 2
+			self.x		       = 1
+			self.y         = 113			
+	  self.w,self.h  = 16,16
+	  self.tam       = 2
+	  self.s,self.sr = 12,12
+		 self.sp        = 44
+		 self.ct        = 0
 
 		//comprar
 		elseif(subtipo == 3)then
- 		qual.tip            = 3
-			qual.x	            	= 97
-			qual.y              = 116 		
-			qual.w              = 18
-	  qual.h              = 8
-	  qual.cor1,qual.cor3 = 5,5
-	  qual.cor2           = 10
+ 		self.tip            = 3
+			self.x	            	= 97
+			self.y              = 116 		
+			self.w              = 18
+	  self.h              = 8
+	  self.cor1,self.cor3 = 5,5
+	  self.cor2           = 10
 
 	 //depot
 		elseif(subtipo == 4)then
- 		qual.tip       = 4
-			qual.x,qual.y  = 57,57		
-			qual.w,qual.h  = 16,16
-	  qual.tam       = 2
-   qual.s,qual.sr = 40,40
-		 qual.sp        = 42
-	  qual.ct        = 1
+ 		self.tip       = 4
+			self.x,self.y  = 57,57		
+			self.w,self.h  = 16,16
+	  self.tam       = 2
+   self.s,self.sr = 40,40
+		 self.sp        = 42
+	  self.ct        = 1
 	  
 		elseif(subtipo == 5)then
- 		qual.tip       = 5
-			qual.x,qual.y  = 80,113		
-			qual.w,qual.h  = 8,8
-	  qual.tam       = 1
-   qual.s,qual.sr = 236,236
-		 qual.sp        = 237
+ 		self.tip       = 5
+			self.x,self.y  = 80,113		
+			self.w,self.h  = 8,8
+	  self.tam       = 1
+   self.s,self.sr = 236,236
+		 self.sp        = 237
 	 end
 	 
 	 //metodos de botoes
 	 
 	 //ativar botao
-  function qual:ativa()
+  function self:ativa()
 			//teve colisao
-			if(qual:col_mouse("retg") and not(mouse.eq_press))then
+			if(self:col_mouse("retg") and not(mouse.eq_press))then
 		 //mouse esquerdo pressionado			
 				if(mouse.esq_press)then	
 					//funcoes ===================
 					//ir lojinha
-				 if(qual.tip == 1)then
+				 if(self.tip == 1)then
 				 	status  = 2		
  	 			mouse.s = 0	
 				 
 					//voltar jogo principal
-				 elseif(qual.tip == 2)then
+				 elseif(self.tip == 2)then
 				 	status = 1
 				 
 				 
 					//comprar
-				 elseif(qual.tip == 3)then		
+				 elseif(self.tip == 3)then		
 						comprar()				
 						 
 					//ir depot
-					elseif(qual.tip == 4 and not sel_atl.val)then
+					elseif(self.tip == 4 and not sel_atl.val)then
 						if(status==1)then
 							status     = 3
 							bt_dept.s  = 12
 						 bt_dept.sr = 12
 						 bt_dept.sp = 44
-					  qual.ct    = 0
+					  self.ct    = 0
 
 						elseif(status==3)then
 							bt_dept.s  = 40
@@ -842,12 +801,12 @@ exemplo:
 						 bt_dept.sp = 42
 							status     = 1
 							atribui.val= false
-						 qual.ct    = 1
+						 self.ct    = 1
 
 						end					
 					 	ls_atl.show = false
 						return
-					elseif(qual.tip == 5)then
+					elseif(self.tip == 5)then
 						 avancar_fase()
 					end
 
@@ -863,278 +822,293 @@ exemplo:
 		
 		end
 		
-		function qual:hover()
+		function self:hover()
 			
-			if(qual:col_mouse("retg"))then
+			if(self:col_mouse("retg"))then
 			
-				if(qual.tip == 3 and count(ls_car.coisas)>0)then				
-				 qual.cor1 =	qual.cor2
+				if(self.tip == 3 and count(ls_car.coisas)>0)then				
+				 self.cor1 =	self.cor2
 				else
-				 qual.cor1 =	qual.cor3
-					qual.s    = qual.sp
+				 self.cor1 =	self.cor3
+					self.s    = self.sp
 
 				end
 	
 			else
 			
-			 qual.cor1 =	qual.cor3
-				qual.s = qual.sr	
+			 self.cor1 =	self.cor3
+				self.s = self.sr	
 			
 			end
 		end
 	
-	elseif(qual.cla == "espaco")then
-		qual.w,qual.h = 18,18
- 	qual.tam      = 16
+	elseif(self.cla == "espaco")then
+		self.w,self.h = 18,18
+ 	self.tam      = 16
  	
  	if(subtipo == 1)then
- 	 qual.cor1,qual.cor3 = 1,1
-	 	qual.cor2 = 7
+ 	 self.cor1,self.cor3 = 1,1
+	 	self.cor2 = 7
 			
  	elseif(subtipo == 2)then
-			qual.cor1,qual.cor3 = 1,1
-	 	qual.cor2 = 8
+			self.cor1,self.cor3 = 1,1
+	 	self.cor2 = 8
 		
  	elseif(subtipo == 3)then
- 		qual.x,qual.y = 64,64
-	 	qual.w,qual.h = 16,16
+ 		self.x,self.y = 64,64
+	 	self.w,self.h = 16,16
 		end
 
-		function qual:hover(qual_sel,tip_col)
+		function self:hover(self_sel,tip_col)
 
-			if(qual:col_mouse(tip_col))then
-				 qual.cor1 = qual.cor2
+			if(self:col_mouse(tip_col))then
+				 self.cor1 = self.cor2
 			else
-				 qual.cor1 = qual.cor3
-				 qual_sel.qual = nil
-				 qual_sel.val  = false
+				 self.cor1 = self.cor3
+				 self_sel.self = nil
+				 self_sel.val  = false
 			end
 			
 		end
 		
-	elseif(qual.cla == "prateleira")then			
-			qual.h = 1
-			qual.w = 80
+	elseif(self.cla == "prateleira")then			
+			self.h = 1
+			self.w = 80
 
-	elseif(qual.cla == "item")then				
-		qual.w  = 16
-		qual.h  = 16
+	elseif(self.cla == "item")then				
+		self.w  = 16
+		self.h  = 16
 		//pa
 		if(subtipo == 1)then
- 		qual.tip  = 1
-		 qual.val  = 200
-		 qual.nome = "shovel"
-		 qual.s    = 2
-		 qual.xoff = 2
-			qual.yoff = 2
- 	 qual.woff = 5
- 		qual.hoff = 5
+ 		self.tip  = 1
+		 self.val  = 0
+		 self.nome = "unknow"
+		 self.s    = 2
+		 self.xoff = 2
+			self.yoff = 2
+ 	 self.woff = 5
+ 		self.hoff = 5
 
 		//regador
 	 elseif(subtipo == 2)then
- 		qual.tip  = 2
-		 qual.val  = 300
-		 qual.nome = "watering can"
-		 qual.s    = 4
-		 qual.xoff = 1
-			qual.yoff = 6
- 	 qual.woff = 3
-	 	qual.hoff = 9
-	  qual.ct   = 1
+ 		self.tip  = 2
+		 self.val  = 300
+		 self.nome = "basket"
+		 self.s    = 4
+		 self.xoff = 0
+			self.yoff = 6
+ 	 self.woff = 1
+	 	self.hoff = 8
+	  self.ct   = 1
 	  
 		//borrifador
 	 elseif(subtipo == 3)then
- 		qual.tip  = 3
-	  qual.val  = 400
-		 qual.nome = "pesticide"
-		 qual.s    = 6
-		 qual.xoff = 3
-			qual.yoff = 1
- 	 qual.woff = 7
-	 	qual.hoff = 4
+ 		self.tip  = 3
+	  self.val  = 400
+		 self.nome = "pesticide"
+		 self.s    = 6
+		 self.xoff = 3
+			self.yoff = 1
+ 	 self.woff = 7
+	 	self.hoff = 4
 	 	
 		//fertilizante	 	
 	 elseif(subtipo == 4)then
- 	 qual.tip  = 4
-	  qual.val  = 500
-		 qual.nome = "fertilizer"
-		 qual.s    = 8
-		 qual.xoff = 3
-			qual.yoff = 1
- 	 qual.woff = 7
-	 	qual.hoff = 4
+ 	 self.tip  = 4
+	  self.val  = 500
+		 self.nome = "fertilizer"
+		 self.s    = 8
+		 self.xoff = 3
+			self.yoff = 1
+ 	 self.woff = 7
+	 	self.hoff = 4
 	 	
 	 //vasos rocha
 	 elseif(subtipo >= 5 and subtipo <= 8 )then
-	 	qual.estagio = 1
+	 	self.estagio = 1
 
-  	function qual:des_planta()
-  		local aux = qual.planta.wh[qual.estagio][1]
+  	function self:des_planta()
+  		local aux = self.planta.wh[self.estagio][1]
   		if(aux > 1)then
-  		 spr(qual.planta[qual.estagio],qual.x          ,qual.yp-(qual.planta.wh[qual.estagio][2]*8),qual.planta.wh[qual.estagio][1],qual.planta.wh[qual.estagio][2])
+  		 spr(self.planta[self.estagio],self.x          ,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
   		else
-  		 spr(qual.planta[qual.estagio],qual.x+qual.xesp,qual.yp-(qual.planta.wh[qual.estagio][2]*8),qual.planta.wh[qual.estagio][1],qual.planta.wh[qual.estagio][2])
+  		 spr(self.planta[self.estagio],self.x+self.xesp,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
   		end
   
   	end
   	
-  	function qual:des(xop,yop)
-  		qual.x = xop or qual.x
-		 	qual.y = yop or qual.y
+  	function self:des(xop,yop)
+  		self.x = xop or self.x
+		 	self.y = yop or self.y
 		 	//cordenadas onde planat fica no vaso		 	
-		 	qual.xp = qual.x+qual.xpoff
-		 	qual.yp = qual.y+qual.ypoff
+		 	self.xp = self.x+self.xpoff
+		 	self.yp = self.y+self.ypoff
 
-		  pal(qual.ct,0)
-		 	spr(qual.s,qual.x,qual.y,qual.w/8,qual.h/8)
+		  pal(self.ct,0)
+		 	spr(self.s,self.x,self.y,self.w/8,self.h/8)
 				pal()
 				
-				if(qual.planta)then
-					qual:des_planta()
+				if(self.planta)then
+					self:des_planta()
 				end			
   	end
 			
 			//vaso1
 		 if(subtipo == 5)then
-	 	 qual.tip  = 5
-			 qual.val  = 500
-			 qual.nome = "flowerpot 1"
-			 qual.s    = 32
-			 qual.xoff = 2
-				qual.yoff = 5
-	 	 qual.woff = 5
-		 	qual.hoff = 8
-		  qual.ct   = 1
+	 	 self.tip  = 5
+			 self.val  = 500
+			 self.nome = "flowerpot 1"
+			 self.s    = 32
+			 self.xoff = 2
+				self.yoff = 5
+	 	 self.woff = 5
+		 	self.hoff = 8
+		  self.ct   = 1
 
 		  //cordenadas da plnat no vaso
-		  qual.xpoff = 8 
-		  qual.xesp  = 4
-		  qual.ypoff = 8
+		  self.xpoff = 8 
+		  self.xesp  = 4
+		  self.ypoff = 8
 		
 			//vaso2
 		 elseif(subtipo == 6)then
-		  qual.tip  = 6
-			 qual.val  = 500
-			 qual.nome = "flowerpot 2"
-			 qual.s    = 34
-			 qual.xoff = 2
-				qual.yoff = 5
-	 	 qual.woff = 5
-		 	qual.hoff = 7
-		  qual.ct   = 1
+		  self.tip  = 6
+			 self.val  = 500
+			 self.nome = "flowerpot 2"
+			 self.s    = 34
+			 self.xoff = 2
+				self.yoff = 5
+	 	 self.woff = 5
+		 	self.hoff = 7
+		  self.ct   = 1
 		 
-		  qual.xpoff = 8
-		  qual.xesp  = 4
-		  qual.ypoff = 7
+		  self.xpoff = 8
+		  self.xesp  = 4
+		  self.ypoff = 7
 		 			 
 			//vaso3
 		 elseif(subtipo == 7)then
-		  qual.tip  = 7
-			 qual.val  = 600
-			 qual.nome = "flowerpot 3"
-			 qual.s    = 36	
-			 qual.xoff = 3
-				qual.yoff = 2
-	 	 qual.woff = 7
-		 	qual.hoff = 5
-		  qual.ct   = 2
+		  self.tip  = 7
+			 self.val  = 600
+			 self.nome = "flowerpot 3"
+			 self.s    = 36	
+			 self.xoff = 3
+				self.yoff = 2
+	 	 self.woff = 7
+		 	self.hoff = 5
+		  self.ct   = 2
 		 	
-		  qual.xpoff = 8
-		  qual.xesp  = 4
-		  qual.ypoff = 5
+		  self.xpoff = 8
+		  self.xesp  = 4
+		  self.ypoff = 5
 		 		
 			//vaso4
 		 elseif(subtipo == 8)then
-		  qual.tip  = 8
-			 qual.val  = 600
-			 qual.nome = "flowerpot 4"
-			 qual.s    = 38
-			 qual.xoff = 1
-				qual.yoff = 2
-	 	 qual.woff = 3
-		 	qual.hoff = 5
-		  qual.ct   = 2
+		  self.tip  = 8
+			 self.val  = 600
+			 self.nome = "flowerpot 4"
+			 self.s    = 38
+			 self.xoff = 1
+				self.yoff = 2
+	 	 self.woff = 3
+		 	self.hoff = 5
+		  self.ct   = 2
 		 
-		  qual.xpoff = 8
-		  qual.xesp  = 4
-		  qual.ypoff = 5
+		  self.xpoff = 8
+		  self.xesp  = 4
+		  self.ypoff = 5
 		  
 	 	end	
 		//planta1
 	 elseif(subtipo >= 9 and subtipo <= 16 )then
-		 qual.s    = 10
-		 qual.ct   = 1
-		 qual.xoff = 2
-			qual.yoff = 2
- 	 qual.woff = 5
-	 	qual.hoff = 5
+		 self.s    = 10
+		 self.ct   = 1
+		 self.xoff = 2
+			self.yoff = 2
+ 	 self.woff = 5
+	 	self.hoff = 5
 	 	
 		 if(subtipo == 9)then
-		  qual.tip  = 9
-			 qual.val  = 400
-			 qual.nome = "tomato"
-		 	qual.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
+		  self.tip  = 9
+			 self.val  = 400
+			 self.nome = "tomato"
+		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
            wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}} }
 		 		 
 			//planta2
 		 elseif(subtipo == 10)then
-		  qual.tip  = 10
-		  qual.val  = 500
-			 qual.nome = "bear_pawn"		
-		 	qual.fases= {64   ,65   ,66   ,67   ,68   ,74  , 76  ,
+		  self.tip  = 10
+		  self.val  = 500
+			 self.nome = "bear_pawn"		
+		 	self.fases= {64   ,65   ,66   ,67   ,68   ,74  , 76  ,
            wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}} }		 					 
 			  	
 			//planta3
 		 elseif(subtipo == 11)then
-		  qual.tip  = 11
-		  qual.val  = 600
-			 qual.nome = "pumpkin"
-		 	qual.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
+		  self.tip  = 11
+		  self.val  = 600
+			 self.nome = "pumpkin"
+		 	self.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}} }		 					 
 			  				 		 	
 		 //planta4
 		 elseif(subtipo == 12)then
-		  qual.tip  = 12
-		  qual.val  = 1000
-			 qual.nome = "pegaxi"		
- 	 	qual.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
+		  self.tip  = 12
+		  self.val  = 1000
+			 self.nome = "pegaxi"		
+ 	 	self.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}}} 					 
   				 		 			  	
 		 //planta5
 		 elseif(subtipo == 13)then
-		  qual.tip  = 13
-		  qual.val  = 500
-			 qual.nome = "sunflower"
-			 qual.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
+		  self.tip  = 13
+		  self.val  = 500
+			 self.nome = "sunflower"
+			 self.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}}} 					 	 	
 		
 		 //planta6
 		 elseif(subtipo == 14)then
-		  qual.tip  = 14
-		  qual.val  = 350
-			 qual.nome = "sword"		 	
-			 qual.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
+		  self.tip  = 14
+		  self.val  = 350
+			 self.nome = "sword"		 	
+			 self.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}}} 					 	 	
 		 //planta7
 		 elseif(subtipo == 15)then
-		  qual.tip  = 15
-		  qual.val  = 600
-			 qual.nome = "rose"
-			 qual.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
+		  self.tip  = 15
+		  self.val  = 600
+			 self.nome = "rose"
+			 self.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}}} 			 
 
 		 //planta8
 		 elseif(subtipo == 16)then
-		  qual.tip  = 16
-		  qual.val  = 1000
-			 qual.nome = "dandelion"
-			 qual.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
+		  self.tip  = 16
+		  self.val  = 1000
+			 self.nome = "dandelion"
+			 self.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{2,2},{2,2}}} 			 
 
 		 end 
 		end
+	
+	--palavra	
+	elseif(self.cla == "palavra")then				
+  self.w    = count(self.ls_aux)
+ 	self.h    = 4
+	 self.cor1 = 5
+		self.cor2 = 5
+ 	function self:des()
+			local aux = 0
+			for i in all(self.ls_aux)do
+					spr(i,self.x+aux,self.y)
+					aux +=5
+			end
+		end
+			
 	end
-
+	
 end
 
 -->8
@@ -1147,10 +1121,11 @@ function n_sai_tela(oque)
 		cim = oque.y+oque.yoff
 		dir = esq+oque.w-oque.woff
 		bax = cim+oque.h-oque.hoff
-		if(esq <  0) oque.x = -oque.xoff
-		if(cim <  0) oque.y = -oque.yoff
- 	if(dir >127) oque.x = oque.x+(127-dir)
- 	if(bax >127) oque.y = oque.y+(127-bax)-1
+	
+		if(esq <   0) oque.x = -oque.xoff
+		if(cim <   0) oque.y = -oque.yoff
+ 	if(dir > 127) oque.x = oque.x+(127-dir)
+ 	if(bax > 127) oque.y = oque.y+(127-bax)-1
 	end
 end
 
@@ -1161,10 +1136,11 @@ function saiu(oque)
 		cim = oque.y+oque.yoff
 		dir = esq+oque.w-oque.woff
 		bax = cim+oque.h-oque.hoff
-		if(esq <  0) return true
-		if(cim <  0) return true
- 	if(dir >127) return true
- 	if(bax >127) return true
+			
+		if(esq < 0) return true
+		if(cim < 0) return true
+ 	if(dir > 127) return true
+ 	if(bax > 127) return true
  	return false
 	end
 end
@@ -1560,8 +1536,9 @@ function tool_tip()
 			else
 				print(sel_esp.qual.item.nome,17,120,6)
 			end
-			
-	  print(sel_esp.qual.item.val,69,120)
+			local cor = 6
+			if(sel_esp.qual.item.val > saldo) cor = 8
+	  print(sel_esp.qual.item.val,69,120,cor)
 		end
 	
 	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 )then
@@ -1623,7 +1600,7 @@ end
 function add_um_item(qual,onde)
 	
 	if(status == 2)def_pos(qual)
-	if(onde == 1)    	add(ls_jrd.coisas,qual)
+	if(onde == 1) add(ls_jrd.coisas,qual)
  if(onde == 2)	add(ls_inv.coisas,qual)
  
 end
@@ -1648,11 +1625,30 @@ function print_inv()
 end
 -->8
 --menu_de_atalho=================
+function init_atl(quantos,ang_inc)	
+	angulo  = 0
+	ang_inc = ang_inc or 45
+	quantos = quantos or 4
+	for i=1,quantos do
+  	new_atl      =	criar_obj("espaco",3,ls_atl.atls)  
+ 	 new_atl.x    =	new_atl.x - 25 * sin(angulo/360)
+ 	 new_atl.y    =	new_atl.y - 25 * cos(angulo/360) 	 
+ 	 new_atl.item = nil
+			new_atl.cor1 = 1 	
+			new_atl.cor2 = 7
+			new_atl.cor3 = 1
+			new_atl.id   = i
+			new_atl.r    = 8.5
+	 	angulo      += ang_inc
+	end
+end
+
 function des_atl()
 
 	if(ls_atl.show)then
 		for i in all(ls_atl.atls)do
-   ovalfill(i.x-8, i.y-8,i.x+9,i.y+9,0)
+		 ovalfill(i.x-9, i.y-9,i.x+10,i.y+10,0)
+   ovalfill(i.x-8, i.y-8,i.x+9 ,i.y+9 ,0)
    oval(i.x-8, i.y-8,i.x+9,i.y+9,i.cor1)
 
 			if(i.item !=nil)then
@@ -1793,24 +1789,47 @@ function des_depot()
 	rect(107,118,119,122,1)
 	rect(99,118,107,122,4)
 	line(8,118,119,118,0)
-	des_prateleiras(16,20,24)
+	//pregos frente
+	local aux_1,aux_2 = 6,0
+ for i=1,3 do
+	des_vertices(11,aux_1,94,26,1)
+		aux_1 += 53
+	end
+	//pregos laterais
+	aux_1 = 11
+	for i=1,4 do
+		des_vertices(109,aux_1,9,20,1)
+		aux_1 += 26
+	end
+		
+ //prateleiras
+	aux_1 = 11
+	aux_2  = 31
+	for i=1,4 do
+		rect(16,aux_1,28,aux_2,1)
+		rect(16,aux_1,95,aux_2,4)
+		aux_1+= 24
+		aux_2+= 24
+	end
+	
+	des_prateleiras(16,31,24)
 	des_inv()
 end
 
 function des_prateleiras(x_init,y_init,y_esp) 
 
-	aux_y = y_esp
+	aux_y = y_init
 	for i in all(ls_prt)do
 		i.x  = x_init
 	 i.y  = aux_y
-  rect(i.x,i.y,i.x+i.w-1,i.y+i.h-1,5)
+  rect(i.x,i.y,i.x+i.w-1,i.y+i.h-1,4)
 		aux_y += y_esp
 	end
 	
 end
 
 function criar_prateleiras(quantas)
-	for i=0, quantas do
+	for i=1, quantas do
 		aux_prt = criar_obj("prateleira",0)
 		add(ls_prt,aux_prt)
 	end	
@@ -1873,9 +1892,7 @@ function funcionalidades(que_item)
 		semear.val    = true
 		semear.qual   = nova_sem
 	end
-	
-	
-	
+		
 end
 
 function plantar(o_que)
@@ -1894,21 +1911,21 @@ end
 
 
 __gfx__
-00000000011111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-07777770167776110000000000000000000000000000000000005577777000000000004224000000000000000000000000000000000000000000000000000000
-06111700777777770000000005dddd00000000000000000000005566666000000000049119400000000066666660000000000000000000000550000000000000
-06117000677677760000000056677d000000000000000000000000d666d00000000002499420e000000611111116600000000000000000000555555555555500
-0616160067611766000000056dd67d0000000000000000000000055ddd00000000000022220e0000006111111161150000000500000000000051111111111500
-066066707617661100000000d56d6d0000000000000000000000560dd0000000000000eeee2ee00000f1111111f1150000005555555000000051551551551500
-060007701717110000000000055d6500006500066666070000006060060000000000044444400000000fffffff11150000055555555500000051111111111500
-000000000111000000000000d0d65000065700665557607000000700006000000000e444111e000000d1111111d1150000005555555500000051155155115000
-0ddd00000dddd0000000000d000500000575007611177060000007bbbb60000000044ee13314400000d1bb1bb1d1150000000500001500000051111111115000
-d776d000057650000000006000000000000560577777506000007333333d00000002441bb314200000611bbb1161150000000000011100000055555555550000
-d7dd6d00576dd50000442600000000000000565555555050000733b33b33d00000024413b1442000006111311161150000001111111000000050000000000000
-56d7d50055d7bdd00020020000000000000005556756550000063333bbb3d0000002213114422000006111311161150000001111110000000055555555555000
-056d7000005b7bbd00020400000000000000005567565000000063333b3d00000000211222220000006111111161150000000000000000000005500005500000
-005506440053bbbd00002400000000000000000566560000000006666dd00000000002222220000000066666666dd00000000000000000000005500005500000
-00000204000533350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+80000000011111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+07777770167776110880088888800880000000000000000000005577777000000000004224000000000000000000000000000000000000000000000000000000
+06111700777777770822888888882280000000000000000000005566666000000000049119400000000066666660000000000000000000000550000000000000
+061170006776777600288800008882000000000000000000000000d666d00000000002499420e000000611111116600000000000000000000555555555555500
+0616160067611766008822000028880000000000000000000000055ddd00000000000022220e0000006111111161150000000500000000000051111111111500
+0660667076176611088828800822888000000000000000000000560dd0000000000000eeee2ee00000f1111111f1150000005555555000000051551551551500
+06000770171711000880082288800880440000000000004400006060060000000000044444400000000fffffff11150000055555555500000051111111111500
+00000000011100000880002888000880404000000000040400000700006000000000e444111e000000d1111111d1150000005555555500000051155155115000
+0ddd00000dddd00008800088820008802402222222222042000007bbbb60000000044ee13314400000d1bb1bb1d1150000000500001500000051111111115000
+d776d000057650000880088822800880029111111111192000007333333d00000002441bb314200000611bbb1161150000000000011100000055555555550000
+d7dd6d00576dd50008882280088288800429999999999240000733b33b33d00000024413b1442000006111311161150000001111111000000050000000000000
+56d7d50055d7bdd00088820000228800024224422442242000063333bbb3d0000002213114422000006111311161150000001111110000000055555555555000
+056d7000005b7bbd00288800008882000024422442244200000063333b3d00000000211222220000006111111161150000000000000000000005500005500000
+005506440053bbbd08228888888822800002222222222000000006666dd00000000002222220000000066666666dd00000000000000000000005500005500000
+00000204000533350880088888800880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000422000555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000444466444400000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000000000770000000000000
@@ -1972,32 +1989,32 @@ d7dd6d00576dd50000442600000000000000565555555050000733b33b33d00000024413b1442000
 00000000000000000000030a9a900000000b03b00b003000000300b00b003000000322929922300000003bb00bb0300000000bb00606060000003bb313000000
 0000000000000000000bb300a90000000003003003003000000300300300300000bbb222922bbb0000000b000033000000000b00006060000000000310000000
 000000000000000000000bb00000000000003030030300000000303003030000000bb32bb23bb000000030b000000000000030b0000000000000003111000000
-00000000000000000000000b00000000000003000030000000000300003000000000113bb33300000000000b000000000000000b000000000000031313300000
-000000000000000000000311113000000000311111130000000031111113000000000113b1100000000003111130000000000311113000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bb00b300000
-0000000000000000000000000000000000000000000888000000000000000000000000000000000000003330000000000000b0000bbb00000000bbbb03330000
-000000000000000000000000000000000000000088800080000000000000000000000000000000000000033000000000000b0bb033b000000000000b30000000
-00000000000000000000000000000000000d000080088080000000000000000000000033033000000000000b300000000000000b300000000000088338800000
-0000000000000000000000000003000000d0d0000800080000000000000000000000000b30000000000000b000a0a0000000003bb30000000000878888780000
-000000000000000000000000003030000b404b000b888b0000000000000000000000003bb300000000b00b000a0a0a0000000a9339a000000000887777880000
-0000000000000000000300000bb0bb0000bb300000bb30000000000000000000000003133130000000bb0300a07070a0000079a9aa9700000030288888820300
-00000000000000000bb0bb0000bb3000000300000003000000000000000000000000b131331b0000000bb3000a070a000000a979779a00000033122222213300
-000000000bb0bb0000bb3000000300000bb300000bb300000000000000000000000031b1bb13000000003300909090900033a9a9aa9a330000b3112222113b00
-0000000000bb3000000300000bb30000b0033300b00333000000000000000000003331313313330000000bb009090900000399a9aa99300000bbb11b111bbb00
-0bb0bb00000300000bb30000b003330000330030003300300000000000000000000311313311300000000bb00090900000bbb999a99bbb00000bb31bb13bb000
-00b3300000b3000000033300003300300003b0000003b000000000000000000000bbb111311bbb00003330b000000000000bb39bb93bb0000000113bb3330000
-0003000000033000003300000003b00000330b0000330b000000000000000000000bb31bb13bb0000003300b000000000000113bb33300000000011111100000
+00650006666607000000000b00000000000003000030000000000300003000000000113bb33300000000000b000000000000000b000000000000031313300000
+065700665557607000000311113000000000311111130000000031111113000000000113b1100000000003111130000000000311113000000000000000000000
+05750076111770600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000560577777506000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bb00b300000
+00005655555550500000000000000000000000000008880000dddd5000000000000000000000000000003330000000000000b0000bbb00000000bbbb03330000
+00000555675655000000000000000000000000008880008000d776650000000000000000000000000000033000000000000b0bb033b000000000000b30000000
+00000055675650000000000000000000000d00008008808000d76dd65000000000000033033000000000000b300000000000000b300000000000088338800000
+0000000566560000000000000003000000d0d0000800080000d6d65d000000000000000b30000000000000b000a0a0000000003bb30000000000878888780000
+000000000000000000000000003030000b404b000b888b000056d550000000000000003bb300000000b00b000a0a0a0000000a9339a000000000887777880000
+0000000000000000000300000bb0bb0000bb300000bb300000056d0d00000000000003133130000000bb0300a07070a0000079a9aa9700000030288888820300
+00000000000000000bb0bb0000bb3000000300000003000000005000d00000000000b131331b0000000bb3000a070a000000a979779a00000033122222213300
+000000000bb0bb0000bb3000000300000bb300000bb300000000000006000000000031b1bb13000000003300909090900033a9a9aa9a330000b3112222113b00
+0000000000bb3000000300000bb30000b0033300b00333000000000000624400003331313313330000000bb009090900000399a9aa99300000bbb11b111bbb00
+0bb0bb00000300000bb30000b003330000330030003300300000000000200200000311313311300000000bb00090900000bbb999a99bbb00000bb31bb13bb000
+00b3300000b3000000033300003300300003b0000003b000000000000040200000bbb111311bbb00003330b000000000000bb39bb93bb0000000113bb3330000
+0003000000033000003300000003b00000330b0000330b000000000000420000000bb31bb13bb0000003300b000000000000113bb33300000000011111100000
 00030000000300000003000000330000000300000003000000000000000000000000113bb3330000000003333330000000000113b11000000000000000000000
 001111000011110000111100001111000011110000111100000000000000000000000113b1100000000000000000000000000000000000000000000000000000
-55550000555500005500000055550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-05500000550500005500000055050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-05500000550500005500000055550000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100888888000
-05500000555500005555000055050000000000000000000000000000000000000000000000000000000000000000000000000000000000000010010888888000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010010000088000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100000888800
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000088000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bb00000000000
+55550000555500005500000055550000000000000000000000000000000030000000000000000000000000000b03300000000000000000000000000000000000
+0550000055050000550000005505000000000000009000090bbb0b3000bb3b300090a00000000bbb0088828000b0077000000000000000000000000000000000
+0550000055050000550000005555000000bb03300009b039b003b3000003b3000099aa990000b0b3002000200b00706600000000000000000001100888888000
+05500000555500005555000055050000008b3320000b303300943490007c3c6000a24290000b0b03000288000b00600600000000000000000010010888888000
+0000000000000000000000000000000008888882090000000a4949490cc766dd0aa424aa0bb0b030000080000300066000000000000000000010010000088000
+0000000000000000000000000000000008e8888200930bb30a4a4a490cccccdd009242a00b0b030000bbb3300030000000000000000000000001100000888800
+0000000000000000000000000000000008ee882800330bb3094949490cdcdddd099aa9900300b0000003b0000003300000000000000000000000000000088000
+0000000000000000000000000000000000882280000003330094949000cdcdd00000a0900333b00000003300000000000000000000000000000bb00000000000
 555500005555000055550000555500000000000000000000000000000000000000000000000000008800009900000000000000000000000000bbbb0044554400
 5505000055550000550000005550000000000000000000000000000000000000000000000000000080000009000000000000000000000000000bb00040660400
 5555000055050000555000005500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bb00044554400
@@ -2067,12 +2084,12 @@ __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000007777770000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000006111700000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000006117000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000006161600000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000006606670000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000006000770000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -2102,12 +2119,12 @@ __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000db113d000000000000dddb113ddd000000000000000000000000000000000000000000000
-000000000000000000000000000000000000000000000000000000d13b331d0000000000d1113b33111d00000000000000077777700000000000000000000000
-000000000000000bb0bb000000000000024444b444200000000000610110160000000000d1100110011d00000000000000061117000000000000000000000000
-0000000000002244b33444220000000020000b330002000000000016666661000000000061000000001600000000000000061170000000000000000000000000
-00000000000020000300000200000000404041114004000000000001111110000000000016666666666100000000000000061616000000000000000000000000
-0000000000004040111140040000000040020402040400000000000d1111d000000000000d11111111d000000000000000066066700000000000000000000000
-00000000000040020402040400000000902040404009000000000066dddddd000000000066dddddddddd00000000000000060007700000000000000000000000
+000000000000000000000000000000000000000000000000000000d13b331d0000000000d1113b33111d00000000000000000000000000000000000000000000
+000000000000000bb0bb000000000000024444b444200000000000610110160000000000d1100110011d00000000000000000000000000000000000000000000
+0000000000002244b33444220000000020000b330002000000000016666661000000000061000000001600000000000000000000000000000000000000000000
+00000000000020000300000200000000404041114004000000000001111110000000000016666666666100000000000000000000000000000000000000000000
+0000000000004040111140040000000040020402040400000000000d1111d000000000000d11111111d000000000000000000000000000000000000000000000
+00000000000040020402040400000000902040404009000000000066dddddd000000000066dddddddddd00000000000000000000000000000000000000000000
 00000000000090204040400900000000099999999990000000000d66dddd6dd00000000d66d6dd6ddd6dd0000000000000000000000000000000000000000000
 000000000000999999999999000000000000000000000000000001ddddd6661000000001ddddddd6d66610000000000000000000000000000000000000000000
 0000000000000200000000200000000000244222220000000000011ddddd61100000000111dd6ddddd6110000000000000000000000000000000000000000000
