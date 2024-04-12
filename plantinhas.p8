@@ -60,12 +60,6 @@ function _init()
  ls_vas_atv = {["tipo"]="vaso com planta",["val"]=false,["qual"]=nil}
  ls_vas_reg = {["tipo"]="vaso regado"    ,["val"]=false,["qual"]=nil}
 
-	ls_all = {}
-	add(ls_all,ls_jrd.coisas)
-	add(ls_all,ls_inv.coisas)
-	add(ls_all,ls_bts)
-	add(ls_all,ls_atl.atls)
-
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
  pat_sem = {["tipo"]="particulas sementes",["val"]=false,["qual"]={} }	
  pat_reg = {["tipo"]="particulas regador" ,["val"]=false,["qual"]={} }	
@@ -140,8 +134,7 @@ end
 
 --update ==========================================================================================================================================================================+
 function _update()
-
- mouse:att()
+	mouse:att()
  
  cool_down(10)
  if(not ls_atl.show) att_particulas(pat_sem)
@@ -177,7 +170,7 @@ function _update()
    ls_jrd.qual = check_sel(ls_jrd.coisas,"retg")	 
   end
  	
-  if(ls_jrd.qual != nil)then		
+  if(ls_jrd.qual != nil)then	
    if(not atribui.val and not pat_sem.val)then
     ls_jrd.qual:mov_cur_esq(ls_jrd,"retg")	
    elseif(atl_wait and not pat_sem.val)then
@@ -190,7 +183,6 @@ function _update()
    plantar(pat_sem.qual)		
   end
   
-
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif(status == 2)then
   --selecionar loja ................................................................................................+
@@ -206,12 +198,12 @@ function _update()
   end
   
   --remover carrinho ...............................................................................................+
-  if(not ls_car.val and count(ls_car.coisas)>0) then
+  if(not ls_car.val and #ls_car.coisas >0) then
+  	foreach(ls_car.coisas,function(esp) esp:hover("retg" ) end)
    ls_car.qual = check_sel(ls_car.coisas,"retg")
   end
 
-  if(ls_car.qual != nil and ls_car)then	
-   ls_car.qual:hover("retg")
+  if(ls_car.qual != nil)then	
    if(sel_compra(ls_car.qual,2))then
     ls_car.val = false
    end
@@ -339,7 +331,6 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   ct       = 0,
   id       = 0,
   ls_aux   = ls_aux or nil,
- 	ls_guardar = ls_guardar or nil,
 
   --metodos--------------------------------------------------------------------------------------------------------+
   --mover objeto ..................................................................................................+
@@ -368,7 +359,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 	 end,
 	 
 	 --mover com o cursor
-	 mov_cur = function(self,mouse)
+	 mov_cur = function(self)
 	 	self:mov((stat(32) - flr(self.w/2))& ~1,(stat(33) - flr(self.w/2))& ~1)
 			n_sai_tela(self)
 	 end,
@@ -387,24 +378,19 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 				if(stat(32)>=esq and  stat(32) <= dir) then
 					//checar em cima e embaixo
 					if(stat(33)>=cim and stat(33) <= bax) then
-						mouse.sel_oque = self
 						return true	
 					end 
-					mouse.sel_oque = nil
 	 		end
-				
+
 			elseif(tipo == "circ")then
 				dx   = self.x - stat(32)
 				dy   = self.y - stat(33)
 				dist = flr(sqrt((dx*dx)+(dy*dy)))
 				if(dist <= (self.r))then
-					mouse.sel_oque = self
 					return true				
-				end			
-				mouse.sel_oque = nil	
+				end
 			end
 		
-
 			return false
 						
 		end,
@@ -445,14 +431,13 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 end
 -->8
 --def_tipos ====================
-function def_tip(self,subtipo,ls_guardar)
+function def_tip(self,subtipo)
 
 --mouse ========================		 
 	if(self.cla == "mouse")then
   self.ativ      = true
  	self.s         = 0
- 	self.sel_oque  = nil
- 	 	
+	 	
 		--esperando ==================
  	self.esq_esper = false
  	self.mei_esper = false
@@ -492,9 +477,6 @@ function def_tip(self,subtipo,ls_guardar)
 	--desenhar mouse ==============
  function self:des()
   spr(self.s,stat(32),stat(33))
-  local aux
-  if(self.sel_oque) aux = self.sel_oque.cla
-  print(nil or aux, stat(32)+9,stat(33),7)
  end
  
  --atualizar mouse =============
@@ -777,72 +759,62 @@ exemplo:
 	 //metodos de botoes
 	 
 	 //ativar botao
-  function self:ativa()
-			//teve colisao
+		function self:ativa()
+			--teve colisao
 			if(self:col_mouse("retg") and not(mouse.eq_press))then
-		 //mouse esquerdo pressionado			
+				--mouse esquerdo pressionado			
 				if(mouse.esq_press)then	
-					//funcoes ===================
-					//ir lojinha
-				 if(self.tip == 1)then
-				 	status  = 2		
- 	 			mouse.s = 0	
-				 
-					//voltar jogo principal
-				 elseif(self.tip == 2)then
-				 	status = 1
-				 
-				 
-					//comprar
-				 elseif(self.tip == 3)then		
-						comprar()				
+					--funcoes ===================
+					--ir lojinha
+					if(self.tip == 1)then
+						status  = 2		
+		 	 	mouse.s = 0	
 						 
-					//ir depot
+					--voltar jogo principal
+					elseif(self.tip == 2)then
+						status = 1
+						 	 
+					--comprar
+					elseif(self.tip == 3)then		
+						comprar()				
+								 
+					--ir depot
 					elseif(self.tip == 4 and not ls_atl.val)then
 						if(status==1)then
 							status     = 3
 							bt_dept.s  = 12
-						 bt_dept.sr = 12
-						 bt_dept.sp = 44
-					  self.ct    = 0
-
+							bt_dept.sr = 12
+							bt_dept.sp = 44
+							self.ct    = 0
+		
 						elseif(status==3)then
 							bt_dept.s  = 40
-						 bt_dept.sr = 40
-						 bt_dept.sp = 42
+							bt_dept.sr = 40
+							bt_dept.sp = 42
 							status     = 1
 							atribui.val= false
-						 self.ct    = 1
-
-						end					
-					 	ls_atl.show = false
-						return
-					elseif(self.tip == 5)then
-						 avancar_fase()
-					end
-
-		 //mouse esquerdo nao pressionado  
-				else
-					ls_bts.val = false
-				end	
-			
-			//nao teve colisao
-			else
-					ls_bts.val = false
-			end
+							self.ct    = 1
 		
+						end					
+						ls_atl.show = false
+						return
+					--avancar fase
+					elseif(self.tip == 5)then
+						avancar_fase()
+					end
+				end
+			end
 		end
 		
 		function self:hover()
 			
 			if(self:col_mouse("retg"))then
-			
+
 				if(self.tip == 3 and count(ls_car.coisas)>0)then				
 				 self.cor1 =	self.cor2
 				else
 				 self.cor1 =	self.cor3
 					self.s    = self.sp
-
 				end
 	
 			else
@@ -1254,7 +1226,8 @@ function get_obj_by_col_mos(lista,tipo)
 	
 	for qual in all(lista)do
 		col= qual:col_mouse(tipo)
-		if(col)then	
+	
+		if(col)then
 			qual.sel = true	
 			return qual
 		else
@@ -1282,6 +1255,7 @@ function check_sel(qual_ls,tipo)
 				qual_ls.val = true
 				return obj_sel
 			else
+
 				qual_ls.val = false
 				return obj_sel
 	 	end
@@ -1488,10 +1462,9 @@ function sel_compra(qual,op)
 				//adiciona ao carrinho
 				if(op==1)then
 					if(count(ls_car.coisas)<4)then
-				  new_car      = criar_obj("espaco",2)
+				  new_car      = criar_obj("espaco",2,ls_car.coisas)
 						new_car.item = criar_obj("item",qual.item.tip)
 						ls_car.total += qual.item.val
-					 add(ls_car.coisas,new_car)
 					 return true
 					end
 				//remove do carrinho
@@ -1970,7 +1943,7 @@ d7dd6d00576dd50008882280088288800429999999999240000733b33b33d00000024413b1442000
 00000204000533350880088888800880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000422000555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000444466444400000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000000000770000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000000000770000000b00000
 0000000000000000000000000000000000000dddddd00000000dddddddddd0000004444664444000009999977999990000000000000000000777777777777700
 000000000000000000000000000000000000d122221d000000d1111111111d000044444664444400001111177111110000000700000000000071111111111700
 00000000000000000002444444442000000061222216000000d1122222211d000044444664444400001111111111110000007777777000000071771771771700
