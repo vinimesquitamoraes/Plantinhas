@@ -142,7 +142,6 @@ end
 function _update()
 
  mouse:att()
- mouse:check_sel(ls_all)
  
  cool_down(10)
  if(not ls_atl.show) att_particulas(pat_sem)
@@ -388,8 +387,10 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 				if(stat(32)>=esq and  stat(32) <= dir) then
 					//checar em cima e embaixo
 					if(stat(33)>=cim and stat(33) <= bax) then
+						mouse.sel_oque = self
 						return true	
 					end 
+					mouse.sel_oque = nil
 	 		end
 				
 			elseif(tipo == "circ")then
@@ -397,10 +398,13 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 				dy   = self.y - stat(33)
 				dist = flr(sqrt((dx*dx)+(dy*dy)))
 				if(dist <= (self.r))then
+					mouse.sel_oque = self
 					return true				
-				end				
+				end			
+				mouse.sel_oque = nil	
 			end
-							
+		
+
 			return false
 						
 		end,
