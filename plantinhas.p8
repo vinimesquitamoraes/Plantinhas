@@ -35,7 +35,7 @@ function _init()
  2 para loja
  3 para o deposito
  ]]
- status = 3
+ status = 1
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo  = 1
@@ -45,36 +45,30 @@ function _init()
  timer_atl = 0
 		
  --init de selecao ----------------------------------------------------------------------------------------------------------------------------------------------------------------+
- sel_tst = {["val"]=false,["qual"]=nil}
- sel_vas = {["val"]=false,["qual"]=nil}
- sel_bts = {["val"]=false,["qual"]=nil}
- sel_esp = {["val"]=false,["qual"]=nil}
- sel_car = {["val"]=false,["qual"]=nil}
- sel_buy = {["val"]=false,["qual"]=nil}
- sel_inv = {["val"]=false,["qual"]=nil}
- sel_atl = {["val"]=false,["qual"]=nil}
- sel_jrd = {["val"]=false,["qual"]=nil}
  atribui = {["val"]=false,["atl" ]={} }	
- semeia  = {["val"]=false,["qual"]={} }	
- rega    = {["val"]=false}	
-
+ 
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- ls_tst     = {["tipo"]="teste"}
- ls_vas     = {["tipo"]="vaso"}
- ls_bts     = {["tipo"]="botao"}
- ls_esp     = {["tipo"]="espaco"}
- ls_plv     = {["tipo"]="palavra"}
- ls_car     = {["tipo"]="carrinho"   ,["total" ]=0 ,["coisas"]={}   }
- ls_atl     = {["tipo"]="atalho"     ,["atls"  ]={},["show"  ]=false} 
- ls_inv     = {["tipo"]="inventario" ,["coisas"]={}}
- ls_jrd     = {["tipo"]="jardim"     ,["coisas"]={}}
- ls_prt     = {["tipo"]="prateleiras"}
- ls_vas_atv = {["tipo"]="vaso com planta"}
- ls_vas_reg = {["tipo"]="vaso regado"}
+ ls_tst     = {["tipo"]="teste"          ,["val"]=false,["qual"]=nil}
+ ls_bts     = {["tipo"]="botao"          ,["val"]=false,["qual"]=nil}
+ ls_esp     = {["tipo"]="espaco"         ,["val"]=false,["qual"]=nil}
+ ls_plv     = {["tipo"]="palavra"        ,["val"]=false,["qual"]=nil}
+ ls_car     = {["tipo"]="carrinho"       ,["val"]=false,["qual"]=nil,["total" ]=0 ,["coisas"]={}   }
+ ls_atl     = {["tipo"]="atalho"         ,["val"]=false,["qual"]=nil,["atls"  ]={},["show"  ]=false} 
+ ls_inv     = {["tipo"]="inventario"     ,["val"]=false,["qual"]=nil,["coisas"]={}}
+ ls_jrd     = {["tipo"]="jardim"         ,["val"]=false,["qual"]=nil,["coisas"]={}}
+ ls_prt     = {["tipo"]="prateleiras"    ,["val"]=false,["qual"]=nil}
+ ls_vas_atv = {["tipo"]="vaso com planta",["val"]=false,["qual"]=nil}
+ ls_vas_reg = {["tipo"]="vaso regado"    ,["val"]=false,["qual"]=nil}
+
+	ls_all = {}
+	add(ls_all,ls_jrd.coisas)
+	add(ls_all,ls_inv.coisas)
+	add(ls_all,ls_bts)
+	add(ls_all,ls_atl.atls)
 
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
- pat_sem = {["tipo"]="particulas sementes"}
- pat_reg = {["tipo"]="particulas regador"}
+ pat_sem = {["tipo"]="particulas sementes",["val"]=false,["qual"]={} }	
+ pat_reg = {["tipo"]="particulas regador" ,["val"]=false,["qual"]={} }	
  
  --init de palavras ---------------------------------------------------------------------------------------------------------------------------------------------------------------+
  p1={192,193,193,194,240}
@@ -148,18 +142,20 @@ end
 function _update()
 
  mouse:att()
+ mouse:check_sel(ls_all)
+ 
  cool_down(10)
  if(not ls_atl.show) att_particulas(pat_sem)
  --jogo principal rocha --------------------------------------------------------------------------------------------+	
  if(status == 1)then
-  if(not semeia.val)toggle_atl()	
+  if(not pat_sem.val)toggle_atl()	
   --ir depot .......................................................................................................
   if(ls_atl.show)then
    bt_dept:hover()
    bt_dept:ativa()
   end
   --ir loja ........................................................................................................   
-  if(not semeia.val)then
+  if(not pat_sem.val)then
    bt_loja:hover()
    bt_loja:ativa()
   end
@@ -167,59 +163,58 @@ function _update()
   bt_skip:ativa()
  	
   --atribuir pra qual atl
-  if(not sel_atl.val and ls_atl.show) then
-   sel_atl.qual = check_sel(sel_atl,ls_atl.atls,"circ")	 
+  if(not ls_atl.val and ls_atl.show) then
+   ls_atl.qual = check_sel(ls_atl.atls,"circ")	 
   end
  
-  if(sel_atl.qual != nil)then
-   toggle_atribuir(sel_atl.qual)
+  if(ls_atl.qual != nil)then
+   toggle_atribuir(ls_atl.qual)
   end
   
-  if(atl_wait and not semeia.val) remov_atl()
+  if(atl_wait and not pat_sem.val) remov_atl()
   
   --mover coisas
-  if(not sel_jrd.val and not ls_atl.show) then
-   sel_jrd.qual = check_sel(sel_jrd,ls_jrd.coisas,"retg")	 
+  if(not ls_jrd.val and not ls_atl.show) then
+   ls_jrd.qual = check_sel(ls_jrd.coisas,"retg")	 
   end
  	
-  if(sel_jrd.qual != nil)then		
-   if(not atribui.val and not semeia.val)then
-    sel_jrd.qual:mov_cur_esq(sel_jrd,"retg")	
-   elseif(atl_wait and not semeia.val)then
+  if(ls_jrd.qual != nil)then		
+   if(not atribui.val and not pat_sem.val)then
+    ls_jrd.qual:mov_cur_esq(ls_jrd,"retg")	
+   elseif(atl_wait and not pat_sem.val)then
    	atribuicao()
    end
   end
  	
   --se esta esperando semente
-  if(semeia.val and not atribui.val)then
-   plantar(semeia.qual)		
+  if(pat_sem.val and not atribui.val)then
+   plantar(pat_sem.qual)		
   end
- 	
+  
+
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif(status == 2)then
   --selecionar loja ................................................................................................+
-  if(not sel_esp.val) then
-   for i in all(ls_esp) do
-    sel_esp.qual = check_sel(sel_esp,i,"retg")								
-    if(sel_esp.qual != nil) break		
-   end
-  end 
-  
-  --adicionar ao carrinho...........................................................................................+
-  if(sel_esp.qual != nil and sel_esp.val)then	
-   sel_esp.qual:hover(sel_esp,"retg")
-   sel_compra(sel_esp.qual,1)			
+  for i in all(ls_esp) do
+  	foreach(i,function(esp) esp:hover("retg" ) end)
+		 ls_esp.qual = check_sel(i,"retg")								
+		 if(ls_esp.qual != nil)break		    
   end
-	
+   
+  --adicionar ao carrinho...........................................................................................+
+  if(ls_esp.qual != nil)then	   
+   sel_compra(ls_esp.qual,1)			
+  end
+  
   --remover carrinho ...............................................................................................+
-  if(not sel_car.val and count(ls_car.coisas)>0) then
-   sel_car.qual = check_sel(sel_car,ls_car.coisas,"retg")
+  if(not ls_car.val and count(ls_car.coisas)>0) then
+   ls_car.qual = check_sel(ls_car.coisas,"retg")
   end
 
-  if(sel_car.qual != nil and sel_car)then	
-   sel_car.qual:hover(sel_car,"retg")
-   if(sel_compra(sel_car.qual,2))then
-    sel_car.val = false
+  if(ls_car.qual != nil and ls_car)then	
+   ls_car.qual:hover("retg")
+   if(sel_compra(ls_car.qual,2))then
+    ls_car.val = false
    end
   end
 			
@@ -232,27 +227,27 @@ function _update()
  elseif(status == 3)then
   toggle_atl()
   grav_depot()
+  
   --atribuir pra qual atl ..........................................................................................+
-  if(not sel_atl.val and ls_atl.show) then
-   sel_atl.qual = check_sel(sel_atl,ls_atl.atls,"circ")	 
+  if(not ls_atl.val and ls_atl.show) then
+   ls_atl.qual = check_sel(ls_atl.atls,"circ")	 
   end
   
-  if(sel_atl.qual != nil)then
-   toggle_atribuir(sel_atl.qual)
+  if(ls_atl.qual != nil)then
+   toggle_atribuir(ls_atl.qual)
   end
   
   if(atl_wait) remov_atl()
 
   --mover coisas ....................................................................................................+
-  if(not sel_inv.val and not ls_atl.show) then
-   sel_inv.qual = check_sel(sel_inv,ls_inv.coisas,"retg")	 
+  if(not ls_inv.val and not ls_atl.show) then
+   ls_inv.qual = check_sel(ls_inv.coisas,"retg")	 
   end
 	
-  if(sel_inv.qual != nil)then		
+  if(ls_inv.qual != nil)then		
    if(not atribui.val)then
-    sel_inv.qual:mov_cur_esq(sel_inv,"retg")	
- 		
-	 		
+    ls_inv.qual:mov_cur_esq(ls_inv,"retg")	
+ 			 		
    elseif(atl_wait)then
 	   atribuicao()
    end
@@ -345,6 +340,8 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   ct       = 0,
   id       = 0,
   ls_aux   = ls_aux or nil,
+ 	ls_guardar = ls_guardar or nil,
+
   --metodos--------------------------------------------------------------------------------------------------------+
   --mover objeto ..................................................................................................+
   mov = function(self, newx, newy)
@@ -423,14 +420,12 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 				//self:mov(self.x & ~1,self.y & ~1)
   			self.sel     = false
 					controle.val = false
-					cu1 = nil
 				end									
 			end
 			
 			//se foi selecionado
 			if(self != nil)then
 				if(self.sel) then
- 				cu1 = self.nome or nil
 					self:mov_cur()
 				end						
 			end
@@ -447,11 +442,13 @@ end
 -->8
 --def_tipos ====================
 function def_tip(self,subtipo,ls_guardar)
-	ls_guardar = ls_guardar or nil
+
 --mouse ========================		 
 	if(self.cla == "mouse")then
   self.ativ      = true
  	self.s         = 0
+ 	self.sel_oque  = nil
+ 	 	
 		--esperando ==================
  	self.esq_esper = false
  	self.mei_esper = false
@@ -474,16 +471,16 @@ function def_tip(self,subtipo,ls_guardar)
 		
 		--estado =====================
 		--self botao?
-	function self:get_estado(self_mouse)
+	function self:get_estado(bt_press)
 	 	local estado_atual = stat(34)
 			--esquerda ==================
-			if(self_mouse == 1)	then
+			if(bt_press == 1)	then
 				return estado_atual==1
 			--meio ======================
-			elseif(self_mouse == 4) then
+			elseif(bt_press == 4) then
 				return estado_atual==4
 			--direira ===================
-			elseif(self_mouse == 2)then
+			elseif(bt_press == 2)then
 				return estado_atual==2
 			end
 		end
@@ -491,6 +488,9 @@ function def_tip(self,subtipo,ls_guardar)
 	--desenhar mouse ==============
  function self:des()
   spr(self.s,stat(32),stat(33))
+  local aux
+  if(self.sel_oque) aux = self.sel_oque.cla
+  print(nil or aux, stat(32)+9,stat(33),7)
  end
  
  --atualizar mouse =============
@@ -700,7 +700,7 @@ exemplo:
 				end
 				
 				if(saiu(self))then
- 				semear.val = false
+ 				pat_sem.val = false
 					self:del()
 				end
 		end
@@ -794,7 +794,7 @@ exemplo:
 						comprar()				
 						 
 					//ir depot
-					elseif(self.tip == 4 and not sel_atl.val)then
+					elseif(self.tip == 4 and not ls_atl.val)then
 						if(status==1)then
 							status     = 3
 							bt_dept.s  = 12
@@ -819,12 +819,12 @@ exemplo:
 
 		 //mouse esquerdo nao pressionado  
 				else
-					sel_bts.val = false
+					ls_bts.val = false
 				end	
 			
 			//nao teve colisao
 			else
-					sel_bts.val = false
+					ls_bts.val = false
 			end
 		
 		end
@@ -866,14 +866,14 @@ exemplo:
 	 	self.w,self.h = 16,16
 		end
 
-		function self:hover(self_sel,tip_col)
+		function self:hover(tip_col)
 
 			if(self:col_mouse(tip_col))then
 				 self.cor1 = self.cor2
 			else
 				 self.cor1 = self.cor3
-				 self_sel.self = nil
-				 self_sel.val  = false
+				 self.qual = nil
+				 self.val  = false
 			end
 			
 		end
@@ -1250,7 +1250,12 @@ function get_obj_by_col_mos(lista,tipo)
 	
 	for qual in all(lista)do
 		col= qual:col_mouse(tipo)
-		if(col)return qual
+		if(col)then	
+			qual.sel = true	
+			return qual
+		else
+			qual.sel = false
+		end
 	end	
 	return nil
 end
@@ -1266,14 +1271,14 @@ end
 
 //checa a selecao de objetos
 //em uma lista
-function check_sel(que_sel,qual_ls,tipo)
+function check_sel(qual_ls,tipo)
 	if(count(qual_ls))then
 			obj_sel = get_obj_by_col_mos(qual_ls,tipo)					
 			if(obj_sel != nil)then
-				que_sel.val = true
+				qual_ls.val = true
 				return obj_sel
 			else
-				que_sel.val = false
+				qual_ls.val = false
 				return obj_sel
 	 	end
 		
@@ -1316,15 +1321,10 @@ end
 
 //particulas
 function des_particulas(que_ls)
-
- for p in all(que_ls) do
- 	p:des()
- end
-
+	foreach(que_ls,function(p) p:des() end)
 end
 
 //atualizar prticulas
-
 function att_particulas(que_ls)
 
  for p in all(que_ls) do
@@ -1429,7 +1429,7 @@ end
 
 //cria vitrines
 function criar_esps(quantos)
-	linha ={}
+	linha ={["val"]=false,["qual"]=nil}
 
 	for i=1,quantos do      
   aux      = criar_obj("espaco",1)
@@ -1477,7 +1477,7 @@ end
 //seleciona produto
 //e envia para o carrinho rocha
 function sel_compra(qual,op)
-	if(qual == nil) return
+	if(not qual) return
 	if(qual:col_mouse("retg") and not(mouse.eq))then
  
 		if(mouse.esq_press)then
@@ -1544,17 +1544,17 @@ end
 
 function tool_tip()
 	//mostrar preco ao passar mouse
-	if(sel_esp.val)then
-		if(sel_esp.qual != nil)then
-			auxtip = sel_esp.qual.item.tip
+	if(ls_esp.val)then
+		if(ls_esp.qual != nil)then
+			auxtip = ls_esp.qual.item.tip
 			if(auxtip >=9 and auxtip <=16)then
 				print("seeds",17,120,6)			
 			else
-				print(sel_esp.qual.item.nome,17,120,6)
+				print(ls_esp.qual.item.nome,17,120,6)
 			end
 			local cor = 6
-			if(sel_esp.qual.item.val > saldo) cor = 8
-	  print(sel_esp.qual.item.val,69,120,cor)
+			if(ls_esp.qual.item.val > saldo) cor = 8
+	  print(ls_esp.qual.item.val,69,120,cor)
 		end
 	
 	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 )then
@@ -1562,11 +1562,11 @@ function tool_tip()
 	  print(ls_car.total,69,120,10)
 	
 	//mostrar preco ao passar mouse no carrinho
-	elseif(sel_car.val)then
+	elseif(ls_car.val)then
 	
-		if(sel_car.qual != nil)then			
-			print(sel_car.qual.item.nome,17,120,6)
-	  print(sel_car.qual.item.val,69,120,6)
+		if(ls_car.qual != nil)then			
+			print(ls_car.qual.item.nome,17,120,6)
+	  print(ls_car.qual.item.val,69,120,6)
  	end
 
 	//mostrar saldo 	
@@ -1593,13 +1593,9 @@ end
 --inventario ===================
 function des_inv()
 	if(status==3)then
-		for k in all(ls_inv.coisas)do
-				k:des()
-		end
+		foreach(ls_inv.coisas,function(obj) obj:des() end)
 	else
- 	for k in all(ls_jrd.coisas)do
-				k:des()
-		end
+		foreach(ls_jrd.coisas,function(obj) obj:des() end)
 	end
 end
 
@@ -1670,8 +1666,9 @@ function des_atl()
 			if(i.item !=nil)then
 			 i.item:des(i.x-7,i.y-7)
 			end
- 			i:hover(sel_atl,"circ")
+ 		i:hover("circ")
 		end  	
+		
   bt_dept:des()
 	end
 
@@ -1703,9 +1700,9 @@ function toggle_atl()
  			mouse.s = 0
 				ls_atl.show = true
 				atribui.val = false
-				semeia.val  = false
+				pat_sem.val = false
 				atribui.atl = nil
-				sel_inv.val = false
+				ls_inv.val  = false
 			end
 	end
 		
@@ -1733,15 +1730,15 @@ end
 
 function atribuicao()
 
- vaso_com_planta = sel_jrd.qual and sel_jrd.qual.tip >= 5 and sel_jrd.qual.tip <= 8 and sel_jrd.qual.planta
+ vaso_com_planta = ls_jrd.qual and ls_jrd.qual.tip >= 5 and ls_jrd.qual.tip <= 8 and ls_jrd.qual.planta
 
 	if(mouse.esq_press and not vaso_com_planta)then
 		//deleta o item selecionado
 		//e salva
 		if(status == 3) then
-			aux_item = del(ls_inv.coisas,sel_inv.qual)		
+			aux_item = del(ls_inv.coisas,ls_inv.qual)		
 		elseif(status == 1) then
-			aux_item = del(ls_jrd.coisas,sel_jrd.qual)	
+			aux_item = del(ls_jrd.coisas,ls_jrd.qual)	
 		end
 					
 		//se o atalho estiver vazio
@@ -1760,22 +1757,22 @@ function atribuicao()
 		
 		atribui.atl.item = aux_item
 		atribui.val  = false
-		sel_inv.qual = nil
-		sel_inv.val  = false		
-		sel_jrd.qual = nil
-		sel_jrd.val  = false
+		ls_inv.qual = nil
+		ls_inv.val  = false		
+		ls_jrd.qual = nil
+		ls_jrd.val  = false
 		ls_atl.show  = true
 		
 	else
-		sel_inv.val = false
-		sel_jrd.val = false
+		ls_inv.val = false
+		ls_jrd.val = false
 	end	
 
 end
 
 function remov_atl()
 	
-	if(atribui.val and atribui.atl.item != nil and sel_inv.qual == nil and not(bt_loja:col_mouse("retg")))then
+	if(atribui.val and atribui.atl.item != nil and ls_inv.qual == nil and not(bt_loja:col_mouse("retg")))then
 		if(mouse.esq_press) then
 			atribui.atl.item.x=stat(32)-8			
 			atribui.atl.item.y=stat(33)-8
@@ -1787,11 +1784,11 @@ function remov_atl()
 			
 			atribui.atl.item = nil
 			atribui.val      = false
-			sel_atl.qual     = nil
-			sel_inv.qual     = nil
-			sel_inv.val      = false
-			sel_jrd.qual     = nil
-			sel_jrd.val      = false			
+			ls_atl.qual     = nil
+			ls_inv.qual     = nil
+			ls_inv.val      = false
+			ls_jrd.qual     = nil
+			ls_jrd.val      = false			
 			mouse.s          = 0
 		end
 	end
@@ -1910,8 +1907,8 @@ function funcionalidades(que_item)
 	elseif(range(que_item.tip,9,16))then
   nova_sem      = gerar_part(pat_sem,3,2)
 	 nova_sem.item = que_item
-		semeia.val    = true
-		semeia.qual   = nova_sem
+		pat_sem.val    = true
+		pat_sem.qual   = nova_sem
 
 	elseif(que_item.tip == 17)then
 		rega.val = true
@@ -1928,7 +1925,7 @@ function plantar(o_que)
 		qual_vaso.planta  = o_que.item.fases
  	qual_vaso.estagio = 1
   o_que:del()
- 	semeia.val = false
+ 	pat_sem.val = false
  	mouse.s = 0
  end
 end
