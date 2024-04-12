@@ -129,6 +129,14 @@ function _init()
  criar_obj("item",3,ls_inv.coisas,nil, 30 ,40)
  criar_obj("item",4,ls_inv.coisas,nil, 60 ,50)
  criar_obj("item",5,ls_inv.coisas,nil, 80 ,50)
+ 
+ ls_atl.atls[1].item = criar_obj("item",5)
+ ls_atl.atls[2].item = criar_obj("item",6)
+ ls_atl.atls[3].item = criar_obj("item",7)
+ ls_atl.atls[4].item = criar_obj("item",8)
+ ls_atl.atls[5].item = criar_obj("item",17)
+ ls_atl.atls[6].item = criar_obj("item",9)
+
 
 end
 
@@ -180,9 +188,13 @@ function _update()
  	
   --se esta esperando semente
   if(pat_sem.val and not atribui.val)then
-   plantar(pat_sem.qual)		
+ 		foreach(pat_sem,function(obj) plantar(obj) end)
   end
   
+  --regar
+		if(pat_reg.val)then
+			gerar_part(pat_reg,3,2)
+		end
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif(status == 2)then
   --selecionar loja ................................................................................................+
@@ -330,6 +342,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   sel      = false,
   ct       = 0,
   id       = 0,
+  ls_gua   = ls_guardar,
   ls_aux   = ls_aux or nil,
 
   --metodos--------------------------------------------------------------------------------------------------------+
@@ -364,19 +377,19 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 			n_sai_tela(self)
 	 end,
 
-	 //checa colisao entre algo e 
-		//o cursor
+	 --checa colisao entre algo e 
+		--o cursor
   col_mouse =	function(self,tipo)
 			if(tipo == "retg")then
-				//checar entre direita e esquerda, cim e baixo
+				--checar entre direita e esquerda, cim e baixo
 				esq =  self.x+self.xoff
 				dir = (self.x+self.xoff)+(self.w-self.woff)
 				cim =  self.y+self.yoff
 				bax = (self.y+self.yoff)+(self.h-self.hoff)
 	
-				//checar entre direita e esquerda
+				--checar entre direita e esquerda
 				if(stat(32)>=esq and  stat(32) <= dir) then
-					//checar em cima e embaixo
+					--checar em cima e embaixo
 					if(stat(33)>=cim and stat(33) <= bax) then
 						return true	
 					end 
@@ -395,25 +408,25 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
 						
 		end,
 	 
-	 //mover objeto com o mouse
-	 //esquerdo clicado
+	 --mover objeto com o mouse
+	 --esquerdo clicado
 	 mov_cur_esq = function(self,controle,tipo)
-			//checa colisao do mouse com
-			//self
+			--checa colisao do mouse com
+			--self
 			col = self:col_mouse(tipo)
-			//se houve colisao...
+			--se houve colisao...
 			if(col)then
 				if(mouse.esq)then
 					self.sel     = true
 					controle.val = true
 				else
-				//self:mov(self.x & ~1,self.y & ~1)
+				--self:mov(self.x & ~1,self.y & ~1)
   			self.sel     = false
 					controle.val = false
 				end									
 			end
 			
-			//se foi selecionado
+			--se foi selecionado
 			if(self != nil)then
 				if(self.sel) then
 					self:mov_cur()
@@ -437,7 +450,7 @@ function def_tip(self,subtipo)
 	if(self.cla == "mouse")then
   self.ativ      = true
  	self.s         = 0
-	 	
+		 	
 		--esperando ==================
  	self.esq_esper = false
  	self.mei_esper = false
@@ -476,7 +489,7 @@ function def_tip(self,subtipo)
 		
 	--desenhar mouse ==============
  function self:des()
-  spr(self.s,stat(32),stat(33))
+  spr(self.s,stat(32)+mouse.xoff,stat(33)+mouse.yoff,self.w/8,self.h/8)
  end
  
  --atualizar mouse =============
@@ -671,7 +684,13 @@ exemplo:
 		self.x_mix = 0
 		self.w     = 0
 		self.h     = 0
-		self.ls    = ls_guardar	
+
+ 	if(subtipo == 1)then
+ 		self.cor = 3
+ 	elseif(subtipo == 2)then
+ 		self.cor = 12
+ 	end
+
 		function self:att()
 			
 				self.x +=	self.vx
@@ -697,7 +716,7 @@ exemplo:
 	 
 	 function self:del()
 			if(self)then
-		 del(self.ls, self)
+		 del(self.ls_gua, self)
 	  self = nil
 			end
 	 end
@@ -705,7 +724,7 @@ exemplo:
 --botao ========================		 
 	elseif(self.cla == "botao")then
 
-		//lojinha
+		--lojinha
 		if(subtipo == 1)then
  		self.tip       = 1
 			self.x		       = 1
@@ -716,7 +735,7 @@ exemplo:
 		 self.sp        = 46
 		 self.ct        = 1
 		 
-	 //voltar
+	 --voltar
 		elseif(subtipo == 2)then
 			self.tip       = 2
 			self.x		       = 1
@@ -727,7 +746,7 @@ exemplo:
 		 self.sp        = 44
 		 self.ct        = 0
 
-		//comprar
+		--comprar
 		elseif(subtipo == 3)then
  		self.tip            = 3
 			self.x	            	= 97
@@ -737,7 +756,7 @@ exemplo:
 	  self.cor1,self.cor3 = 5,5
 	  self.cor2           = 10
 
-	 //depot
+	 --depot
 		elseif(subtipo == 4)then
  		self.tip       = 4
 			self.x,self.y  = 57,57		
@@ -756,9 +775,9 @@ exemplo:
 		 self.sp        = 237
 	 end
 	 
-	 //metodos de botoes
+	 --metodos de botoes
 	 
-	 //ativar botao
+	 --ativar botao
 		function self:ativa()
 			--teve colisao
 			if(self:col_mouse("retg") and not(mouse.eq_press))then
@@ -861,7 +880,7 @@ exemplo:
 	elseif(self.cla == "item")then				
 		self.w  = 16
 		self.h  = 16
-		//pa
+		--pa
 		if(subtipo == 1)then
  		self.tip  = 1
 		 self.val  = 0
@@ -872,7 +891,7 @@ exemplo:
  	 self.woff = 5
  		self.hoff = 5
 
-		//regador
+		--regador
 	 elseif(subtipo == 2)then
  		self.tip  = 2
 		 self.val  = 300
@@ -884,7 +903,7 @@ exemplo:
 	 	self.hoff = 8
 	  self.ct   = 1
 	  
-		//borrifador
+		--borrifador
 	 elseif(subtipo == 3)then
  		self.tip  = 3
 	  self.val  = 400
@@ -895,7 +914,7 @@ exemplo:
  	 self.woff = 7
 	 	self.hoff = 4
 	 	
-		//fertilizante	 	
+		--fertilizante	 	
 	 elseif(subtipo == 4)then
  	 self.tip  = 4
 	  self.val  = 500
@@ -906,7 +925,7 @@ exemplo:
  	 self.woff = 7
 	 	self.hoff = 4
 	 	
-	 //vasos rocha
+	 --vasos rocha
 	 elseif(range(subtipo,5,8))then
 	 	self.estagio = 1
 			self.colher  = false
@@ -924,7 +943,7 @@ exemplo:
   	function self:des(xop,yop)
   		self.x = xop or self.x
 		 	self.y = yop or self.y
-		 	//cordenadas onde planat fica no vaso		 	
+		 	--cordenadas onde planat fica no vaso		 	
 		 	self.xp = self.x+self.xpoff
 		 	self.yp = self.y+self.ypoff
 
@@ -937,7 +956,7 @@ exemplo:
 				end			
   	end
 			
-			//vaso1
+			--vaso1
 		 if(subtipo == 5)then
 	 	 self.tip  = 5
 			 self.val  = 500
@@ -949,12 +968,12 @@ exemplo:
 		 	self.hoff = 8
 		  self.ct   = 1
 
-		  //cordenadas da plnat no vaso
+		  --cordenadas da plnat no vaso
 		  self.xpoff = 8 
 		  self.xesp  = 4
 		  self.ypoff = 8
 		
-			//vaso2
+			--vaso2
 		 elseif(subtipo == 6)then
 		  self.tip  = 6
 			 self.val  = 500
@@ -970,7 +989,7 @@ exemplo:
 		  self.xesp  = 4
 		  self.ypoff = 7
 		 			 
-			//vaso3
+			--vaso3
 		 elseif(subtipo == 7)then
 		  self.tip  = 7
 			 self.val  = 600
@@ -986,7 +1005,7 @@ exemplo:
 		  self.xesp  = 4
 		  self.ypoff = 5
 		 		
-			//vaso4
+			--vaso4
 		 elseif(subtipo == 8)then
 		  self.tip  = 8
 			 self.val  = 600
@@ -1003,7 +1022,7 @@ exemplo:
 		  self.ypoff = 5
 		  
 	 	end	
-		//planta1
+		--planta1
 	 elseif(range(subtipo,9,18))then
 		 self.s    = 10
 		 self.ct   = 1
@@ -1019,7 +1038,7 @@ exemplo:
 		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
            wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}} }
 		 		 
-			//planta2
+			--planta2
 		 elseif(subtipo == 10)then
 		  self.tip  = 10
 		  self.val  = 500
@@ -1027,7 +1046,7 @@ exemplo:
 		 	self.fases= {64   ,65   ,66   ,67   ,68   ,74  , 76  ,
            wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}} }		 					 
 			  	
-			//planta3
+			--planta3
 		 elseif(subtipo == 11)then
 		  self.tip  = 11
 		  self.val  = 600
@@ -1035,7 +1054,7 @@ exemplo:
 		 	self.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}} }		 					 
 			  				 		 	
-		 //planta4
+		 --planta4
 		 elseif(subtipo == 12)then
 		  self.tip  = 12
 		  self.val  = 1000
@@ -1043,7 +1062,7 @@ exemplo:
  	 	self.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}}} 					 
   				 		 			  	
-		 //planta5
+		 --planta5
 		 elseif(subtipo == 13)then
 		  self.tip  = 13
 		  self.val  = 500
@@ -1051,14 +1070,14 @@ exemplo:
 			 self.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}}} 					 	 	
 		
-		 //planta6
+		 --planta6
 		 elseif(subtipo == 14)then
 		  self.tip  = 14
 		  self.val  = 350
 			 self.nome = "sword"		 	
 			 self.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}}} 					 	 	
-		 //planta7
+		 --planta7
 		 elseif(subtipo == 15)then
 		  self.tip  = 15
 		  self.val  = 600
@@ -1066,7 +1085,7 @@ exemplo:
 			 self.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}}} 			 
 
-		 //planta8
+		 --planta8
 		 elseif(subtipo == 16)then
 		  self.tip  = 16
 		  self.val  = 1000
@@ -1074,7 +1093,7 @@ exemplo:
 			 self.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{2,2},{2,2}}} 			 
 		
-			//regador
+			--regador
 		 elseif(subtipo == 17)then
 	 	 self.tip  = 17
 		  self.val  = 500
@@ -1109,8 +1128,8 @@ end
 
 -->8
 --colisor e utilitrios =========
-//nao deixa um objeto sair
-//da tela
+--nao deixa um objeto sair
+--da tela
 function n_sai_tela(oque)
 	if(oque != nil)then
 		esq = oque.x+oque.xoff
@@ -1141,7 +1160,7 @@ function saiu(oque)
 	end
 end
 
-//checa colisao entre dois retangulos
+--checa colisao entre dois retangulos
 function col_2ret(q1,q2)
 	esq_1 = q1.x+q1.xoff
 	cim_1 = q1.y+q1.yoff
@@ -1153,7 +1172,7 @@ function col_2ret(q1,q2)
 	dir_2 = esq_2+q2.w-q2.woff
 	bax_2 = cim_2+q2.h-q2.hoff
 
-	//checar entre direita e esquerda
+	--checar entre direita e esquerda
 	if(esq_1 < dir_2 and dir_1 > esq_2)then
   if(cim_1 < bax_2 and bax_1 > cim_2)then
 			return true
@@ -1165,7 +1184,7 @@ function col_2ret(q1,q2)
 end
 
 
-//colisao de dois circulos
+--colisao de dois circulos
 function col_circ(q1,q2)
 	dx   = q1.x - q2.x
 	dy   = q1.y - q2.y
@@ -1178,7 +1197,7 @@ function col_circ(q1,q2)
 	
 end
 
-//colisa de um circulo e 1 ponto
+--colisa de um circulo e 1 ponto
 function col_circ_pt(cic,pt)
 	dx   = cic.x - pt.x
 	dy   = cic.y - pt.y
@@ -1220,8 +1239,8 @@ function mover_obj_mos(qual,controle,tipo)
 	
 end
 
-//retorna o obejto selecionado
-//em uma lista
+--retorna o obejto selecionado
+--em uma lista
 function get_obj_by_col_mos(lista,tipo)
 	
 	for qual in all(lista)do
@@ -1246,8 +1265,8 @@ function get_obj_by_col_retg(ls_oque_1,oque_2)
 	return nil
 end
 
-//checa a selecao de objetos
-//em uma lista
+--checa a selecao de objetos
+--em uma lista
 function check_sel(qual_ls,tipo)
 	if(count(qual_ls))then
 			obj_sel = get_obj_by_col_mos(qual_ls,tipo)					
@@ -1266,7 +1285,7 @@ function check_sel(qual_ls,tipo)
 
 end
 
-//desenhar vertice
+--desenhar vertice
 function des_vertices(x,y,w,h,cor)
 
  pset(x    ,y    ,cor)
@@ -1276,7 +1295,7 @@ function des_vertices(x,y,w,h,cor)
 
 end
 
-//retorna as chaves de uma tabela
+--retorna as chaves de uma tabela
 function get_keys(qual_ls)
 	keys = {}
 	for i,j in pairs(qual_ls)do
@@ -1285,24 +1304,24 @@ function get_keys(qual_ls)
 	return keys
 end
 
-//exibe x y do mouse
+--exibe x y do mouse
 function pos_mouse(cor)
 		print("("..stat(32)..","..stat(33)..")",100,120,cor)
 end
 
-//apaga uma lista
+--apaga uma lista
 function del_ls(qual_ls)
 	for i in all(qual_ls)do
 		del(qual_ls,i)
 	end
 end
 
-//particulas
+--particulas
 function des_particulas(que_ls)
 	foreach(que_ls,function(p) p:des() end)
 end
 
-//atualizar prticulas
+--atualizar prticulas
 function att_particulas(que_ls)
 
  for p in all(que_ls) do
@@ -1311,15 +1330,15 @@ function att_particulas(que_ls)
 
 end
 
-function gerar_part(que_pat, cor, ampx)
-	nova = criar_obj("particula",0,que_pat)
-	nova.x     = stat(32)
-	nova.y     = stat(33)
-	nova.item  = do_que
-	nova.cor   = cor
-	nova.x_max = nova.x+ampx
-	nova.x_min = nova.x-ampx
-	return nova 
+function gerar_part(que_pat_ls, quantas, tip, ampx, item)
+ tip = tip or 1
+ for i=1, quantas do
+		nova = criar_obj("particula",tip,que_pat_ls,item)
+		nova.x     = stat(32)
+		nova.y     = stat(33)
+		nova.x_max = nova.x+ampx
+		nova.x_min = nova.x-ampx
+	end
 end
 
 function range(val,⬅️,➡️)
@@ -1331,16 +1350,16 @@ end
 -->8
 --loljinha =====================
 function	des_lojinha()
- //base
+ --base
 	rect(8,2,119,114,5)
 	line(92,114,118,114,0)
-	//compartimentos			
+	--compartimentos			
 	rect(37,7,91,28,5)
 	rect(32,35,91,55,5)
 	rect(42,63,91,83,5)
 	rect(47,91,91,114,5)
 	
-	//linhas do lado labels
+	--linhas do lado labels
 	rect(35,30,91,32,5)
 	rect(35,31,90,32,0)
 	
@@ -1350,42 +1369,42 @@ function	des_lojinha()
 	rect(50,86,91,88,5)
 	rect(50,87,90,88,0)
  
- //tools
+ --tools
  rect(8,2,37,28,5)
  rectfill(9,3,36,27,0)
  rectfill(8,28,91,29,0)
  
- //pots
+ --pots
 	local addy = 28
  rect(8,2+addy,32,28+addy,5)
  rectfill(9,36,90,55,0)
  rectfill(8,56,91,57,0)
  
- //plants
+ --plants
  addy +=28
  rect(8,2+addy,42,28+addy,5)
  rectfill(9,64,90,83,0)
  rectfill(8,84,91,85,0)
  
- //flowers
+ --flowers
  addy +=28
  rect(8,2+addy,47,28+addy,5)
  rectfill(9,92,90,113,0)
 	rectfill(9,112,90,113,0)
 	
-	//do lado dos labels			
+	--do lado dos labels			
 	rect(38,2,39,6,0)
 	line(37,8,37,9,0)
 	line(32,36,32,37,0)
 	line(42,64,42,65,0)
 	line(47,92,47,93,0)
 	
-	//botao de comprar
+	--botao de comprar
 	rect(92,114,119,126,5)
 	rectfill(92,114,118,125,0)
 	des_vertices(95,115,22,10,5)
 	
-	//carrinho de compra
+	--carrinho de compra
 	local y=0
 	for i=1,4 do
 		rect(95,7+y,116,28+y,5)
@@ -1393,7 +1412,7 @@ function	des_lojinha()
 		y+=28
 	end
 	
-	//precos
+	--precos
  rect(14,117,91,126,5)
  rectfill(15,118,90,125,0)
  rect(14,117,66,126,5)
@@ -1405,7 +1424,7 @@ function	des_lojinha()
  
 end
 
-//cria vitrines
+--cria vitrines
 function criar_esps(quantos)
 	linha ={["val"]=false,["qual"]=nil}
 
@@ -1420,7 +1439,7 @@ function criar_esps(quantos)
 
 end
 
-//enfileira as vitrines
+--enfileira as vitrines
 function enfileirar_esp(qual,ondex,ondey)
 
 	for i in all(qual)do
@@ -1433,7 +1452,7 @@ function enfileirar_esp(qual,ondex,ondey)
 
 end
 
-//desenha todas as vitrines
+--desenha todas as vitrines
 function des_esps(qual_linha)
 
 	for i in all(qual_linha)do
@@ -1442,7 +1461,7 @@ function des_esps(qual_linha)
 
 end
 
-//desenha uma vitrine
+--desenha uma vitrine
 function des_esp(i)
 
 	rect(i.x,i.y,i.x+i.w-1,i.y+i.h-1,i.cor1)	
@@ -1452,14 +1471,14 @@ function des_esp(i)
 
 end
 
-//seleciona produto
-//e envia para o carrinho rocha
+--seleciona produto
+--e envia para o carrinho rocha
 function sel_compra(qual,op)
 	if(not qual) return
 	if(qual:col_mouse("retg") and not(mouse.eq))then
  
 		if(mouse.esq_press)then
-				//adiciona ao carrinho
+				--adiciona ao carrinho
 				if(op==1)then
 					if(count(ls_car.coisas)<4)then
 				  new_car      = criar_obj("espaco",2,ls_car.coisas)
@@ -1467,7 +1486,7 @@ function sel_compra(qual,op)
 						ls_car.total += qual.item.val
 					 return true
 					end
-				//remove do carrinho
+				--remove do carrinho
 				elseif(op==2)then
 					if(count(ls_car.coisas)<=4)then
 	 				ls_car.total -= qual.item.val
@@ -1480,7 +1499,7 @@ function sel_compra(qual,op)
 	return false
 end
 
-//desenha o carrinho de compras
+--desenha o carrinho de compras
 function des_car()
 
 	if(count(ls_car.coisas)>0)then
@@ -1520,7 +1539,7 @@ function des_bt_comprar()
 end
 
 function tool_tip()
-	//mostrar preco ao passar mouse
+	--mostrar preco ao passar mouse
 	if(ls_esp.val)then
 		if(ls_esp.qual != nil)then
 			auxtip = ls_esp.qual.item.tip
@@ -1538,7 +1557,7 @@ function tool_tip()
 			print("total",17,120,10)
 	  print(ls_car.total,69,120,10)
 	
-	//mostrar preco ao passar mouse no carrinho
+	--mostrar preco ao passar mouse no carrinho
 	elseif(ls_car.val)then
 	
 		if(ls_car.qual != nil)then			
@@ -1546,7 +1565,7 @@ function tool_tip()
 	  print(ls_car.qual.item.val,69,120,6)
  	end
 
-	//mostrar saldo 	
+	--mostrar saldo 	
 	else
 		print("money",17,120,13)
 		print(saldo,69,120,13)
@@ -1667,14 +1686,20 @@ function cool_down(tempo)
 
 end
 
-//mostrar-ocultar atalhos
+--mostrar-ocultar atalhos
 function toggle_atl()
 
 	if(mouse.dir_press)then
 			if(ls_atl.show)then 
 				ls_atl.show = false		
 			else
- 			mouse.s = 0
+ 			mouse.s     = 0
+ 			mouse.xoff  = 0
+  		mouse.yoff  = 0
+		  mouse.xoff  = 0
+	 		mouse.yoff  = 0
+	 	 mouse.h     = 8
+	 	 mouse.w     = 8
 				ls_atl.show = true
 				atribui.val = false
 				pat_sem.val = false
@@ -1696,9 +1721,24 @@ function toggle_atribuir(qual)
 			
 			if(qual.item != nil and status == 1)then
    		local tip = qual.item.tip
-   		if(range(tip,5,8))              mouse.s = 119 //vaso
-   		if(tip == 3)                    mouse.s = 17  //inseticida   
-   		if(range(tip,9,16) or tip == 4) mouse.s = 1   //semente ou fertilizante
+   		--vaso
+   		if(range(tip,5,8))then
+    		mouse.xoff = -4
+    		mouse.yoff = -2
+   		 mouse.s    = 119 
+  		 --inseticida   
+   		elseif(tip == 3)then
+   		 mouse.s = 17  
+   		--semente ou fertilizante
+   		elseif(range(tip,9,16) or tip == 4)then
+   		 mouse.s = 1   
+   		elseif(tip== 17)then
+   			mouse.xoff = -4
+    		mouse.yoff = -2
+   		 mouse.s    = 212
+   		 mouse.w    = 16
+   		 mouse.h    = 16
+   		end
 
 			end
 	end
@@ -1710,18 +1750,18 @@ function atribuicao()
  vaso_com_planta = ls_jrd.qual and ls_jrd.qual.tip >= 5 and ls_jrd.qual.tip <= 8 and ls_jrd.qual.planta
 
 	if(mouse.esq_press and not vaso_com_planta)then
-		//deleta o item selecionado
-		//e salva
+		--deleta o item selecionado
+		--e salva
 		if(status == 3) then
 			aux_item = del(ls_inv.coisas,ls_inv.qual)		
 		elseif(status == 1) then
 			aux_item = del(ls_jrd.coisas,ls_jrd.qual)	
 		end
 					
-		//se o atalho estiver vazio
-		//simplesmente poe nele
-		//caso nao, os item que
-		//tava no atalho volta pro inv
+		--se o atalho estiver vazio
+		--simplesmente poe nele
+		--caso nao, os item que
+		--tava no atalho volta pro inv
 		if(atribui.atl.item != nil)then
  		atribui.atl.item.x = aux_item.x
  		atribui.atl.item.y = aux_item.y-8
@@ -1759,14 +1799,24 @@ function remov_atl()
 		 	funcionalidades(atribui.atl.item)
 			end
 			
-			atribui.atl.item = nil
+			--se for um regador nao remove do atalho
+			if(atribui.atl.item.tip != 17)then
+				mouse.s          = 0
+				mouse.xoff       = 0
+	 		mouse.yoff       = 0
+	 	 mouse.h,mouse.w  = 8,8
+	  	atribui.atl.item = nil
+			end
+			
 			atribui.val      = false
-			ls_atl.qual     = nil
-			ls_inv.qual     = nil
-			ls_inv.val      = false
-			ls_jrd.qual     = nil
-			ls_jrd.val      = false			
-			mouse.s          = 0
+			ls_atl.qual      = nil
+			ls_inv.qual      = nil
+			ls_inv.val       = false
+			ls_jrd.qual      = nil
+			ls_jrd.val       = false			
+			
+			
+
 		end
 	end
 	
@@ -1774,29 +1824,29 @@ end
 -->8
 --deposito======================
 function des_depot()
- //base
+ --base
 	rect(107,3,119,115,1)
 	rect(8,3,107,115,4)
-	//pesinhos
+	--pesinhos
 	rect(16,118,28,122,1)
 	rect(8,118,16,122,4)
 	rect(107,118,119,122,1)
 	rect(99,118,107,122,4)
 	line(8,118,119,118,0)
-	//pregos frente
+	--pregos frente
 	local aux_1,aux_2 = 6,0
  for i=1,3 do
 	des_vertices(11,aux_1,94,26,1)
 		aux_1 += 53
 	end
-	//pregos laterais
+	--pregos laterais
 	aux_1 = 11
 	for i=1,4 do
 		des_vertices(109,aux_1,9,20,1)
 		aux_1 += 26
 	end
 		
- //prateleiras
+ --prateleiras
 	aux_1 = 11
 	aux_2  = 31
 	for i=1,4 do
@@ -1882,13 +1932,11 @@ function funcionalidades(que_item)
  	add(ls_jrd.coisas,que_item)
 
 	elseif(range(que_item.tip,9,16))then
-  nova_sem      = gerar_part(pat_sem,3,2)
-	 nova_sem.item = que_item
-		pat_sem.val    = true
-		pat_sem.qual   = nova_sem
+  nova_sem    = gerar_part(pat_sem,1,1,2,que_item)
+		pat_sem.val = true
 
 	elseif(que_item.tip == 17)then
-		rega.val = true
+		pat_reg.val = true
 	end
 		
 end
@@ -1899,7 +1947,7 @@ function plantar(o_que)
 
 	if(qual_vaso)then
 		add(ls_vas_atv,qual_vaso)
-		qual_vaso.planta  = o_que.item.fases
+		qual_vaso.planta  = o_que.ls_aux.fases
  	qual_vaso.estagio = 1
   o_que:del()
  	pat_sem.val = false
@@ -1909,6 +1957,7 @@ end
 
 function regar(o_que)
 
+	
 
 	 
 end
