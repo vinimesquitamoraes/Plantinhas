@@ -145,10 +145,14 @@ function _update()
 	mouse:att()
  
  cool_down(10)
- if(not ls_atl.show) att_particulas(pat_sem)
+ if(not ls_atl.show)then
+ 	att_particulas(pat_sem)
+  att_particulas(pat_reg)
+ end
+ cu1 = #pat_reg
  --jogo principal rocha --------------------------------------------------------------------------------------------+	
  if(status == 1)then
-  if(not pat_sem.val)toggle_atl()	
+  if(not pat_sem.val and not pat_reg.val)toggle_atl()	
   --ir depot .......................................................................................................
   if(ls_atl.show)then
    bt_dept:hover()
@@ -179,6 +183,7 @@ function _update()
   end
  	
   if(ls_jrd.qual != nil)then	
+
    if(not atribui.val and not pat_sem.val)then
     ls_jrd.qual:mov_cur_esq(ls_jrd,"retg")	
    elseif(atl_wait and not pat_sem.val)then
@@ -193,8 +198,19 @@ function _update()
   
   --regar
 		if(pat_reg.val)then
-			gerar_part(pat_reg,3,2)
+			if(mouse.esq)then
+				mouse.s = 214
+			else
+				mouse.s = 212
+			end
+			if(mouse.esq) gerar_part(pat_reg, 1, 2, 3, nil)
 		end
+		
+		--esperando awa
+		if(pat_reg.val and not atribui.val)then
+ 		foreach(pat_reg,function(obj) regar(obj) end)
+  end
+  
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif(status == 2)then
   --selecionar loja ................................................................................................+
@@ -276,7 +292,8 @@ function _draw()
   
   --particulas -----------------------------------------------------------------------------------------------------+
   des_particulas(pat_sem)
-	
+ 	des_particulas(pat_reg)
+ 	
  --loljinha -------------------------------------------------------------------------------------------------------+
  elseif(status == 2)then
   des_lojinha()
@@ -298,7 +315,7 @@ function _draw()
  mouse:des()
 	if(true) pos_mouse(10)
 
-	if(true) then
+	if(false) then
 	 format(cu1,str1)
 	 format(cu2,str2)
 	 format(cu3,str3)
@@ -687,27 +704,29 @@ exemplo:
 
  	if(subtipo == 1)then
  		self.cor = 3
+		 self.ace = 0
  	elseif(subtipo == 2)then
  		self.cor = 12
+		 self.ace = 0.2
  	end
 
-		function self:att()
-			
-				self.x +=	self.vx
-				self.y += self.vy 
-
-				if(self.x>self.x_max)then
-					self.x = self.x_max
-					
-				elseif(self.x<self.x_min)then
-					self.x  = self.x_min
-					self.vx = -self.vx
-				end
+		function self:att()			
+			self.x  +=	self.vx
+			self.y  += flr(self.vy)
+  	self.vy += self.ace
+  	
+			if(self.x>self.x_max)then
+				self.x = self.x_max
 				
-				if(saiu(self))then
- 				pat_sem.val = false
-					self:del()
-				end
+			elseif(self.x<self.x_min)then
+				self.x  = self.x_min
+				self.vx = -self.vx
+			end
+			
+			if(saiu(self))then
+				pat_sem.val = false
+				self:del()
+			end
 		end
 		
 		function self:des()
@@ -819,7 +838,7 @@ exemplo:
 						return
 					--avancar fase
 					elseif(self.tip == 5)then
-						avancar_fase()
+						avancar_fases()
 					end
 				end
 			end
@@ -929,6 +948,7 @@ exemplo:
 	 elseif(range(subtipo,5,8))then
 	 	self.estagio = 1
 			self.colher  = false
+			self.saturac = 0
 			
   	function self:des_planta()
   		local aux = self.planta.wh[self.estagio][1]
@@ -937,7 +957,7 @@ exemplo:
   		else
   		 spr(self.planta[self.estagio],self.x+self.xesp,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
   		end
-  
+  		
   	end
   	
   	function self:des(xop,yop)
@@ -1327,15 +1347,15 @@ function att_particulas(que_ls)
  for p in all(que_ls) do
  	p:att()
  end
-
+ 
 end
 
 function gerar_part(que_pat_ls, quantas, tip, ampx, item)
  tip = tip or 1
  for i=1, quantas do
 		nova = criar_obj("particula",tip,que_pat_ls,item)
-		nova.x     = stat(32)
-		nova.y     = stat(33)
+		nova.x     = stat(32)-2
+		nova.y     = stat(33)+11
 		nova.x_max = nova.x+ampx
 		nova.x_min = nova.x-ampx
 	end
@@ -1957,20 +1977,34 @@ end
 
 function regar(o_que)
 
-	
+	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 
-	 
+	if(qual_vaso)then
+ 	qual_vaso.saturac += 0.5
+  o_que:del()
+  if(qual_vaso.saturac > 1)then
+  	avancar_fase(qual_vaso)
+   qual_vaso.saturac = 0
+  end
+ end
+	
+  
 end
 
-function avancar_fase()
+function avancar_fases()
 	if(status==1 and not ls_atl.show)then
 		for i in all(ls_vas_atv)do
-			local inc = flr(rnd(100))
-			i.estagio+= inc%2
-		 if(i.estagio>#i.planta)i.estagio = #i.planta
-			if(i.estagio==#i.planta)i.colher = true						
+			avancar_fase(i)		
 		end
 	end
+end
+
+function avancar_fase(o_que)
+ if(#o_que.planta == 0) return
+	local inc = 1 --flr(rnd(100))
+	o_que.estagio+= inc%2
+ if(o_que.estagio >#o_que.planta) o_que.estagio = #o_que.planta
+	if(o_que.estagio==#o_que.planta) o_que.colher  = true	
 end
 
 
@@ -1992,7 +2026,7 @@ d7dd6d00576dd50008882280088288800429999999999240000733b33b33d00000024413b1442000
 00000204000533350880088888800880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000422000555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000444466444400000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000000000770000000b00000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000000000770000000000000
 0000000000000000000000000000000000000dddddd00000000dddddddddd0000004444664444000009999977999990000000000000000000777777777777700
 000000000000000000000000000000000000d122221d000000d1111111111d000044444664444400001111177111110000000700000000000071111111111700
 00000000000000000002444444442000000061222216000000d1122222211d000044444664444400001111111111110000007777777000000071771771771700
