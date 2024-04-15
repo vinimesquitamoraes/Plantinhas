@@ -35,28 +35,23 @@ function _init()
  2 para loja
  3 para o deposito
  ]]
- status = 1
+ status = 3
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo  = 1
  saldo     = 8000
- grav      = 1.75
- atl_wait  = false
- timer_atl = 0
+ grav      = 2
 		
-			
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- ls_tst     = {["tipo"]="teste"          ,["val"]=false,["qual"]=nil}
- ls_bts     = {["tipo"]="botao"          ,["val"]=false,["qual"]=nil}
- ls_esp     = {["tipo"]="espaco"         ,["val"]=false,["qual"]=nil}
- ls_plv     = {["tipo"]="palavra"        ,["val"]=false,["qual"]=nil}
- ls_atl     = {["tipo"]="atalho"         ,["val"]=false,["qual"]=nil,["atls"  ]={},["show"  ]=false} 
- ls_car     = {["tipo"]="carrinho"       ,["val"]=false,["qual"]=nil,["coisas"]={},["total" ]=0    }
- ls_inv     = {["tipo"]="inventario"     ,["val"]=true ,["qual"]=nil,["coisas"]={}}
- ls_jrd     = {["tipo"]="jardim"         ,["val"]=true ,["qual"]=nil,["coisas"]={}}
- ls_prt     = {["tipo"]="prateleiras"    ,["val"]=false,["qual"]=nil}
- ls_vas_atv = {["tipo"]="vaso com planta",["val"]=false,["qual"]=nil}
- ls_vas_reg = {["tipo"]="vaso regado"    ,["val"]=false,["qual"]=nil}
+ ls_tst     = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
+ ls_bts     = {["tipo"]="botao"       ,["val"]=false,["qual"]=nil}
+ ls_esp     = {["tipo"]="espaco"      ,["val"]=false,["qual"]=nil                              ,["timer"]=0,["wait"]=false} 
+ ls_plv     = {["tipo"]="palavra"     ,["val"]=false,["qual"]=nil}
+ ls_atl     = {["tipo"]="atalho"      ,["val"]=false,["qual"]=nil,["atls"  ]={},["show" ]=false,["timer"]=0,["wait"]=false} 
+ ls_car     = {["tipo"]="carrinho"    ,["val"]=false,["qual"]=nil,["coisas"]={},["total"]=0    ,["timer"]=0,["wait"]=false} 
+ ls_inv     = {["tipo"]="inventario"  ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
+ ls_jrd     = {["tipo"]="jardim"      ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
+ ls_prt     = {["tipo"]="prateleiras" ,["val"]=false,["qual"]=nil}
 
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
  pat_sem = {["tipo"]="particulas sementes",["val"]=false,["qual"]={} }	
@@ -139,7 +134,6 @@ end
 function _update()
 	mouse:att()
  
- cool_down(10) 
  --atualizar particulas
 	att_particulas(pat_sem)
  att_particulas(pat_reg)
@@ -150,7 +144,7 @@ function _update()
  --jogo principal rocha --------------------------------------------------------------------------------------------+	
  if(status == 1)then
  
-  toggle_atl(mouse.dir_press)	
+  atl_on_off(mouse.dir_press)	
   --ir depot .......................................................................................................
   if(ls_atl.show)then
    bt_dept:hover()
@@ -169,12 +163,17 @@ function _update()
   end
     
  	--colisao jardim -------------------------------------------------------------------------------------------------------+
-  if(not ls_atl.show) then
+	 --delay pra comecar a mover
+  cool_down(10,ls_jrd)
+  if(not ls_atl.show and ls_jrd.wait) then
    check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
   end
-  
+
   --performar atribuicao
   if(ls_atl.show)toggle_atribuir()
+ 
+  --se o timer contou ja
+  if(ls_atl.val and atl_wait) atribuir()
   
   --regar -------------------------------------------------------------------------------------------------------+
 		if(pat_reg.val and not ls_atl.show)then
@@ -215,7 +214,7 @@ function _update()
 
  --deposito rocha --------------------------------------------------------------------------------------------------+
  elseif(status == 3)then
-  toggle_atl(mouse.dir_press)	
+  atl_on_off(mouse.dir_press)	
   grav_depot()
   
   --checar colisao =================================================================================================+
@@ -225,18 +224,23 @@ function _update()
   end
   
 		--inventario -----------------------------------------------------------------------------------------------------+
-		if(not ls_atl.show) then
+	 --delay pra comecar a mover
+  cool_down(20,ls_inv)
+		if(not ls_atl.show and ls_inv.wait) then
    check_sel_and_mov(ls_inv.coisas,ls_inv,"retg",ls_inv.val)	 
   end
-  
+
   --performar atribuicao
-  if(ls_atl.show)toggle_atribuir()
-       
+  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
+  cool_down(10,ls_atl)
+  --se o timer contou ja
+  if(ls_atl.wait) atribuir()
+     
   if(ls_atl.show)then
    bt_dept:hover()
    bt_dept:ativa()
   end
-	
+
  end
  
 end
@@ -750,7 +754,7 @@ exemplo:
 			--teve colisao
 			if(self:col_mouse("retg") and not(mouse.eq_press))then
 				--mouse esquerdo pressionado			
-				if(mouse.esq_press)then	
+				if(mouse.esq_press)then						
 					--funcoes ===================
 					--ir lojinha
 					if(self.tip == 1)then
@@ -768,20 +772,22 @@ exemplo:
 					--ir depot
 					elseif(self.tip == 4 and not ls_atl.val)then
 						if(status==1)then
-							status     = 3
-							bt_dept.s  = 12
-							bt_dept.sr = 12
-							bt_dept.sp = 44
-							self.ct    = 0
-		
+							status      = 3
+							bt_dept.s   = 12
+							bt_dept.sr  = 12
+							bt_dept.sp  = 44
+							self.ct     = 0
+							ls_inv.wait = false
+							
 						elseif(status==3)then
-							bt_dept.s  = 40
-							bt_dept.sr = 40
-							bt_dept.sp = 42
-							status     = 1
-							ls_atl.val= false
-							self.ct    = 1
-		
+							bt_dept.s   = 40
+							bt_dept.sr  = 40
+							bt_dept.sp  = 42
+							status      = 1
+							ls_atl.val  = false
+							self.ct     = 1
+						 ls_jrd.wait = false
+
 						end					
 						ls_atl.show = false
 						return
@@ -1180,35 +1186,6 @@ function col_circ_pt(cic,pt)
 	
 end
 
---mover objeto com o mouse
-function mover_obj_mos(qual,controle,tipo)
-	local col = false
-	if(tipo == "retg")then
-		col = check_col_point_ret(qual.x,qual.y,qual.h,qual.w,stat(32),stat(33))
-	elseif(tipo == "circ")then
-		col=col_circ_pt(qual,mouse)
-	end
-	
-	if(col)then
-		if(mouse_esq())then
-			qual.sel = true
-			controle.val = true
-		else
-			qual.sel = false
-			controle.val = false
-		end									
-	end
-	
-	if(qual != nil)then
-		if(qual.sel) then
-				qual.x = stat(32)-flr((qual.w/2))
-				qual.y = stat(33)-flr((qual.h/2))
-				n_sai_tela(qual)
-		end						
-	end
-	
-end
-
 --retorna o obejto selecionado
 --em uma lista
 function get_obj_by_col_mos(lista,tipo)
@@ -1309,7 +1286,20 @@ function range(val,⬅️,➡️)
 	return false
 end
 
+function cool_down(tempo,context)
 
+	if context.val and not context.wait then
+
+		if(context.timer>=tempo)then
+		 context.wait  = true
+  	context.timer = 0
+ 	else		
+ 		context.timer += 1
+ 	end
+		
+	end
+	
+end
 -->8
 --loljinha =====================
 function	des_lojinha()
@@ -1631,32 +1621,21 @@ function des_atl()
 
 end
 
-function cool_down(tempo)
-
-	if ls_atl.val then
-		timer_atl +=1
-		if(timer_atl>tempo)then
-   atl_wait = true  
-		 return true
-		end
-	else
-  atl_wait = false
-	 return false
-	end
-	
-end
-
 --mostrar-ocultar atalhos
-function toggle_atl(context)
+function atl_on_off(context)
 
 	if(context)then
 		ls_atl.show = not ls_atl.show 
 		
 		if(ls_atl.show)then 
 			mouse:reset()
-			ls_atl.val = false
-			ls_jrd.val = true
-			ls_inv.val = true
+
+			ls_jrd.val   = true
+			ls_inv.val   = true
+
+			ls_atl.val   = false
+			ls_atl.wait  = false
+			ls_atl.timer = 0
 		end
 		
 	end	
@@ -1667,20 +1646,13 @@ function toggle_atribuir()
 	
 	if(mouse.esq_press)then	
   --oculta os atalhos
-	 toggle_atl(true)
+	 atl_on_off(true)
 	 --poe em contexto de atribuicao
 		ls_atl.val  = true
 		--desativa o movimento do jardim e inventario
 		ls_jrd.val,ls_inv.val = false,false
 
-		--o atalho selecionado
-		-- ja tem um item?
-		-- se ele ja tiver efetuamos
-		-- uma troca com o jardim/inv
-		if(ls_atl.qual and ls_atl.qual.item)cu1 = ls_atl.qual.item.nome
-	//	if(ls_atl.qual)cu1 = ls_atl.id
- aqui negah, taa fazendo a funcao atribuir
-		--[[
+	--[[
 		if(qual.item != nil and status == 1)then
  		local tip = qual.item.tip
  		--vaso
@@ -1704,7 +1676,11 @@ function toggle_atribuir()
 end
 
 function atribuir()
-
+	--o atalho selecionado
+	-- ja tem um item?
+	-- se ele ja tiver efetuamos
+	-- uma troca com o jardim/inv
+	if(ls_atl.qual) atl_para_container(mouse.esq,ls_inv)
 
 end
 
@@ -1713,12 +1689,20 @@ end
 	atua com algum do inventario que
 	for clicado	
 ]]
-function atl_para_container()
-
+function atl_para_container(context,qual_container)
  //vaso_com_planta = ls_jrd.qual and range(ls_jrd.qual.tip, 5, 8) and ls_jrd.qual.planta
-	local aux = ls_atl.qual.item
-	aux:mov(stat(32)-8,y=stat(33)-8)	
-	add(ls_inv.coisas,aux)
+cu1 = "aqui"
+	if(context)then
+		local aux = ls_atl.qual.item
+		aux:mov((stat(32)-8)~1,(stat(33)-8)~1)	
+		add(qual_container.coisas,aux)
+
+ 	ls_atl.qual.item   = nil
+		ls_atl.qual        = nil
+		ls_atl.val         = false
+		qual_container.val = true
+ 
+	end
 end
 -->8
 --deposito======================
@@ -1748,7 +1732,7 @@ function des_depot()
 		
  --prateleiras
 	aux_1 = 11
-	aux_2  = 31
+	aux_2 = 32
 	for i=1,4 do
 		rect(16,aux_1,28,aux_2,1)
 		rect(16,aux_1,95,aux_2,4)
@@ -1756,7 +1740,7 @@ function des_depot()
 		aux_2+= 24
 	end
 	
-	des_prateleiras(16,31,24)
+	des_prateleiras(16,32,24)
 	des_inv()
 end
 
@@ -1774,8 +1758,7 @@ end
 
 function criar_prateleiras(quantas)
 	for i=1, quantas do
-		aux_prt = criar_obj("prateleira",0)
-		add(ls_prt,aux_prt)
+		criar_obj("prateleira",0,ls_prt)
 	end	
 end
 
