@@ -35,7 +35,7 @@ function _init()
  2 para loja
  3 para o deposito
  ]]
- status = 3
+ status = 2
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo  = 1
@@ -87,11 +87,7 @@ function _init()
  bt_dept = criar_obj("botao",4,ls_bts)
 
  --espacos da lojinha .............................................................................................................................................................+
- for i=1,4 do criar_esps(4) end
- enfileirar_esp(ls_esp[1],11,10)
- enfileirar_esp(ls_esp[2],11,38)
- enfileirar_esp(ls_esp[3],11,66)
- enfileirar_esp(ls_esp[4],11,94)
+ init_loja()
  
  --atalhos ........................................................................................................................................................................+
  init_atl(num_atl)
@@ -193,15 +189,13 @@ function _update()
  elseif(status == 2)then
 
   --selecionar loja ................................................................................................+
-  for i in all(ls_esp) do
-  	foreach(i,function(esp) esp:hover("retg" ) end)
-		 check_sel_and_mov(i,ls_esp,"retg")										
-  end
-    
+ 	foreach(ls_esp.esps,function(esp) esp:hover("retg" ) end)
+	 check_sel_and_mov(ls_esp.esps,ls_esp,"retg")										
+      
   --selecionar compra ..............................................................................................+
   if(ls_esp.qual)then
    mouse:tip_set(231,"➡️","")
-  	sel_compra(ls_esp.qual,1)			
+ 		ls_esp.qual:add_car()	
   end  
   
   --colisao no carrinho ............................................................................................+
@@ -212,8 +206,8 @@ function _update()
    
   --remover carrinho ...............................................................................................+
   if(ls_car.qual)then
-  	sel_compra(ls_car.qual,2)
    mouse:tip_set(232,"➡️","")
+  	ls_car.qual:del_car()	
   end
   			
   bt_comp:hover()
@@ -222,6 +216,7 @@ function _update()
   bt_volt:ativa()
 	
   if(not ls_esp.qual and not ls_car.qual)mouse:reset()
+		att_car()
 
  --deposito rocha --------------------------------------------------------------------------------------------------+
  elseif(status == 3)then
@@ -276,14 +271,6 @@ function _draw()
  --loljinha --------------------------------------------------------------------------------------------------------+
  elseif(status == 2)then
   des_lojinha()
-  des_esps(ls_esp[1])
-  des_esps(ls_esp[2])
-  des_esps(ls_esp[3])
-  des_esps(ls_esp[4])
-  des_car()
-  tool_tip()
-  des_bt_comprar()
-  bt_volt:des()
  
  --deposito -------------------------------------------------------------------------------------------------------+
  elseif(status == 3)then
@@ -828,10 +815,44 @@ function def_tip(self,subtipo)
 	 	function self:disp_toggle(qual)
  			self.disp = qual or false
 			end
+			
+			function self:des()
+    rect(self.x,self.y,self.x+self.w-1,self.y+self.h-1,self.cor1)	
+	   rectfill(self.x+1,self.y+1,(self.x+self.w-1)-1,(self.y+self.h-1)-1,0)	
+    self.item:des(self.x+1,self.y+1)
+    if(not self.disp)then
+ 	   line(self.x+3 ,self.y+2,self.x+14,self.y+13,8)
+ 	   line(self.x+3 ,self.y+3,self.x+14,self.y+14,8)
+	   	line(self.x+3 ,self.y+4,self.x+14,self.y+15,8)
+    end
+    des_vertices(self.x+1,self.y+1,self.w-2,self.h-2,self.cor1)
+			end
+		 
+		 function self:add_car()
+				if(mouse.esq_press)then
+				--adiciona ao carrinho
+					if(#ls_car.coisas<4)then
+				 	if(self.disp)then
+					  new_car       = criar_obj("espaco",2,ls_car.coisas)
+							new_car.item  = criar_obj("item",self.item.tip)
+							ls_car.total += self.item.val
+						end
+			 	end
+			 end
+			end
+			
 		--carinho	
  	elseif(subtipo == 2)then
 			self.cor1,self.cor3 = 1,1
 	 	self.cor2 = 8
+	 	
+	 function self:del_car()
+	 	if(mouse.esq_press)then
+				ls_car.total -= self.item.val
+			 del(ls_car.coisas,self)
+			 ls_car.qual = nil
+			end
+	 end
 	 	
 		--atalho
  	elseif(subtipo == 3)then
@@ -1381,115 +1402,55 @@ function	des_lojinha()
 	pots:des()
  plants:des()
  flowers:des()
+
+	foreach(ls_esp.esps,function(obj) obj:des() end)
+	foreach(ls_car.coisas,function(obj) obj:des() end)
+
+ tool_tip()
+ des_bt_comprar()
+ bt_volt:des()
  
 end
 
 --cria vitrines
-function criar_esps(quantos)
-	linha ={}
+function init_loja()
 
-	for i=1,quantos do      
-  aux      = criar_obj("espaco",1)
+	for i=1,16 do      
+  aux      = criar_obj("espaco",1,ls_esp.esps)
 		aux.item = criar_obj("item"  ,aux_tipo)
-		add(linha,aux)
 		aux_tipo+=1		
+		aux.id = i
 	end	
-	add(ls_esp,linha)
-
-end
-
---enfileira as vitrines
-function enfileirar_esp(qual,ondex,ondey)
-
-	for i in all(qual)do
+ ondex,ondey =	11,10
+ for i in all(ls_esp.esps)do
 		i.x = ondex
 		i.item.x = i.x+1
 		i.y = ondey
 		i.item.y = i.y+1
 		ondex += 20
+		
+		if(i.id%4==0)then
+			ondey+=28
+			ondex =11
+		end
 	end	
-
-end
-
---desenha todas as vitrines
-function des_esps(qual_linha)
-
-	for i in all(qual_linha)do
-		des_esp(i)
-	end
-
-end
-
---desenha uma vitrine
-function des_esp(i)
-
-	rect(i.x,i.y,i.x+i.w-1,i.y+i.h-1,i.cor1)	
-	rectfill(i.x+1,i.y+1,(i.x+i.w-1)-1,(i.y+i.h-1)-1,0)	
- i.item:des(i.x+1,i.y+1)
- if(not i.disp)then
-  i.item:des(i.x+1,i.y+1)
- 	line(i.x+3 ,i.y+2,i.x+14,i.y+13,8)
- 	line(i.x+3 ,i.y+3,i.x+14,i.y+14,8)
-		line(i.x+3 ,i.y+4,i.x+14,i.y+15,8)
- end
- des_vertices(i.x+1,i.y+1,i.w-2,i.h-2,i.cor1)
-
 end
 
 --on/off disponibilidade
-function toggle_disp(qual_linha,qual_esp,pra_qual)
- ls_esp[qual_linha][qual_esp]:disp_toggle(pra_qual)
-end
-
---seleciona produto
---e envia para o carrinho rocha
-function sel_compra(qual,op)
-
-	if(mouse.esq_press and qual:col_mouse("retg"))then
-		--adiciona ao carrinho
-		if(op==1)then
-			if(count(ls_car.coisas)<4)then
-		 	if(qual.disp)then
-			  new_car      = criar_obj("espaco",2,ls_car.coisas)
-					new_car.item = criar_obj("item",qual.item.tip)
-					ls_car.total += qual.item.val
-				end
-			end
-		--remove do carrinho
-		elseif(op==2)then
-			if(count(ls_car.coisas)<=4)then
-				ls_car.total -= qual.item.val
-			 del(ls_car.coisas,qual)
-			 ls_car.qual = nil
-			 return true
-			end					
-		end
-	end		
-	
+function toggle_disp(qual,pra_qual)
+ ls_esp.esps[qual]:disp_toggle(pra_qual)
 end
 
 --desenha o carrinho de compras
-function des_car()
+function att_car()
 
 	if(count(ls_car.coisas)>0)then
-		 
-		for i=1,count(ls_car.coisas) do
-		 ls_car.coisas[i].x=97
-			if(i==1)then
-				ls_car.coisas[i].y=9
-			end
-			if(i==2)then
-				ls_car.coisas[i].y=37
-			end
-			if(i==3)then
-				ls_car.coisas[i].y=65
-			end
-			if(i==4)then
-				ls_car.coisas[i].y=93
-			end
-			des_esp(ls_car.coisas[i])
-		end
-		
+		local aux_y = 9
+		for i in all(ls_car.coisas) do
+		 i.x=97
+			i.y=aux_y
+			aux_y += 27
+		end	
 	end
 	
 end
@@ -1946,7 +1907,7 @@ function funcionalidades()
  	if(mouse.esq)then
 	 
 			if(#ls_atl.atls == 8)then
-			 toggle_disp(1,1)
+			 toggle_disp(1)
 			else
 				init_atl(2)
  		 def_pos_atls()
