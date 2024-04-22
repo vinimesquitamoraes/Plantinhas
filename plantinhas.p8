@@ -8,7 +8,7 @@ function _init()
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento  = 0
  
- cu1 = ""
+ cu1 = nil
  cu2 = nil
  cu3 = nil
  cu4 = nil
@@ -101,7 +101,12 @@ function _init()
 	--objetos funcionais padrao ------------------------------------------------------------------------------------------------------------------------------------------------------+
 	regador = criar_obj("item",17,ls_inv.coisas,nil, 50 ,16)
  --ls_atl.atls[1].item =criar_obj("item",17)
-
+ teste   = criar_obj("item",  5,ls_jrd.coisas,nil, 64 ,60)
+	girasol = criar_obj("item", 13)
+	teste.planta  = girasol.fases
+	teste.estagio = 3
+	-- 0, 64, 60,
+	
  --[[testes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+
  vaso_change = 5
  que_planta  = 9
@@ -121,8 +126,8 @@ function _init()
  criar_obj("item",3,ls_inv.coisas,nil, 30 ,40)
  criar_obj("item",4,ls_inv.coisas,nil, 60 ,50)
  criar_obj("item",5,ls_inv.coisas,nil, 80 ,50)
-
  ls_atl.atls[1].item = criar_obj("item", 5)
+
  ls_atl.atls[2].item = criar_obj("item", 6)
  ls_atl.atls[3].item = criar_obj("item", 7)
  ls_atl.atls[4].item = criar_obj("item",15)
@@ -253,7 +258,7 @@ function _update()
 
  end
  
-	cu1 = combinar_bits(ls_inv.coisas[1])
+
 
 end
 
@@ -288,7 +293,7 @@ function _draw()
 	if(true) then
 	 format(cu1,str1,3)
 	 format(cu2,str2,3)
-		--[[
+	--[[
 	 format(cu3,str3,12)
 	 format(cu4,str4,12)
 	 	 
@@ -302,7 +307,8 @@ function _draw()
 	 --]]
 	 espacamento =0
 	end
-	--rect(stat(32),stat(33),stat(32)+7,stat(33)+7,10)
+ combinar_bits(ls_jrd.qual)
+ debug_obj(ls_jrd.qual)
 end
 
 function format(que_cu,str,cor)
@@ -2045,12 +2051,48 @@ function save()
 	
 end
 
-function combinar_bits(do_que)
-	local ls_keys_vasos = {"onde","x","y",""}
+function combinar_bits(obj)
+	
+ if(not obj)then
+		cu1 = "objeto nulo"
+  return
+ else
+ 	cu1 = "selecionado"
+ end
  
- 
- combinado = do_que[aux]
- 
+	local ls_keys   = {"onde", "x", "y",{"planta","capacidade"},"tip","estagio"}
+	local ls_crop   = {  0x03,0x7f,0x7f,                   0x07, 0x03,     0x07}            
+	local ls_mov    = {    30,  23,  16,       13,           11,    8,        5}
+	local combinado = 0
+	
+end
+
+function debug_obj(obj)
+	
+ if(not obj)then
+		cu1 = "objeto nulo"
+  return
+ else
+ 	cu1 = "selecionado"
+ end
+ aqui negah
+	local ls_keys = {"onde", "x", "y","tip","estagio"}
+	
+	--salvar infomacoes bases
+	for v,k in pairs(ls_keys)do
+		--primeiro cropar os bits extras que possam existir
+		if(type(k) == "table")then
+	 	if(obj[k[1]])then
+	 		print(k[1]..":"..obj[k[1]].tip) 
+	 	else
+	 		print(k[1]..":"..tostr(obj[k[1]])) 
+	 	end
+			print(k[2]..":"..tostr(obj[k[2]]))
+		else
+			print(k..":"..tostr(obj[k]))
+		end
+	end
+
  return combinado
 end
 __gfx__
