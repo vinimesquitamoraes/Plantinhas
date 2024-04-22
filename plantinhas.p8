@@ -18,14 +18,14 @@ function _init()
  cu8 = nil
  cu9 = nil
 
- str1 = "debug mode cu"
+ str1 = ""
  str2 = "" 
  str3 = ""
- str4 = ""
+ str4 = "" 
  str5 = ""
- str6 = ""
+ str6 = "" 
  str7 = ""
- str8 = ""
+ str8 = "" 
  str9 = ""
 
  --status -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+	
@@ -45,15 +45,15 @@ function _init()
 	max_saturac = 20
 	
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- ls_tst     = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
- ls_bts     = {["tipo"]="botao"       ,["val"]=false,["qual"]=nil}
- ls_esp     = {["tipo"]="espaco"      ,["val"]=false,["qual"]=nil,["esps"  ]={}                              ,["timer"]=0,["wait"]=false} 
- ls_plv     = {["tipo"]="palavra"     ,["val"]=false,["qual"]=nil}
- ls_atl     = {["tipo"]="atalho"      ,["val"]=false,["qual"]=nil,["atls"  ]={},["show" ]=false,["timer"]=0,["wait"]=false} 
- ls_car     = {["tipo"]="carrinho"    ,["val"]=false,["qual"]=nil,["coisas"]={},["total"]=0    ,["timer"]=0,["wait"]=false} 
- ls_inv     = {["tipo"]="inventario"  ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
- ls_jrd     = {["tipo"]="jardim"      ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
- ls_prt     = {["tipo"]="prateleiras" ,["val"]=false,["qual"]=nil}
+ ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
+ ls_bts = {["tipo"]="botao"       ,["val"]=false,["qual"]=nil}
+ ls_esp = {["tipo"]="espaco"      ,["val"]=false,["qual"]=nil,["esps"  ]={}                              ,["timer"]=0,["wait"]=false} 
+ ls_plv = {["tipo"]="palavra"     ,["val"]=false,["qual"]=nil}
+ ls_atl = {["tipo"]="atalho"      ,["val"]=false,["qual"]=nil,["atls"  ]={},["show" ]=false,["timer"]=0,["wait"]=false} 
+ ls_car = {["tipo"]="carrinho"    ,["val"]=false,["qual"]=nil,["coisas"]={},["total"]=0    ,["timer"]=0,["wait"]=false} 
+ ls_inv = {["tipo"]="inventario"  ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
+ ls_jrd = {["tipo"]="jardim"      ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
+ ls_prt = {["tipo"]="prateleiras" ,["val"]=false,["qual"]=nil}
 
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
  pat_sem = {["tipo"]="semente",["val"]=false,["qual"]={} }	
@@ -99,7 +99,7 @@ function _init()
  init_prat(4)
 	
 	--objetos funcionais padrao ------------------------------------------------------------------------------------------------------------------------------------------------------+
-	regador = criar_obj("item",17,ls_inv.coisas,nil, 50 ,18)
+	regador = criar_obj("item",17,ls_inv.coisas,nil, 50 ,16)
  --ls_atl.atls[1].item =criar_obj("item",17)
 
  --[[testes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+
@@ -121,7 +121,7 @@ function _init()
  criar_obj("item",3,ls_inv.coisas,nil, 30 ,40)
  criar_obj("item",4,ls_inv.coisas,nil, 60 ,50)
  criar_obj("item",5,ls_inv.coisas,nil, 80 ,50)
- 
+
  ls_atl.atls[1].item = criar_obj("item", 5)
  ls_atl.atls[2].item = criar_obj("item", 6)
  ls_atl.atls[3].item = criar_obj("item", 7)
@@ -244,7 +244,6 @@ function _update()
   if(ls_atl.show and ls_atl.qual)toggle_atribuir()
   --se o timer contou ja
   if(ls_atl.wait)atribuir()
-  
   atl_on_off(mouse.dir_press)	
      
   if(ls_atl.show)then
@@ -253,6 +252,8 @@ function _update()
   end
 
  end
+ 
+	cu1 = combinar_bits(ls_inv.coisas[1])
 
 end
 
@@ -285,15 +286,20 @@ function _draw()
 	if(false) pos_mouse(10)
 
 	if(true) then
-	 format(cu1,str1)
-	 format(cu2,str2)
-	 format(cu3,str3)
-	 format(cu4,str4)
-	 format(cu5,str5)
-	 format(cu6,str6)
+	 format(cu1,str1,3)
+	 format(cu2,str2,3)
+		--[[
+	 format(cu3,str3,12)
+	 format(cu4,str4,12)
+	 	 
+	 format(cu5,str5,9)
+	 format(cu6,str6,9)
+	 
 	 format(cu7,str7)
 	 format(cu8,str8)
+	 --
 	 format(cu9,str9)
+	 --]]
 	 espacamento =0
 	end
 	--rect(stat(32),stat(33),stat(32)+7,stat(33)+7,10)
@@ -302,7 +308,7 @@ end
 function format(que_cu,str,cor)
  str = str or ""
  cor = cor or 5	
- print(str..tostr(que_cu),0,espacamento,8)
+ print(str..tostr(que_cu),0,espacamento,cor)
  espacamento+=6	
 end
 
@@ -331,8 +337,20 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   id       = 0,
   ls_gua   = ls_guardar,
   ls_aux   = ls_aux or nil,
-
-  --metodos--------------------------------------------------------------------------------------------------------+
+	 onde     = 0,
+  --metodos--------------------------------------------------------------------------------------------------------+ 
+  foi_onde = function(self,pra_onde)
+ 		if(    pra_onde == "jardim")then	 		
+				self.onde = 0
+			elseif(pra_onde == "inventario")then
+				self.onde = 1			
+			elseif(pra_onde == "atalho")then
+		 	self.onde = 2
+			else
+  	 self.onde = 3
+			end		
+		end,
+				
   --mover objeto ..................................................................................................+
   mov = function(self, newx, newy)
    self.x = newx& ~1
@@ -1055,7 +1073,8 @@ function def_tip(self,subtipo)
 			 self.val  = 400
 			 self.nome = "tomato"
 		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
-           wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}} }
+           wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}},
+          tip = self.tip-8}
 		 		 
 			--planta2
 		 elseif(subtipo == 10)then
@@ -1063,7 +1082,8 @@ function def_tip(self,subtipo)
 		  self.val  = 500
 			 self.nome = "bear_pawn"		
 		 	self.fases= {64   ,65   ,66   ,67   ,68   ,74   , 
-           wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2}} }		 					 
+           wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2}},
+          tip = self.tip-8}					 
 			  	
 			--planta3
 		 elseif(subtipo == 11)then
@@ -1071,7 +1091,8 @@ function def_tip(self,subtipo)
 		  self.val  = 600
 			 self.nome = "pumpkin"
 		 	self.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
-           wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}} }		 					 
+           wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
+          tip = self.tip-8}			 
 			  				 		 	
 		 --planta4
 		 elseif(subtipo == 12)then
@@ -1079,7 +1100,8 @@ function def_tip(self,subtipo)
 		  self.val  = 1000
 			 self.nome = "pegaxi"		
  	 	self.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
-           wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}}} 					 
+           wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
+          tip = self.tip-8}				 
   				 		 			  	
 		 --planta5
 		 elseif(subtipo == 13)then
@@ -1087,7 +1109,8 @@ function def_tip(self,subtipo)
 		  self.val  = 500
 			 self.nome = "sunflower"
 			 self.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
-           wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}}} 					 	 	
+           wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}},
+          tip = self.tip-8} 					 
 		
 		 --planta6
 		 elseif(subtipo == 14)then
@@ -1095,7 +1118,8 @@ function def_tip(self,subtipo)
 		  self.val  = 350
 			 self.nome = "sword"		 	
 			 self.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
-           wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}}} 					 	 	
+           wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
+          tip = self.tip-8} 					 
 				self.fases.ct = 2
 
 		 --planta7
@@ -1104,15 +1128,18 @@ function def_tip(self,subtipo)
 		  self.val  = 600
 			 self.nome = "rose"
 			 self.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
-           wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}}} 			 
+           wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}},
+          tip = self.tip-8} 					 
 				self.fases.ct = 2
+				
 		 --planta8
 		 elseif(subtipo == 16)then
 		  self.tip  = 16
 		  self.val  = 1000
 			 self.nome = "dandelion"
 			 self.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
-           wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}}} 			 
+           wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
+          tip = self.tip-8}					 
 		
 			--regador
 		 elseif(subtipo == 17)then
@@ -1302,16 +1329,14 @@ end
 
 --atualizar prticulas
 function att_particulas(que_ls_part)
-
+	
  for p in all(que_ls_part) do
  	p:att() 
+ 	if(#que_ls_part>0 and que_ls_part.tipo == "semente")ls_jrd.val = false
  end 
- 
-	if(not que_ls_part.val)return
 
- if(#que_ls_part>0 and que_ls_part.tipo == "semente")then ls_jrd.val = false
-	else ls_jrd.val = true end
-	
+ if(#que_ls_part==0 and que_ls_part.tipo == "semente")ls_jrd.val = true
+		 
 end
 
 function gerar_part(que_pat_ls, quantas, tip, ampx, item, x, y)
@@ -1557,9 +1582,13 @@ end
 function add_um_item(qual,onde)
 	
 	if(status == 2) def_pos(qual)
-	if(onde   == 1) add(ls_jrd.coisas,qual)
- if(onde   == 2)	add(ls_inv.coisas,qual)
- 
+	if(onde   == 1)then
+	 add(ls_jrd.coisas,qual)
+	 qual:foi_onde("jardim")
+	else
+	 qual:foi_onde("inventario")
+  add(ls_inv.coisas,qual)
+ end
 end
 
 function add_varios_itens(qual_ls,onde)
@@ -1665,7 +1694,6 @@ function atl_on_off(context)
 		if(ls_atl.show)then 
 			mouse:reset()
 
-
 			ls_jrd.val   = true
 			ls_inv.val   = true
 			
@@ -1692,7 +1720,7 @@ function toggle_atribuir()
   --oculta os atalhos
 	 atl_on_off(true)
 	 --poe em contexto de atribuicao
-		ls_atl.val  = true
+		ls_atl.val = true
 		--desativa o movimento do jardim e inventario
 		ls_jrd.val,ls_inv.val = false,false				
 		
@@ -1735,8 +1763,9 @@ function atribuir()
 			if(ls_atl.qual.item and range(ls_atl.qual.item.tip,5,8))then
 	 		if(atl_para_container(mouse.esq,ls_jrd))atl_on_off(true)
 			else
+
 	 		--so e possivel guardar vasos sem planta
- 			if(ls_jrd.qual and ls_jrd.item  and range(ls_jrd.qual.item.tip,5,8) and not ls_jrd.qual.planta)then
+ 			if(ls_jrd.qual and range(ls_jrd.qual.tip,5,8) and not ls_jrd.qual.planta)then
 	 			if(container_para_atl(mouse.esq,ls_jrd)) atl_on_off(true)
 	 		elseif(ls_atl.qual.item)then
 	 		 funcionalidades()
@@ -1757,6 +1786,7 @@ end
 ]]
 function atl_para_container(context,qual_container,permutavel)
 	permutavel = permutavel or false	
+
 	if(qual_container.qual and permutavel)then
 	 mouse:tip_set(ls_atl.qual.item and 233 or 217,"⬅️","⬆️")		
  else
@@ -1764,14 +1794,19 @@ function atl_para_container(context,qual_container,permutavel)
  end
 	 
 	if(context)then
+		--seta a proprieda onde
+		--para o container
+		--jardim ou deposito
+	 ls_atl.qual.item:foi_onde(qual_container.tipo)
 
 		--se algo do container
 		--nao esta sendo selecionado
 		--poe na posicao do cursor ajustado
 		if((qual_container.qual and not permutavel) or not qual_container.qual)then
 			ls_atl.qual.item:mov(stat(32)-11,stat(33)-15)	
-	 	--aficiona ao container
+	 	--adiciona ao container
 			add(qual_container.coisas,ls_atl.qual.item)
+
  		--esvazia o atalho
  	 ls_atl.qual.item = nil
    
@@ -1782,6 +1817,7 @@ function atl_para_container(context,qual_container,permutavel)
 		 qual_container.val  = true
    qual_container.wait = false
    ls_atl.qual = nil
+   ls_atl.val = false
    mouse:reset()
  		return false
 		else
@@ -1791,6 +1827,8 @@ function atl_para_container(context,qual_container,permutavel)
 			add(qual_container.coisas,ls_atl.qual.item)
  		--remove o item selecionado do container e passa pro atalho
  		ls_atl.qual.item = del(qual_container.coisas,qual_container.qual)
+		 ls_atl.qual.item:foi_onde("atalho")
+			
 			qual_container.val  = true
    qual_container.wait = false
 		 return true
@@ -1804,13 +1842,14 @@ function container_para_atl(context,qual_container)
 
 	if(qual_container.qual)then
 		if(context)then
-			local para_atl = qual_container.qual
-			ls_atl.qual.item =	del(qual_container.coisas,para_atl)
 
- 		ls_atl.qual         = nil
-			ls_atl.val          = false
-			qual_container.val  = true
-	  qual_container.wait = false
+			local para_atl        = qual_container.qual
+			ls_atl.qual.item      =	del(qual_container.coisas,para_atl)
+   ls_atl.qual.item:foi_onde(ls_atl.tipo)
+ 		ls_atl.qual           = nil
+			ls_atl.val            = false
+			qual_container.val    = true
+	  qual_container.wait   = false
 
 	  return true
 		end
@@ -1943,8 +1982,7 @@ function funcionalidades()
 	  nova_sem    = gerar_part(pat_sem,1,1,3,ls_atl.qual.item, stat(32)+1, stat(33)+13)
 			pat_sem.val = true
 			ls_atl.qual.item = nil
-			ls_atl.qual = nil
-  
+			ls_atl.qual  = nil
 			mouse:reset()
 
 		end
@@ -1958,13 +1996,15 @@ end
 function plantar(o_que)
 	
 	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
-
+	if(qual_vaso and qual_vaso.planta)return
+	
 	if(qual_vaso)then
 		qual_vaso.planta  = o_que.ls_aux.fases
  	qual_vaso.estagio = 1
   o_que:del()
- 	pat_sem.val = false
+ 	pat_sem.val  = false
  	mouse:reset()
+  ls_atl.val = false
  end
  
 end
@@ -1997,6 +2037,22 @@ function avancar_fase(o_que)
  end
 end
 
+-->8
+--save/load =======================
+function save()
+
+	objeto = ls_jrd.coisas[1]
+	
+end
+
+function combinar_bits(do_que)
+	local ls_keys_vasos = {"onde","x","y",""}
+ 
+ 
+ combinado = do_que[aux]
+ 
+ return combinado
+end
 __gfx__
 000000000000000000000000000bbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000422200b1b00000000000000000000005577777000000000004224000000000000000000000000000000000000000000000000000000
