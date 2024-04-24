@@ -3,6 +3,8 @@ version 41
 __lua__
 --ed rocha te amo =================================================================================================================================================================+
 function _init()
+ --carrega save 
+	cartdata("edevini_plantinhas_1")
  --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -101,11 +103,6 @@ function _init()
 	--objetos funcionais padrao ------------------------------------------------------------------------------------------------------------------------------------------------------+
 	regador = criar_obj("item",17,ls_inv.coisas,nil, 50 ,16)
  --ls_atl.atls[1].item =criar_obj("item",17)
- teste   = criar_obj("item",  5,ls_jrd.coisas,nil, 64 ,60)
-	girasol = criar_obj("item", 13)
-	teste.planta  = girasol.fases
-	teste.estagio = 3
-	-- 0, 64, 60,
 	
  --[[testes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+
  vaso_change = 5
@@ -141,7 +138,9 @@ function _update()
 	mouse:att()
 
 	foreach(ls_bts,function(obj) cool_down(5,obj) end)
-
+ if(btnp(❎))load_obj()
+ if(btnp(🅾️))save_obj(ls_inv.qual)
+  
  --atualizar particulas
 	att_particulas(pat_sem)
  att_particulas(pat_reg)
@@ -232,7 +231,7 @@ function _update()
   cool_down(5,ls_atl)
 
   grav_depot()
-  
+ 
   --checar colisao =================================================================================================+
 		--atalhos --------------------------------------------------------------------------------------------------------+
   if(ls_atl.show) then
@@ -257,14 +256,29 @@ function _update()
   end
 
  end
- 
-
 
 end
 
 --draw =============================================================================================================+
 function _draw()
  cls()
+ if(true) then
+	 format(cu1,str1,3)
+	 format(cu2,str2,3)
+		
+	 format(cu3,str3,12)
+	 format(cu4,str4,12)
+	 	 --[[
+	 format(cu5,str5,9)
+	 format(cu6,str6,9)
+	 
+	 format(cu7,str7)
+	 format(cu8,str8)
+	 --
+	 format(cu9,str9)
+	 --]]
+	 espacamento =0
+	end
  --jogo principal --------------------------------------------------------------------------------------------------+
  if(status == 1)then
   bt_loja:des()
@@ -276,6 +290,7 @@ function _draw()
  	
  	--atalhos --------------------------------------------------------------------------------------------------------+	
   des_atl()
+  debug_obj(ls_jrd.qual)
 
  --loljinha --------------------------------------------------------------------------------------------------------+
  elseif(status == 2)then
@@ -285,30 +300,14 @@ function _draw()
  elseif(status == 3)then
   des_depot()
   des_atl()
+  debug_obj(ls_inv.qual)
+
  end
 
  mouse:des()
 	if(false) pos_mouse(10)
 
-	if(true) then
-	 format(cu1,str1,3)
-	 format(cu2,str2,3)
-	--[[
-	 format(cu3,str3,12)
-	 format(cu4,str4,12)
-	 	 
-	 format(cu5,str5,9)
-	 format(cu6,str6,9)
-	 
-	 format(cu7,str7)
-	 format(cu8,str8)
-	 --
-	 format(cu9,str9)
-	 --]]
-	 espacamento =0
-	end
- combinar_bits(ls_jrd.qual)
- debug_obj(ls_jrd.qual)
+
 end
 
 function format(que_cu,str,cor)
@@ -323,11 +322,14 @@ end
 function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
  novo_obj = {
   --atributos ------------------------------------------------------------------------------------------------------+
-  cla      = que_classe,
-  s        = 0,
-  cur_s    = 0,
+	 onde     = 0,
   x				    = xop or 0,
   y 			    = yop or 0,
+  cla      = que_classe,
+  tip      = 0,
+  algo     = 0,
+  s        = 0,
+  cur_s    = 0,
   w        = 8,
   h        = 8,
   r        = 1,
@@ -343,7 +345,6 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   id       = 0,
   ls_gua   = ls_guardar,
   ls_aux   = ls_aux or nil,
-	 onde     = 0,
   --metodos--------------------------------------------------------------------------------------------------------+ 
   foi_onde = function(self,pra_onde)
  		if(    pra_onde == "jardim")then	 		
@@ -924,48 +925,51 @@ function def_tip(self,subtipo)
 
 		--regador
 	 elseif(subtipo == 2)then
- 		self.tip  = 2
-		 self.val  = 300
-		 self.nome = "basket"
-		 self.s    = 4
-		 self.xoff = 0
-			self.yoff = 6
- 	 self.woff = 1
-	 	self.hoff = 8
-	  self.ct   = 1
-	 	self.cur_s = 215
-
+ 	 self.tip   = 2
+	  self.val   = 500
+		 self.nome  = "fertilizer"
+		 self.s     = 8
+		 self.xoff  = 3
+			self.yoff  = 1
+ 	 self.woff  = 7
+	 	self.hoff  = 4
+	 	self.cur_s = 216
+	  self.ct    = 1	
+			self.capacity  = 0
+			
 		--borrifador
 	 elseif(subtipo == 3)then
- 		self.tip  = 3
-	  self.val  = 400
-		 self.nome = "pesticide"
-		 self.s    = 6
-		 self.xoff = 3
-			self.yoff = 1
- 	 self.woff = 7
-	 	self.hoff = 4
+ 		self.tip   = 3
+	  self.val   = 400
+		 self.nome  = "pesticide"
+		 self.s     = 6
+		 self.xoff  = 3
+			self.yoff  = 1
+ 	 self.woff  = 7
+	 	self.hoff  = 4
 	 	self.cur_s = 229
-
-		--fertilizante	 	
+			self.capacity  = 0
+			
+		--cesta	 	
 	 elseif(subtipo == 4)then
- 	 self.tip  = 4
-	  self.val  = 500
-		 self.nome = "fertilizer"
-		 self.s    = 8
-		 self.xoff = 3
-			self.yoff = 1
- 	 self.woff = 7
-	 	self.hoff = 4
-	 	self.cur_s = 216
-	  self.ct   = 1
-
+	 self.tip    = 4
+		 self.val   = 300
+		 self.nome  = "basket"
+		 self.s     = 4
+		 self.xoff  = 0
+			self.yoff  = 6
+ 	 self.woff  = 1
+	 	self.hoff  = 8
+	  self.ct    = 1
+	 	self.cur_s = 215
+			self.capacity  = 0
+			
 	 --vasos rocha
 	 elseif(range(subtipo,5,8))then
 	 	self.estagio = 1
 			self.colher  = false
 			self.saturac = 0
-			self.cur_s = 230
+			self.cur_s   = 230
 			
   	function self:des_planta()
   		local aux = self.planta.wh[self.estagio][1]
@@ -2006,7 +2010,8 @@ function plantar(o_que)
 	
 	if(qual_vaso)then
 		qual_vaso.planta  = o_que.ls_aux.fases
- 	qual_vaso.estagio = 1
+ 	qual_vaso.estagio = 3
+ 	qual_vaso.algo    = 1
   o_que:del()
  	pat_sem.val  = false
  	mouse:reset()
@@ -2051,20 +2056,34 @@ function save()
 	
 end
 
-function combinar_bits(obj)
+function save_obj(obj)
 	
- if(not obj)then
-		cu1 = "objeto nulo"
-  return
- else
- 	cu1 = "selecionado"
- end
- 
-	local ls_keys   = {"onde", "x", "y",{"planta","capacidade"},"tip","estagio"}
-	local ls_crop   = {  0x03,0x7f,0x7f,                   0x07, 0x03,     0x07}            
-	local ls_mov    = {    30,  23,  16,       13,           11,    8,        5}
-	local combinado = 0
-	
+ if(not obj)return 
+	local combinado = 0	 																																																							--estagio											
+	local ls_keys   = {"onde", "x", "y","tip","algo"}--planta, capacidade, atalho}
+	local ls_crop   = {  0x03,0x7f,0x7f, 0x0f,  0x01,    0x07,       0x07,   0x07}            
+	local ls_mov    = {    30,  23,  16,   12,    11,       8,          5,      2}
+	local combinado = 0.0
+	local crop      = 0
+aqui negah
+	combinado = (obj.onde & 0x03) << 14
+	          | (obj.x    & 0x7f) <<  7
+		         | (obj.y    & 0x7f) <<  0
+	          | (obj.tip-1& 0x0f) >>> 4
+	cu2 = "salvo"
+	dset(0,combinado)
+end
+
+function load_obj()
+	local save = dget(0)
+ onde = (save >>> 14) & 0x03
+ x    = (save >>>  7) & 0x7f
+ y    = (save >>>  0) & 0x7f
+ tip  = (save <<   4) & 0x0f
+	if(onde == 0) criar_obj("item", tip+1,ls_jrd.coisas,nil, x ,y)
+	if(onde == 1) criar_obj("item", tip+1,ls_jrd.coisas,nil, x ,y)
+
+ cu2 = "carregado"
 end
 
 function debug_obj(obj)
@@ -2074,26 +2093,28 @@ function debug_obj(obj)
   return
  else
  	cu1 = "selecionado"
- end
- aqui negah
-	local ls_keys = {"onde", "x", "y","tip","estagio"}
+ end	
+	--keys basicas
+	local ls_keys = {"onde", "x", "y","tip","algo"}
 	
 	--salvar infomacoes bases
 	for v,k in pairs(ls_keys)do
 		--primeiro cropar os bits extras que possam existir
-		if(type(k) == "table")then
-	 	if(obj[k[1]])then
-	 		print(k[1]..":"..obj[k[1]].tip) 
-	 	else
-	 		print(k[1]..":"..tostr(obj[k[1]])) 
-	 	end
-			print(k[2]..":"..tostr(obj[k[2]]))
-		else
-			print(k..":"..tostr(obj[k]))
+		print(k..":"..tostr(obj[k]),9)		
+	end
+	--informaes especificas
+	--tem algo
+	if(obj.algo == 1)then
+  --eh algo que pode ter uma planta
+		if(range(obj.tip,3,7))then
+ 		print("planta: "..obj.planta.tip)
+ 		print("estagio:"..obj.estagio)
+		end
+		--eh algo que pode ter uma capacidade
+		if(range(obj.tip,1,3))then
+ 		print("capacidade:"..obj.planta.tip)
 		end
 	end
-
- return combinado
 end
 __gfx__
 000000000000000000000000000bbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -2192,20 +2213,20 @@ __gfx__
 0003000000033000003300000003b00000330b0000330b000000000000000000000bb31bb13bb0000003300b000000000000113bb33300000000011111100000
 00030000000300000003000000330000000300000003000000000000000000000000113bb3330000000003333330000000000113b11000000000000000000000
 001111000011110000111100001111000011110000111100000000000000000000000113b1100000000000000000000000000000000000000000000000000000
-55550000555500005500000055550000000000000000000000000000000030000000000000000000000000000b033000000000000000000000000000000bbb00
-0550000055050000550000005505000000000000009000090bbb0b3000bb3b300090a00000000bbb0088828000b00770000000000000000000000422200b1b00
-0550000055050000550000005555000000bb03300009b039b003b3000003b3000099aa990000b0b3002000200b0070660000000000000000000441111bbb1bbb
-05500000555500005555000055050000008b3320000b303300943490007c3c6000a24290000b0b03000288000b0060060000000000000000004111111b11111b
-0000000000000000000000000000000008888882090000000a4949490cc766dd0aa424aa0bb0b03000008000030006600000000000000000041111111bbb1bbb
-0000000000000000000000000000000008e8888200930bb30a4a4a490cccccdd009242a00b0b030000bbb33000300000000000000000000004111999111b1b00
-0000000000000000000000000000000008ee882800330bb3094949490cdcdddd099aa9900300b0000003b00000033000006500066666070000411a19114bbb00
-0000000000000000000000000000000000882280000003330094949000cdcdd00000a0900333b00000003300000000000657006655576070021911a114111110
-55550000555500005555000055550000811111110ddd000000444400000000000044440000111100000000000000000005750076111770600211911191211120
-5505000055550000550000005550000017777771d776d00004111140000000000004200e111bb111000000000000000000056057777750600411199911211120
-5555000055050000555000005500000016111710d7dd6d00419911420000000000eeeee01bbbbbb1000000000000000000005655555550500411111111411120
-550000005505000055000000555500001611710056d7d50044114412400000040041120e01bbbb10000000000000000000000555675655000411111111411120
-0000000000000000000000000000000016161610056d70004144121224242424041131201c1bb1c1000000000000000000000055675650000041111114111200
-0000000000000000000000000000000016616671005506444111141222424242041311201c1111c1000000000000000000000005665600000004999942222000
+55550000555500005500000055550000000000000000000000000000000030000000000000000000000000000b03300000000000000000000000000000000000
+0550000055050000550000005505000000000000009000090bbb0b3000bb3b300090a00000000bbb0088828000b0077000000000000000000000000000000000
+0550000055050000550000005555000000bb03300009b039b003b3000003b3000099aa990000b0b3002000200b00706600000000000000000000000000000000
+05500000555500005555000055050000008b3320000b303300943490007c3c6000a24290000b0b03000288000b00600600000000000000000000000000000000
+0000000000000000000000000000000008888882090000000a4949490cc766dd0aa424aa0bb0b030000080000300066000000000000000000000000000000000
+0000000000000000000000000000000008e8888200930bb30a4a4a490cccccdd009242a00b0b030000bbb3300030000000000000000000000000000000000000
+0000000000000000000000000000000008ee882800330bb3094949490cdcdddd099aa9900300b0000003b0000003300000650006666607000000000000000000
+0000000000000000000000000000000000882280000003330094949000cdcdd00000a0900333b000000033000000000006570066555760700000000000000000
+55550000555500005555000055550000811111110ddd000000444400000000000044440000111100000000000000000005750076111770600000000000000000
+5505000055550000550000005550000017777771d776d00004111140000000000004200e111bb111000000000000000000056057777750600000000000000000
+5555000055050000555000005500000016111710d7dd6d00419911420000000000eeeee01bbbbbb1000000000000000000005655555550500000000000000000
+550000005505000055000000555500001611710056d7d50044114412400000040041120e01bbbb10000000000000000000000555675655000000000000000000
+0000000000000000000000000000000016161610056d70004144121224242424041131201c1bb1c1000000000000000000000055675650000000000000000000
+0000000000000000000000000000000016616671005506444111141222424242041311201c1111c1000000000000000000000005665600000000000000000000
 00000000000000000000000000000000161017710000020441114112242424220411112001cccc10000000000000000000000000000000000000000000000000
 00000000000000000000000000000000110001110000042204442220022222200044220000111100000000000000000000000000000000000000000000000000
 55550000555000005505000055550000011111000dddd0000000000000bbbb001111111111111111000000000000000000000000000000000000000000000000
