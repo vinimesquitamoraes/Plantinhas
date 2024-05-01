@@ -9,7 +9,6 @@ function _init()
  poke(0x5f2d, 1)
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento  = 0
- 
  cu1 = nil
  cu2 = nil
  cu3 = nil
@@ -45,7 +44,9 @@ function _init()
  grav        = 2
 	num_atl     = 6	
 	max_saturac = 20
-	
+	slots       = 0
+	ultimo_slot = 0
+
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
  ls_bts = {["tipo"]="botao"       ,["val"]=false,["qual"]=nil}
@@ -124,32 +125,31 @@ function _init()
  criar_obj("item",4,ls_inv.coisas,nil, 60 ,50)
  criar_obj("item",5,ls_inv.coisas,nil, 80 ,50)
  ls_atl.atls[1].item = criar_obj("item", 5)
-
  ls_atl.atls[2].item = criar_obj("item", 6)
  ls_atl.atls[3].item = criar_obj("item", 7)
  ls_atl.atls[4].item = criar_obj("item",15)
  ls_atl.atls[5].item = criar_obj("item",17)
  ls_atl.atls[6].item = criar_obj("item", 9)
 --]]
+	--caregar save
+
+ for i=0,63 do load_obj(i) end
+
 end
 
 --update ==========================================================================================================================================================================+
 function _update()
 	mouse:att()
-
+	
 	foreach(ls_bts,function(obj) cool_down(5,obj) end)
- if(btnp(❎))load_obj()
- if(btnp(🅾️))save_obj(ls_inv.qual)
-  
+
  --atualizar particulas
 	att_particulas(pat_sem)
  att_particulas(pat_reg)
-
+ 
  --jogo principal rocha --------------------------------------------------------------------------------------------+	
  if(status == 1)then
-  cool_down(5,ls_jrd)
-  cool_down(5,ls_atl)
-  
+       
   --ir depot .......................................................................................................
   if(ls_atl.show)then
    bt_dept:hover()
@@ -163,27 +163,39 @@ function _update()
   end
   	
   --colisao atalhos ------------------------------------------------------------------------------------------------------+
+  cool_down(5,ls_atl)
   if(ls_atl.show) then
    check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
   end
     
  	--colisao jardim -------------------------------------------------------------------------------------------------------+
 	 --delay pra comecar a mover
-  cool_down(5,ls_jrd)
+  cool_down(10,ls_jrd)
   if(not ls_atl.show and ls_jrd.wait) then
    check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
   end
-
-  --performar atribuicao
-  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
-  --se o timer contou ja
-  if(ls_atl.wait)atribuir()
-   
+  
   --regar -------------------------------------------------------------------------------------------------------+
 		if(pat_reg.val and not ls_atl.show)then
-			if(mouse:toggle(mouse.esq,204,236)) gerar_part(pat_reg, 1, 2, 3, nil, stat(32)+1, stat(33)+13)				
+			if(mouse:toggle(mouse.esq,204,236)) gerar_part(pat_reg, 1, nil, 2, 3, nil, stat(32)+1, stat(33)+13)				
 		end
-		 
+		
+		--semear -------------------------------------------------------------------------------------------------------+
+		if(pat_sem.val and not ls_atl.show and #pat_sem<1)then
+ 		if(mouse:toggle(mouse.esq,228,228))then
+ 		 gerar_part(pat_sem,1,ls_atl.qual.item,1,5,ls_atl.qual.item, stat(32)+2, stat(33)+7)
+				if(ls_atl.qual.item.capacity == 0)then
+				 ls_atl.qual.item = nil
+			  ls_atl.qual = nil
+			 end
+			end
+  end
+		
+		--performar atribuicao
+  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
+  --se o timer contou ja
+  if(ls_atl.wait)funcionalidades(2,ls_jrd)
+
 		--esperando awa -------------------------------------------------------------------------------------------------------+ 	
  	foreach(pat_reg,function(obj) regar(obj) end)
   
@@ -227,19 +239,19 @@ function _update()
 
  --deposito rocha --------------------------------------------------------------------------------------------------+
  elseif(status == 3)then
-  cool_down(5,ls_inv)
-  cool_down(5,ls_atl)
-
+  
   grav_depot()
  
   --checar colisao =================================================================================================+
 		--atalhos --------------------------------------------------------------------------------------------------------+
+  cool_down(5,ls_atl)
   if(ls_atl.show) then
    check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
   end
   
 		--inventario -----------------------------------------------------------------------------------------------------+
 	 --delay pra comecar a mover
+	 cool_down(5,ls_inv)
 		if(not ls_atl.show and ls_inv.wait) then
    check_sel_and_mov(ls_inv.coisas,ls_inv,"retg",ls_inv.val)	 
   end
@@ -247,7 +259,7 @@ function _update()
   --performar atribuicao
   if(ls_atl.show and ls_atl.qual)toggle_atribuir()
   --se o timer contou ja
-  if(ls_atl.wait)atribuir()
+  if(ls_atl.wait)funcionalidades(1,ls_inv)
   atl_on_off(mouse.dir_press)	
      
   if(ls_atl.show)then
@@ -256,29 +268,19 @@ function _update()
   end
 
  end
-
+ 
+	if(btnp(❎))then
+		foreach(ls_inv.coisas,function(obj) save_obj(obj) end)	
+  ultimo_slot = 0
+  cu2 = "salvo"
+	end 
+	
 end
 
 --draw =============================================================================================================+
 function _draw()
  cls()
- if(true) then
-	 format(cu1,str1,3)
-	 format(cu2,str2,3)
-		
-	 format(cu3,str3,12)
-	 format(cu4,str4,12)
-	 	 --[[
-	 format(cu5,str5,9)
-	 format(cu6,str6,9)
-	 
-	 format(cu7,str7)
-	 format(cu8,str8)
-	 --
-	 format(cu9,str9)
-	 --]]
-	 espacamento =0
-	end
+
  --jogo principal --------------------------------------------------------------------------------------------------+
  if(status == 1)then
   bt_loja:des()
@@ -290,7 +292,8 @@ function _draw()
  	
  	--atalhos --------------------------------------------------------------------------------------------------------+	
   des_atl()
-  debug_obj(ls_jrd.qual)
+  debug_obj(ls_jrd.qual,8)
+  debug_obj(teste)
 
  --loljinha --------------------------------------------------------------------------------------------------------+
  elseif(status == 2)then
@@ -307,7 +310,24 @@ function _draw()
  mouse:des()
 	if(false) pos_mouse(10)
 
-
+ if(true) then
+	 format(cu1,str1)
+	 format(cu2,str2)
+		--[[
+	 format(cu3,str3)
+	 format(cu4,str4)
+	 	
+	 format(cu5,str5)
+	 format(cu6,str6)
+	 
+	 format(cu7,str7)
+	 format(cu8,str8)
+	 --
+	 format(cu9,str9)
+	 --]]
+	 espacamento =0
+	end
+	print("slots:"..slots.."/64",85,0,6)
 end
 
 function format(que_cu,str,cor)
@@ -320,7 +340,7 @@ end
 -->8
 --classes ==========================================================================================================+
 function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
- novo_obj = {
+ local novo_obj = {
   --atributos ------------------------------------------------------------------------------------------------------+
 	 onde     = 0,
   x				    = xop or 0,
@@ -328,6 +348,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   cla      = que_classe,
   tip      = 0,
   algo     = 0,
+  capacity = 0,
   s        = 0,
   cur_s    = 0,
   w        = 8,
@@ -340,7 +361,6 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   woff     = 0,
  	y_vel    = 1,
   movable  = false,
-  contble  = false,
   ct       = 0,
   id       = 0,
   ls_gua   = ls_guardar,
@@ -348,13 +368,11 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop)
   --metodos--------------------------------------------------------------------------------------------------------+ 
   foi_onde = function(self,pra_onde)
  		if(    pra_onde == "jardim")then	 		
-				self.onde = 0
+				self.onde = 1
 			elseif(pra_onde == "inventario")then
-				self.onde = 1			
+				self.onde = 2			
 			elseif(pra_onde == "atalho")then
-		 	self.onde = 2
-			else
-  	 self.onde = 3
+		 	self.onde = 3
 			end		
 		end,
 				
@@ -670,7 +688,8 @@ function def_tip(self,subtipo)
 		self.h     = 0
 
  	if(subtipo == 1)then
- 		self.cor = 3
+ 		
+ 		self.cor = rnd({3,11})
 		 self.ace = 0
  	elseif(subtipo == 2)then
  		self.cor = 12
@@ -682,12 +701,13 @@ function def_tip(self,subtipo)
 			self.y  += flr(self.vy)
   	self.vy += self.ace
   	
-			if(self.x>self.x_max)then
+			if(self.x>=self.x_max)then
 				self.x = self.x_max
-				
-			elseif(self.x<self.x_min)then
+				self.vx *= -1
+
+			elseif(self.x<=self.x_min)then
 				self.x  = self.x_min
-				self.vx = -self.vx
+				self.vx *= -1
 			end
 			
 			if(saiu(self))then
@@ -926,7 +946,7 @@ function def_tip(self,subtipo)
 		--regador
 	 elseif(subtipo == 2)then
  	 self.tip   = 2
-	  self.val   = 500
+	  self.val   = 800 
 		 self.nome  = "fertilizer"
 		 self.s     = 8
 		 self.xoff  = 3
@@ -935,7 +955,7 @@ function def_tip(self,subtipo)
 	 	self.hoff  = 4
 	 	self.cur_s = 216
 	  self.ct    = 1	
-			self.capacity  = 0
+			self.capacity  = 1
 			
 		--borrifador
 	 elseif(subtipo == 3)then
@@ -948,11 +968,11 @@ function def_tip(self,subtipo)
  	 self.woff  = 7
 	 	self.hoff  = 4
 	 	self.cur_s = 229
-			self.capacity  = 0
+			self.capacity  = 5
 			
 		--cesta	 	
 	 elseif(subtipo == 4)then
-	 self.tip    = 4
+ 	 self.tip    = 4
 		 self.val   = 300
 		 self.nome  = "basket"
 		 self.s     = 4
@@ -984,8 +1004,8 @@ function def_tip(self,subtipo)
   	end
   	
   	function self:vasar()
-  		gerar_part(pat_reg, 1, 2, 3, nil,self.x+4 ,self.y+self.h-2)
-  		gerar_part(pat_reg, 1, 2, 3, nil,self.x+11,self.y+self.h-2)				  		
+  		gerar_part(pat_reg, 1, nil, 2, 3, nil,self.x+4 ,self.y+self.h-2)
+  		gerar_part(pat_reg, 1, nil, 2, 3, nil,self.x+11,self.y+self.h-2)				  		
   	end
   	
   	function self:des(xop,yop)
@@ -999,7 +1019,7 @@ function def_tip(self,subtipo)
 		 	spr(self.s,self.x,self.y,self.w/8,self.h/8)
 				pal()
 				
-				if(self.planta)self:des_planta()
+				if(self.planta and self.algo == 1)self:des_planta()
   	end
 			
 			--vaso1
@@ -1077,6 +1097,7 @@ function def_tip(self,subtipo)
  	 self.woff  = 5
 	 	self.hoff  = 5
 	 	self.cur_s = 249
+			self.capacity  = 8
 
 		 if(subtipo == 9)then
 		  self.tip  = 9
@@ -1349,8 +1370,12 @@ function att_particulas(que_ls_part)
 		 
 end
 
-function gerar_part(que_pat_ls, quantas, tip, ampx, item, x, y)
+function gerar_part(que_pat_ls, quantas, do_que, tip, ampx, item, x, y)
  tip = tip or 1
+
+ if(do_que and quantas>do_que.capacity)return
+ if(do_que) do_que.capacity -= 1
+ 
  for i=1, quantas do
 		nova = criar_obj("particula",tip,que_pat_ls,item)
 		nova.x     = x
@@ -1591,11 +1616,12 @@ end
 
 function add_um_item(qual,onde)
 	
-	if(status == 2) def_pos(qual)
 	if(onde   == 1)then
-	 add(ls_jrd.coisas,qual)
 	 qual:foi_onde("jardim")
+ 	 add(ls_jrd.coisas,qual)
+
 	else
+ 	def_pos(qual)
 	 qual:foi_onde("inventario")
   add(ls_inv.coisas,qual)
  end
@@ -1715,6 +1741,7 @@ function atl_on_off(context)
 			ls_atl.timer = 0
 			
 			pat_reg.val  = false
+			pat_sem.val  = false
 			
 			foreach(ls_bts,function(obj) obj.wait = false end)
 
@@ -1733,60 +1760,105 @@ function toggle_atribuir()
 		ls_atl.val = true
 		--desativa o movimento do jardim e inventario
 		ls_jrd.val,ls_inv.val = false,false				
-		
+
 		if(status == 3)then
 			if(ls_atl.qual and ls_atl.qual.item)then
 	   mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
 	 	else
 	   mouse:tip_set(217,"⬅️","⬆️")
 	 	end
+	 	
 	 else
-	 	if(ls_atl.qual and ls_atl.qual.item and range(ls_atl.qual.item.tip,5,8))then
-	   mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
-	 	end
-	 	if(ls_atl.qual and ls_atl.qual.item and ls_atl.qual.item.tip == 17) then
- 			mouse.w,mouse.h = 16,16
-	 		mouse:toggle(mouse.esq,236,204)
+
+	 	if(ls_atl.qual and ls_atl.qual.item)then
+	 		local aux_tip = ls_atl.qual.item.tip
+
+	 	 if(range(aux_tip,5,8)) mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
+			 
+			 if(range(aux_tip,9,16))then
+			  mouse.s = 228
+			 end
+			 
+		 	if(aux_tip == 17) then
+	 			mouse.w,mouse.h = 16,16
+		 		mouse.s = 204
+		 	end
+		 	
 	 	end
 	 	
 	 end
 	end								
 end
 
-function atribuir()
-	--o atalho selecionado
-	-- ja tem um item?
-	-- se ele ja tiver efetuamos
-	-- uma troca com o jardim/inv
-	if(ls_atl.qual)then
-		--exclusivo depot ------------------------------------------------------------
-		if(status == 3)then				
-	 	if(ls_atl.qual.item)then
-	 	 if(atl_para_container(mouse.esq,ls_inv,true)) atl_on_off(true)
-			else
-   	if(container_para_atl(mouse.esq,ls_inv)) atl_on_off(true)
-			end	
-			
-		--exclusivo jardim rocha  ------------------------------------------------------------
-		else
- 		--so e possivel por vasos no jardim
-			if(ls_atl.qual.item and range(ls_atl.qual.item.tip,5,8))then
-	 		if(atl_para_container(mouse.esq,ls_jrd))atl_on_off(true)
-			else
+function funcionalidades(que_func,container)
+	--se nao tem atalho selecionado
+	if(not ls_atl.qual) return
 
-	 		--so e possivel guardar vasos sem planta
- 			if(ls_jrd.qual and range(ls_jrd.qual.tip,5,8) and not ls_jrd.qual.planta)then
-	 			if(container_para_atl(mouse.esq,ls_jrd)) atl_on_off(true)
-	 		elseif(ls_atl.qual.item)then
-	 		 funcionalidades()
+ --tipo item do atalho
+ local aux_tip = nil
+	if(ls_atl.qual.item)aux_tip = ls_atl.qual.item.tip
+
+	--que func == 1 permutar item com atalho
+	if    (que_func == 1)then
+	 -- o atalho selecionado
+		-- ja tem  um item?
+
+		-- se ele ja tiver efetuamos
+		-- uma troca com o jardim/inv
+		if(aux_tip)then
+	  atl_para_container(mouse.esq,container,true)
+  -- se ele nao tiver simplesmenete
+  -- bota no atalho
+ 	else
+   container_para_atl(mouse.esq,container)
+	 end	
+					 
+	--que func == 2
+	elseif(que_func == 2)then
+		-- mesma logica da funcao 1
+		-- exclusivo pro jardim
+		-- so vasos pode ser colocados
+		-- so vasos sem planta podem ser removidos
+		-- as demais coisas executam suas respectivas funcoes
+	
+	 --nao tem item
+ 	if(not aux_tip)then
+ 	 --o item a ser guardado eh um vaso sem planta
+			if(container.qual and range(container.qual.tip,5,8) and not container.qual.planta and not(pat_sem.val or pat_reg.val))then
+ 	  container_para_atl(mouse.esq,container)
+ 	 end
+ 	 
+			--eh um vaso
+	 	elseif(range(aux_tip,5,8))then
+		  atl_para_container(mouse.esq,container,true)
+
+ 	--eh um upgrade de atl
+ 	elseif(aux_tip == 1)then
+	 	if(mouse.esq)then
+		 
+				if(#ls_atl.atls == 8)then
+				 toggle_disp(1)
+				else
+					init_atl(2)
+	 		 def_pos_atls()
+				 ls_atl.qual.item = nil
 				end
-				
-			end	
+				ls_atl.qual = nil
+	   atl_on_off(true)	   
+			end
 			
+	 --eh uma semente
+	 elseif(range(aux_tip,9,16))then
+			pat_sem.val = true		
+
+		--eh um regador
+		elseif(aux_tip == 17)then
+			pat_reg.val = true
+
 		end
-
+			 
 	end
-
+	
 end
 
 --[[
@@ -1819,17 +1891,17 @@ function atl_para_container(context,qual_container,permutavel)
 
  		--esvazia o atalho
  	 ls_atl.qual.item = nil
-   
-  --se algo do container
-		--esta sendo selecionado
-		--permuta esse "algo" com
-		--o item do atalho
+
 		 qual_container.val  = true
    qual_container.wait = false
    ls_atl.qual = nil
    ls_atl.val = false
    mouse:reset()
- 		return false
+   
+  --se algo do container
+		--esta sendo selecionado
+		--permuta esse "algo" com
+		--o item do atalho
 		else
 		 --poe o item do atalho na mesma posicao do item selecionado
 			ls_atl.qual.item:mov(qual_container.qual.x,qual_container.qual.y-2)	
@@ -1841,30 +1913,24 @@ function atl_para_container(context,qual_container,permutavel)
 			
 			qual_container.val  = true
    qual_container.wait = false
-		 return true
+  	atl_on_off(true)
 		end
 	end
-	return false
 end
 
 function container_para_atl(context,qual_container)
 	--se algo do container esta sendo selecionado		
+	if(qual_container.qual and context)then
+		local para_atl        = qual_container.qual
+		ls_atl.qual.item      =	del(qual_container.coisas,para_atl)
+  ls_atl.qual.item:foi_onde(ls_atl.tipo)
+		ls_atl.qual           = nil
+		ls_atl.val            = false
+		qual_container.val    = true
+  qual_container.wait   = false
 
-	if(qual_container.qual)then
-		if(context)then
-
-			local para_atl        = qual_container.qual
-			ls_atl.qual.item      =	del(qual_container.coisas,para_atl)
-   ls_atl.qual.item:foi_onde(ls_atl.tipo)
- 		ls_atl.qual           = nil
-			ls_atl.val            = false
-			qual_container.val    = true
-	  qual_container.wait   = false
-
-	  return true
-		end
+ 	atl_on_off(true)
 	end
-	return false
 end
 -->8
 --deposito======================
@@ -1969,42 +2035,10 @@ function des_jardim()
  des_inv()
 end
 
-function funcionalidades()
-	local aux_tipo = ls_atl.qual.item.tip
- --garantido chegar aqui com um item
-	if(aux_tipo == 1)then
- 	if(mouse.esq)then
-	 
-			if(#ls_atl.atls == 8)then
-			 toggle_disp(1)
-			else
-				init_atl(2)
- 		 def_pos_atls()
-			 ls_atl.qual.item = nil
-			end
-			ls_atl.qual = nil
-   atl_on_off(true)
-		end
-			
- elseif(range(aux_tipo,9,16))then
-  mouse.s     = 228
- 	if(mouse.esq)then
-	  nova_sem    = gerar_part(pat_sem,1,1,3,ls_atl.qual.item, stat(32)+1, stat(33)+13)
-			pat_sem.val = true
-			ls_atl.qual.item = nil
-			ls_atl.qual  = nil
-			mouse:reset()
-
-		end
-	elseif(aux_tipo == 17)then
-		pat_reg.val = true
-
-	end
-		
-end
-
 function plantar(o_que)
-	
+
+ if(#pat_sem == 0) return 
+	ls_jrd.coisas.wait = true
 	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	if(qual_vaso and qual_vaso.planta)return
 	
@@ -2012,10 +2046,12 @@ function plantar(o_que)
 		qual_vaso.planta  = o_que.ls_aux.fases
  	qual_vaso.estagio = 3
  	qual_vaso.algo    = 1
-  o_que:del()
- 	pat_sem.val  = false
+  ls_atl.val  = false
+ 	pat_sem.val = false
+ 	ls_atl.wait = false
  	mouse:reset()
-  ls_atl.val = false
+  o_que:del()
+
  end
  
 end
@@ -2050,44 +2086,76 @@ end
 
 -->8
 --save/load =======================
-function save()
-
-	objeto = ls_jrd.coisas[1]
-	
-end
-
 function save_obj(obj)
 	
  if(not obj)return 
 	local combinado = 0	 																																																							--estagio											
-	local ls_keys   = {"onde", "x", "y","tip","algo"}--planta, capacidade, atalho}
-	local ls_crop   = {  0x03,0x7f,0x7f, 0x0f,  0x01,    0x07,       0x07,   0x07}            
-	local ls_mov    = {    30,  23,  16,   12,    11,       8,          5,      2}
-	local combinado = 0.0
-	local crop      = 0
-aqui negah
-	combinado = (obj.onde & 0x03) << 14
-	          | (obj.x    & 0x7f) <<  7
-		         | (obj.y    & 0x7f) <<  0
-	          | (obj.tip-1& 0x0f) >>> 4
-	cu2 = "salvo"
-	dset(0,combinado)
+	--salvar informacoes basicas
+	combinado |= (obj.onde & 0x03) << 14
+	          |  (obj.x    & 0x7f) <<  7
+		         |  (obj.y    & 0x7f) 
+	          |  (obj.tip-1& 0x0f) >>> 4
+	          |  (obj.algo & 0x0f) >>> 5
+	
+	--o item tem uma planta?
+ if(range(obj.tip,4,8) and obj.algo==1)then
+  combinado |= (obj.planta.tip-8  & 0x07) >>> 8
+  combinado |= (obj.estagio       & 0x07) >>> 11
+ end
+
+ --esta em um atalho?
+ --if(obj.onde == 2) combinado |=
+	dset(ultimo_slot,combinado)	
+	ultimo_slot+=1
 end
 
-function load_obj()
-	local save = dget(0)
- onde = (save >>> 14) & 0x03
- x    = (save >>>  7) & 0x7f
- y    = (save >>>  0) & 0x7f
- tip  = (save <<   4) & 0x0f
-	if(onde == 0) criar_obj("item", tip+1,ls_jrd.coisas,nil, x ,y)
-	if(onde == 1) criar_obj("item", tip+1,ls_jrd.coisas,nil, x ,y)
+function save(container)
+	
+	for i in all(container.coisas)do
+		if(ultimo_slot>= 64)break
+	 save_obj(i,ultimo_slot)
+	 ultimo_slot += 1
+ end
+
+end
+
+function load_obj(qual_slot)
+--	dset(qual_slot,0)
+	local save = dget(qual_slot)
+ local onde =  (save >>> 14) & 0x03
+	if(onde == 0) return 
+	slots += 1
+ local x    =  (save >>>  7) & 0x7f
+ local y    =  (save >>>  0) & 0x7f
+ local tip  = ((save <<   4) & 0x0f)+1
+	local algo =  (save <<   5) & 0x01
+	--o item basico
+	local novo_obj = criar_obj("item",tip,nil,nil,x,y)
+ novo_obj.algo = algo
+ 
+ --o item tem uma planta?
+ if(range(tip,4,8) and algo==1)then
+  local tip_pla    = ((save << 8) & 0x03)+8
+  local pla_salva  = criar_obj("item",tip_pla)
+
+  novo_obj.planta  = pla_salva.fases
+ 
+  novo_obj.estagio = ((save << 11) & 0x07)
+ end
+ 
+	
+ if(onde == 1) add(ls_jrd.coisas,novo_obj)
+ if(onde == 2) add(ls_inv.coisas,novo_obj)
 
  cu2 = "carregado"
+ return novo_obj
+ 
 end
 
-function debug_obj(obj)
-	
+function debug_obj(obj,cor)
+	if(true) return
+	cor = cor or 9
+
  if(not obj)then
 		cu1 = "objeto nulo"
   return
@@ -2100,7 +2168,7 @@ function debug_obj(obj)
 	--salvar infomacoes bases
 	for v,k in pairs(ls_keys)do
 		--primeiro cropar os bits extras que possam existir
-		print(k..":"..tostr(obj[k]),9)		
+		print(k..":"..tostr(obj[k]),cor)		
 	end
 	--informaes especificas
 	--tem algo
@@ -2115,7 +2183,10 @@ function debug_obj(obj)
  		print("capacidade:"..obj.planta.tip)
 		end
 	end
+	
 end
+
+
 __gfx__
 000000000000000000000000000bbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000422200b1b00000000000000000000005577777000000000004224000000000000000000000000000000000000000000000000000000
