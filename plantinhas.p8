@@ -117,72 +117,73 @@ end
 
 --update ==========================================================================================================================================================================+
 function _update()
-	mouse:att()
-	cu2 =	ls_jrd.val
-
-	--cooldown para os bts
-	foreach(ls_bts,function(obj) cool_down(5,obj) end)
+ mouse:att()
+ 
+ --cooldown para os bts
+ foreach(ls_bts,function(obj) cool_down(5,obj) end)
 
  --atualizar particulas
-	att_particulas(pat_sem)
+ att_particulas(pat_sem)
  att_particulas(pat_reg)
  
  --jogo principal rocha --------------------------------------------------------------------------------------------+	
- if(status == 1)then
+ if status == 1 then
        
-  --ir depot .......................................................................................................
-  if(ls_atl.show)then
-   bt_dept:hover()
-   bt_dept:ativa()
-  end
+ --ir depot .......................................................................................................
+ if ls_atl.show then
+  bt_dept:hover()
+  bt_dept:ativa()
+ end
   
-  --ir loja ........................................................................................................   
-  if(not ls_atl.show and not ls_atl.val and not ls_jrd.qual)then
-   bt_loja:hover()
-   bt_loja:ativa()
-  end
+ --ir loja ........................................................................................................   
+ if not ls_atl.show and not ls_atl.val and not ls_jrd.qual then
+  bt_loja:hover()
+  bt_loja:ativa()
+ end
   
- 	--performar atribuicao
-  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
-  --se o timer contou ja
-  if(ls_atl.wait)funcionalidades(2,ls_jrd)
+ --performar atribuicao
+ if(ls_atl.show and ls_atl.qual)toggle_atribuir()
+ --se o timer contou ja
+ if(ls_atl.wait)funcionalidades(2,ls_jrd)
 	
-  --colisao atalhos ------------------------------------------------------------------------------------------------------+
-  cool_down(5,ls_atl)
-  if(ls_atl.show) then
-   check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
-  end
+ --colisao atalhos ------------------------------------------------------------------------------------------------------+
+ cool_down(5,ls_atl)
+ if ls_atl.show then
+  check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
+ end
     
-  --colisao jardim -------------------------------------------------------------------------------------------------------+
-  --delay pra comecar a mover
-  cool_down(15,ls_jrd)
+ --colisao jardim -------------------------------------------------------------------------------------------------------+
+ --delay pra comecar a mover
+ cool_down(15,ls_jrd)
  
-  if(not ls_atl.show and ls_jrd.wait) then
-   check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
-  end
+ if not ls_atl.show and ls_jrd.wait then
+  check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
+ end
 
-  --regar -------------------------------------------------------------------------------------------------------+
-		if(pat_reg.val and not ls_atl.show)then
-			if(mouse:toggle(mouse.esq,204,236)) gerar_part(pat_reg, 1, nil, 2, 3, nil, stat(32)+1, stat(33)+13)				
-		end
-		
-		--semear -------------------------------------------------------------------------------------------------------+
-		if(pat_sem.val and not ls_atl.show and #pat_sem<1)then
- 		if(mouse:toggle(mouse.esq,228,228))then
-  		 gerar_part(pat_sem,1,ls_atl.qual.item,1,5,ls_atl.qual.item, stat(32)+2, stat(33)+7)				if(ls_atl.qual.item.capacity == 0)then
-				 ls_atl.qual.item = nil
-			  ls_atl.qual = nil
-			 end
-			end
-  end
-		
-		--esperando awa -------------------------------------------------------------------------------------------------------+ 	
- 	foreach(pat_reg,function(obj) regar(obj) end)
+ --regar -------------------------------------------------------------------------------------------------------+
+ if pat_reg.val and not ls_atl.show then
+  if(mouse:toggle(mouse.esq,204,236)) gerar_part(pat_reg, 1, nil, 2, 3, nil, stat(32)+1, stat(33)+13) 
+ end
   
-  --esperando semente -------------------------------------------------------------------------------------------------------+
- 	foreach(pat_sem,function(obj) plantar(obj) end)
+ --semear -------------------------------------------------------------------------------------------------------+
+ if pat_sem.val and not ls_atl.show and #pat_sem<1 then
+  if mouse:toggle(mouse.esq,228,228) then
+   gerar_part(pat_sem,1,ls_atl.qual.item,1,5,ls_atl.qual.item, stat(32)+2, stat(33)+7)
+   if(ls_atl.qual.item.capacity == 0)then
+    ls_atl.qual.item = nil
+    ls_atl.qual = nil
+   end
+  end
+ end
+		
+ --esperando awa -------------------------------------------------------------------------------------------------------+ 	
+ foreach(pat_reg,function(obj) regar(obj) end)
+  
+ --esperando semente -------------------------------------------------------------------------------------------------------+
+ foreach(pat_sem,function(obj) plantar(obj) end)
  
-  atl_on_off(mouse.dir_press,true)	
+ --cancelar acção/mostrar atalho
+ atl_on_off(mouse.dir_press,true)	
 
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif(status == 2)then
