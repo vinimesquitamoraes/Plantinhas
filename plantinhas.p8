@@ -8,10 +8,10 @@ function _init()
  --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
   
-	if(false)then
-		for i=3,63 do dset(i,0) end
+	if false then
+		for i=0,63 do dset(i,0) end
 	end
-	
+
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento = 0
  cu1 = 0
@@ -41,17 +41,18 @@ function _init()
  2 para loja
  3 para o deposito
  ]]
- status = 1
+ status = 3
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo    = 1
  grav        = 0
 	max_saturac = 20
-
+	venda       = false
+	
  --variaveis de jogo --------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	saldo   = 20000
+	saldo   = 0
 	num_atl = 6
-	slots   = 2
+	slots   = 0
 	
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
@@ -96,6 +97,7 @@ function _init()
  bt_volt = criar_obj("botao",2,ls_bts)
  bt_comp = criar_obj("botao",3,ls_bts)
  bt_dept = criar_obj("botao",4,ls_bts)
+ bt_vend = criar_obj("botao",5,ls_bts)
 
  --espacos da lojinha .............................................................................................................................................................+
  init_loja()
@@ -110,22 +112,23 @@ function _init()
 	--atalhos
  init_atl(num_atl)
  def_pos_atls()
-
 	--caregar save
  load_game()
+
 end
 
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
- 
+	if(btnp(❎)) saldo = 2000
+
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
 
  --atualizar particulas
  att_particulas(pat_sem)
  att_particulas(pat_reg)
- 
+
  --jogo principal rocha --------------------------------------------------------------------------------------------+	
  if status == 1 then
        
@@ -151,7 +154,7 @@ function _update()
  if ls_atl.show then
   check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
  end
-    
+  
  --colisao jardim -------------------------------------------------------------------------------------------------------+
  --delay pra comecar a mover
  cool_down(15,ls_jrd)
@@ -167,9 +170,9 @@ function _update()
   
  --semear -------------------------------------------------------------------------------------------------------+
  if pat_sem.val and not ls_atl.show and #pat_sem<1 then
-  if mouse:toggle(mouse.esq,228,228) then
+  if(mouse:toggle(mouse.esq,228,228))then
    gerar_part(pat_sem,1,ls_atl.qual.item,1,5,ls_atl.qual.item, stat(32)+2, stat(33)+7)
-   if(ls_atl.qual.item.capacity == 0)then
+   if ls_atl.qual.item.capacity == 0 then
     ls_atl.qual.item = nil
     ls_atl.qual = nil
    end
@@ -182,18 +185,21 @@ function _update()
  --esperando semente -------------------------------------------------------------------------------------------------------+
  foreach(pat_sem,function(obj) plantar(obj) end)
  
- --cancelar acção/mostrar atalho
+ --cancelar acれせれこo/mostrar atalho
  atl_on_off(mouse.dir_press,true)	
 
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
- elseif(status == 2)then
+ elseif status == 2 then
+		--verificar disponibilidade de compra
+		if(slots == 63)toggle_disp(1,16) else toggle_disp(1,16,true)
 
+		
   --selecionar loja ................................................................................................+
  	foreach(ls_esp.esps,function(esp) esp:hover("retg" ) end)
 	 check_sel_and_mov(ls_esp.esps,ls_esp,"retg")										
       
   --selecionar compra ..............................................................................................+
-  if(ls_esp.qual)then
+  if ls_esp.qual then
    mouse:tip_set(231,"➡️","")
  		ls_esp.qual:add_car()	
   end  
@@ -205,7 +211,7 @@ function _update()
   end
    
   --remover carrinho ...............................................................................................+
-  if(ls_car.qual)then
+  if ls_car.qual then
    mouse:tip_set(232,"➡️","")
   	ls_car.qual:del_car()	
   end
@@ -219,7 +225,7 @@ function _update()
 		att_car()
 
  --deposito rocha --------------------------------------------------------------------------------------------------+
- elseif(status == 3)then
+ elseif status == 3 then
   grav_depot()
 
   --checar colisao =================================================================================================+
@@ -242,16 +248,19 @@ function _update()
   if(ls_atl.wait)funcionalidades(1,ls_inv)
   atl_on_off(mouse.dir_press)	
      
-  if(ls_atl.show)then
+  if ls_atl.show then
    bt_dept:hover()
    bt_dept:ativa()
   end
-		
- end
   
-	if(ls_atl.qual and ls_atl.qual.item) cu1 = "atl com obj sel"
-	if(ls_jrd.qual) cu1 = "jrd obj selecionado"
-	if(ls_inv.qual) cu1 = "inv obj selecionado"
+  if not ls_atl.show and not ls_atl.val and not ls_inv.qual then
+   bt_vend:hover()
+   bt_vend:ativa()
+  end
+		
+ 	--venda so se algo esta sendo movido
+ 	
+ end
 
 	save_game()
 
@@ -262,8 +271,9 @@ function _draw()
  cls()
 
  --jogo principal --------------------------------------------------------------------------------------------------+
- if(status == 1)then
-  bt_loja:des()
+ if status == 1 then
+ 	
+  bt_loja:des() 
   des_jardim()
   
   --particulas -----------------------------------------------------------------------------------------------------+
@@ -274,11 +284,11 @@ function _draw()
   des_atl()
 
  --loljinha --------------------------------------------------------------------------------------------------------+
- elseif(status == 2)then
+ elseif status == 2 then
   des_lojinha()
  
  --deposito -------------------------------------------------------------------------------------------------------+
- elseif(status == 3)then
+ elseif status == 3 then
   des_depot()
   des_atl()
  end
@@ -288,14 +298,13 @@ function _draw()
  if(ls_atl.qual)debug_obj(ls_atl.qual.item,10)
   
  mouse:des()
-	if(false) pos_mouse(10)
 
  if(true) then
 	 format(cu1,str1,12)
 	 format(cu2,str2)
   format(cu3,str3)
  	
-	-- print_ls(cu4)
+  print_ls(cu4)
 	
 	-- format(cu5,str5,8)
  	--[[
@@ -308,7 +317,7 @@ function _draw()
   --]]
 	 espacamento = 0
 	end
-	print("slots:"..slots.."/62",85,0,6)
+	print("slots:"..slots.."/63",85,0,6)
 end
 
 function format(que_cu,str,cor)
@@ -319,7 +328,7 @@ function format(que_cu,str,cor)
 end
 
 function print_ls(que_ls)
-	if(not que_ls)then
+	if not que_ls then
 		print("ls vazia",0,espacamento,14)
 	 return
 	end
@@ -350,6 +359,8 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   hoff     = 0,
   woff     = 0,
  	y_vel    = 1,
+ 	flip_x   = false,
+ 	flip_y   = false,
   movable  = false,
   ct       = 0,
   id       = 0,
@@ -374,10 +385,10 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
 	 
 	 --desenhar objeto
 	 des = function(self,xop,yop)
-	 	self.x = xop or self.x  
-	 	self.y = yop or self.y
+	 	aux_x = xop or self.x  
+	 	aux_y = yop or self.y
 	  pal(self.ct,0)
-	 	spr(self.s,self.x,self.y,self.w/8,self.h/8)
+	 	spr(self.s,aux_x,aux_y,self.w/8,self.h/8,self.flip_x,self.flip_y)
 			pal()
 	 end,
 	 
@@ -427,6 +438,7 @@ function def_tip(self,subtipo)
   self.ativ      = true
  	self.s         = 212
 		self.ct        = 1
+		self.woff,self.hoff = 8,8
 			
 		--esperando ==================
  	self.esq_esper = false
@@ -462,17 +474,17 @@ function def_tip(self,subtipo)
 	 self.tool_tip = qual or nil	
  	dir_x,dir_y = dir_x,dir_y
 
-		if(dir_x == "⬅️")then
+		if dir_x == "⬅️" then
 		 self.xoff = -8		
-		elseif(dir_x == "➡️")then
+		elseif dir_x == "➡️" then
 			self.xoff =  8
 		else
 			self.xoff =  0
 		end
 
-		if(dir_y == "⬆️")then
+		if dir_y == "⬆️" then
 		 self.yoff = -9		
-		elseif(dir_y == "⬇️")then
+		elseif dir_y == "⬇️" then
 			self.yoff =  9
 		else
 			self.yoff =  0
@@ -489,7 +501,7 @@ function def_tip(self,subtipo)
  end
  
  function self:toggle(que_bt,spr_1,spr_2)
- 	if(que_bt)then
+ 	if que_bt then
  	 mouse.s = spr_2
  	 return true
  	end
@@ -509,16 +521,16 @@ function def_tip(self,subtipo)
 	
 		--comportamento esquerdo ||||
 		--se o mouse esq foi apertado
-		if(self.esq)then
+		if self.esq then
 			--se ele estava solto
-			if(self.esq_solto)then
+			if self.esq_solto then
 				--agora nao esta mais
 				self.esq_solto=false
 			end
 			
 			--se ele nao estava pressio
 			--nado
-			if(not self.esq_press)then
+			if not self.esq_press then
 		 	--se nao estava esperando
 				if(not self.esq_esper) then
 		 		--agora esta pressionado
@@ -542,9 +554,9 @@ function def_tip(self,subtipo)
 			end
 			
 			--se nao esatava solto
-			if(not self.esq_solto)then
+			if not self.esq_solto then
 				--se estava esperando
-				if(self.esq_esper)then
+				if self.esq_esper then
 					--agora esta solto
 					self.esq_solto = true
 					--e nao esta mais esperando
@@ -559,16 +571,16 @@ function def_tip(self,subtipo)
 		
  	--comportamento meio ||||||||
 		--se o mouse mei foi apertado
-		if(self.mei)then
+		if self.mei then
 			--se ele estava solto
-			if(self.mei)then
+			if self.mei then
 				--agora nao esta mais
 				self.mei_solto=false
 			end
 			
 			--se ele nao estava pressio
 			--nado
-			if(not self.mei_press)then
+			if not self.mei_press then
 		 	--se nao estava esperando
 				if(not self.mei_esper) then
 		 		--agora esta pressionado
@@ -592,9 +604,9 @@ function def_tip(self,subtipo)
 			end
 			
 			--se nao esatava solto
-			if(not self.mei_solto)then
+			if not self.mei_solto then
 				--se estava esperando
-				if(self.mei_esper)then
+				if self.mei_esper then
 					--agora esta solto
 					self.mei_solto = true
 					--e nao esta mais esperando
@@ -609,16 +621,16 @@ function def_tip(self,subtipo)
 	 
  	--comportamento direita ||||||
 		--se o mouse dir foi apertado
-		if(self.dir)then
+		if self.dir then
 			--se ele estava solto
-			if(self.dir)then
+			if self.dir then
 				--agora nao esta mais
 				self.dir_solto=false
 			end
 			
 			--se ele nao estava pressio
 			--nado
-			if(not self.dir_press)then
+			if not self.dir_press then
 		 	--se nao estava esperando
 				if(not self.dir_esper) then
 		 		--agora esta pressionado
@@ -642,9 +654,9 @@ function def_tip(self,subtipo)
 			end
 			
 			--se nao esatava solto
-			if(not self.dir_solto)then
+			if not self.dir_solto then
 				--se estava esperando
-				if(self.dir_esper)then
+				if self.dir_esper then
 					--agora esta solto
 					self.dir_solto = true
 					--e nao esta mais esperando
@@ -659,7 +671,7 @@ function def_tip(self,subtipo)
 	end
 
 --particula ====================
-	elseif(self.cla == "particula")then
+	elseif self.cla == "particula" then
 		self.vx    = rnd(2) - 1
  	self.vy    = 1
 		self.x_max = 128
@@ -667,11 +679,11 @@ function def_tip(self,subtipo)
 		self.w     = 0
 		self.h     = 0
 
- 	if(subtipo == 1)then
+ 	if subtipo == 1 then
  		
  		self.cor = rnd({3,11})
 		 self.ace = 0
- 	elseif(subtipo == 2)then
+ 	elseif subtipo == 2 then
  		self.cor = 12
 		 self.ace = 0.2
  	end
@@ -681,11 +693,11 @@ function def_tip(self,subtipo)
 			self.y  += flr(self.vy)
   	self.vy += self.ace
   	
-			if(self.x>=self.x_max)then
+			if self.x>=self.x_max then
 				self.x = self.x_max
 				self.vx *= -1
 
-			elseif(self.x<=self.x_min)then
+			elseif self.x<=self.x_min then
 				self.x  = self.x_min
 				self.vx *= -1
 			end
@@ -701,7 +713,7 @@ function def_tip(self,subtipo)
 	 end
 	 
 	 function self:del()
-			if(self)then
+			if self then
 		 del(self.ls_gua, self)
 	  self = nil
 			end
@@ -710,13 +722,13 @@ function def_tip(self,subtipo)
 	 end
 	
 --botao ========================		 
-	elseif(self.cla == "botao")then
+	elseif self.cla == "botao" then
 		self.timer = 0
 		self.wait  = false
 		self.val   = true
 		 
 		--lojinha
-		if(subtipo == 1)then
+		if subtipo == 1 then
  		self.tip       = 1
 			self.x		       = 1
 			self.y         = 113
@@ -727,7 +739,7 @@ function def_tip(self,subtipo)
 		 self.ct        = 1
 		 
 	 --voltar
-		elseif(subtipo == 2)then
+		elseif subtipo == 2 then
 			self.tip       = 2
 			self.x		       = 1
 			self.y         = 113			
@@ -738,7 +750,7 @@ function def_tip(self,subtipo)
 		 self.ct        = 0
 
 		--comprar
-		elseif(subtipo == 3)then
+		elseif subtipo == 3 then
  		self.tip            = 3
 			self.x	            	= 97
 			self.y              = 116 		
@@ -748,7 +760,7 @@ function def_tip(self,subtipo)
 	  self.cor2           = 10
 
 	 --depot
-		elseif(subtipo == 4)then
+		elseif subtipo == 4 then
  		self.tip       = 4
 			self.x,self.y  = 57,57		
 			self.w,self.h  = 16,16
@@ -757,15 +769,16 @@ function def_tip(self,subtipo)
 		 self.sp        = 42
 	  self.ct        = 1
 	  
-		elseif(subtipo == 5)then
+		elseif subtipo == 5 then
  		self.tip       = 5
-			self.x,self.y  = 80,113		
-			self.w,self.h  = 8,8
-	  self.tam       = 1
-   self.s,self.sr = 236,236
-		 self.sp        = 237
+			self.x,self.y  = 112,113		
+   self.w,self.h  = 16,16
+	  self.tam       = 2
+	  self.s,self.sr = 14,14
+		 self.sp        = 46
+		 self.ct        = 1
 	 end
-	 
+	
 	 --metodos de botoes
 	 
 	 --ativar botao
@@ -775,21 +788,21 @@ function def_tip(self,subtipo)
 			if(self:col_mouse("retg") and not(mouse.eq_press) and mouse.esq_press and self.wait)then
 				--funcoes ===================
 				--ir lojinha
-				if(self.tip == 1)then
+				if self.tip == 1 then
 					status = 2		
 	   	mouse:reset()
 	  			 
 				--voltar jogo principal
-				elseif(self.tip == 2)then
+				elseif self.tip == 2 then
 					status = 1
 					 	 
 				--comprar
-				elseif(self.tip == 3)then		
+				elseif self.tip == 3 then		
 					comprar()				
 							 
 				--ir depot
-				elseif(self.tip == 4 and not ls_atl.val)then
-					if(status==1)then
+				elseif self.tip == 4 and not ls_atl.val then
+					if status==1 then
 						status      = 3
 						bt_dept.s   = 12
 						bt_dept.sr  = 12
@@ -797,7 +810,7 @@ function def_tip(self,subtipo)
 						self.ct     = 0
 						ls_inv.wait = false
 						
-					elseif(status==3)then
+					elseif status==3 then
 						bt_dept.s   = 40
 						bt_dept.sr  = 40
 						bt_dept.sp  = 42
@@ -806,9 +819,13 @@ function def_tip(self,subtipo)
 						self.ct     = 1
 					 ls_jrd.wait = false
      	ls_atl.qual = nil      	
-					end					
+				 
+				 end				
 					ls_atl.show = false
 					foreach(ls_bts,function(obj) obj.wait = false end)
+	 		elseif self.tip == 5 then
+	    	mouse:reset()
+						venda = not venda
 				end
 			end
 		end
@@ -832,7 +849,7 @@ function def_tip(self,subtipo)
 			end
 		end
 	
-	elseif(self.cla == "espaco")then
+	elseif self.cla == "espaco" then
 		self.w,self.h = 18,18
  	self.tam      = 16
  	self.disp     = true
@@ -842,7 +859,7 @@ function def_tip(self,subtipo)
     rect(self.x,self.y,self.x+self.w-1,self.y+self.h-1,self.cor1)	
 	   rectfill(self.x+1,self.y+1,(self.x+self.w-1)-1,(self.y+self.h-1)-1,0)	
     self.item:des(self.x+1,self.y+1)
-    if(not self.disp)then
+    if not self.disp then
  	   line(self.x+3 ,self.y+2,self.x+14,self.y+13,8)
  	   line(self.x+3 ,self.y+3,self.x+14,self.y+14,8)
 	   	line(self.x+3 ,self.y+4,self.x+14,self.y+15,8)
@@ -851,7 +868,7 @@ function def_tip(self,subtipo)
 			end
 		end
  	--espaco da loja
- 	if(subtipo == 1)then
+ 	if subtipo == 1 then
  	 self.cor1,self.cor3 = 1,1
 	 	self.cor2  = 7
 
@@ -860,10 +877,10 @@ function def_tip(self,subtipo)
 			end
 					 
 		 function self:add_car()
-				if(mouse.esq_press)then
+				if mouse.esq_press then
 				--adiciona ao carrinho
-					if(#ls_car.coisas<4)then
-				 	if(self.disp)then
+					if #ls_car.coisas<4 then
+				 	if self.disp then
 					  new_car       = criar_obj("espaco",2,ls_car.coisas)
 							new_car.item  = criar_obj("item",self.item.tip)
 							ls_car.total += self.item.val
@@ -873,12 +890,12 @@ function def_tip(self,subtipo)
 			end
 			
 		--carinho	
- 	elseif(subtipo == 2)then
+ 	elseif subtipo == 2 then
 			self.cor1,self.cor3 = 1,1
 	 	self.cor2 = 8
 	 	
 	 function self:del_car()
-	 	if(mouse.esq_press)then
+	 	if mouse.esq_press then
 				ls_car.total -= self.item.val
 			 del(ls_car.coisas,self)
 			 ls_car.qual = nil
@@ -886,7 +903,7 @@ function def_tip(self,subtipo)
 	 end
 	 	
 		--atalho
- 	elseif(subtipo == 3)then
+ 	elseif subtipo == 3 then
  		self.x,self.y = 64,64
 	 	self.w,self.h = 16,16
 		end
@@ -903,16 +920,16 @@ function def_tip(self,subtipo)
 			
 		end
 		
-	elseif(self.cla == "prateleira")then			
+	elseif self.cla == "prateleira" then			
 			self.h = 1
 			self.w = 80
 
-	elseif(self.cla == "item")then				
+	elseif self.cla == "item" then				
 		self.w  = 16
 		self.h  = 16
 		self.movable = true
 		--pa
-		if(subtipo == 1)then
+		if subtipo == 1 then
  		self.tip   = 1
 		 self.val   = 2000
 		 self.nome  = "inv slot"
@@ -925,7 +942,7 @@ function def_tip(self,subtipo)
 	  self.ct    = 1
 
 		--regador
-	 elseif(subtipo == 2)then
+	 elseif subtipo == 2 then
  	 self.tip   = 2
 	  self.val   = 800 
 		 self.nome  = "fertilizer"
@@ -939,7 +956,7 @@ function def_tip(self,subtipo)
 			self.capacity  = 1
 			
 		--borrifador
-	 elseif(subtipo == 3)then
+	 elseif subtipo == 3 then
  		self.tip   = 3
 	  self.val   = 400
 		 self.nome  = "pesticide"
@@ -952,7 +969,7 @@ function def_tip(self,subtipo)
 			self.capacity  = 5
 			
 		--cesta	 	
-	 elseif(subtipo == 4)then
+	 elseif subtipo == 4 then
  	 self.tip    = 4
 		 self.val   = 300
 		 self.nome  = "basket"
@@ -975,7 +992,7 @@ function def_tip(self,subtipo)
   	function self:des_planta()
   		local aux = self.planta.wh[self.estagio][1]
 		  pal(self.planta.ct,0)
-  		if(aux > 1)then
+  		if aux > 1 then
   		 spr(self.planta[self.estagio],self.x          ,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
   		else
   		 spr(self.planta[self.estagio],self.x+self.xesp,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
@@ -1004,7 +1021,7 @@ function def_tip(self,subtipo)
   	end
 			
 			--vaso1
-		 if(subtipo == 5)then
+		 if subtipo == 5 then
 	 	 self.tip  = 5
 			 self.val  = 500
 			 self.nome = "flowerpot 1"
@@ -1021,7 +1038,7 @@ function def_tip(self,subtipo)
 		  self.ypoff = 8
 		
 			--vaso2
-		 elseif(subtipo == 6)then
+		 elseif subtipo == 6 then
 		  self.tip  = 6
 			 self.val  = 500
 			 self.nome = "flowerpot 2"
@@ -1037,7 +1054,7 @@ function def_tip(self,subtipo)
 		  self.ypoff = 7
 		 			 
 			--vaso3
-		 elseif(subtipo == 7)then
+		 elseif subtipo == 7 then
 		  self.tip  = 7
 			 self.val  = 600
 			 self.nome = "flowerpot 3"
@@ -1053,7 +1070,7 @@ function def_tip(self,subtipo)
 		  self.ypoff = 5
 		 		
 			--vaso4
-		 elseif(subtipo == 8)then
+		 elseif subtipo == 8 then
 		  self.tip  = 8
 			 self.val  = 600
 			 self.nome = "flowerpot 4"
@@ -1080,7 +1097,7 @@ function def_tip(self,subtipo)
 	 	self.cur_s = 249
 			self.capacity  = 1
 
-		 if(subtipo == 9)then
+		 if subtipo == 9 then
 		  self.tip  = 9
 			 self.val  = 400
 			 self.nome = "tomato"
@@ -1089,7 +1106,7 @@ function def_tip(self,subtipo)
           tip = self.tip}
 		 		 
 			--planta2
-		 elseif(subtipo == 10)then
+		 elseif subtipo == 10 then
 		  self.tip  = 10
 		  self.val  = 500
 			 self.nome = "bear_pawn"		
@@ -1098,7 +1115,7 @@ function def_tip(self,subtipo)
           tip = self.tip}					 
 			  	
 			--planta3
-		 elseif(subtipo == 11)then
+		 elseif subtipo == 11 then
 		  self.tip  = 11
 		  self.val  = 600
 			 self.nome = "pumpkin"
@@ -1107,7 +1124,7 @@ function def_tip(self,subtipo)
           tip = self.tip}			 
 			  				 		 	
 		 --planta4
-		 elseif(subtipo == 12)then
+		 elseif subtipo == 12 then
 		  self.tip  = 12
 		  self.val  = 1000
 			 self.nome = "pegaxi"		
@@ -1116,7 +1133,7 @@ function def_tip(self,subtipo)
           tip = self.tip}				 
   				 		 			  	
 		 --planta5
-		 elseif(subtipo == 13)then
+		 elseif subtipo == 13 then
 		  self.tip  = 13
 		  self.val  = 500
 			 self.nome = "sunflower"
@@ -1125,7 +1142,7 @@ function def_tip(self,subtipo)
           tip = self.tip} 					 
 		
 		 --planta6
-		 elseif(subtipo == 14)then
+		 elseif subtipo == 14 then
 		  self.tip  = 14
 		  self.val  = 350
 			 self.nome = "sword"		 	
@@ -1135,7 +1152,7 @@ function def_tip(self,subtipo)
 				self.fases.ct = 2
 
 		 --planta7
-		 elseif(subtipo == 15)then
+		 elseif subtipo == 15 then
 		  self.tip  = 15
 		  self.val  = 600
 			 self.nome = "rose"
@@ -1145,7 +1162,7 @@ function def_tip(self,subtipo)
 				self.fases.ct = 2
 				
 		 --planta8
-		 elseif(subtipo == 16)then
+		 elseif subtipo == 16 then
 		  self.tip  = 16
 		  self.val  = 1000
 			 self.nome = "dandelion"
@@ -1157,7 +1174,7 @@ function def_tip(self,subtipo)
   elseif(range(subtipo,17,18))then
 	  	
 			--regador
-		 if(subtipo == 17)then
+		 if subtipo == 17 then
 	 	 self.tip   = 17
 		  self.val   = 500
 			 self.nome  = "watering can"
@@ -1174,7 +1191,7 @@ function def_tip(self,subtipo)
  			self.y_def = 12
  			
 			--regador
-		 elseif(subtipo == 18)then
+		 elseif subtipo == 18 then
 	 	 self.tip   = 18
 		  self.val   = 500
 			 self.nome  = "shovel"
@@ -1193,7 +1210,7 @@ function def_tip(self,subtipo)
 		end
 	
 	--palavra	
-	elseif(self.cla == "palavra")then				
+	elseif self.cla == "palavra" then				
   self.w    = count(self.ls_aux)
  	self.h    = 4
 	 self.cor1 = 5
@@ -1215,7 +1232,7 @@ end
 --nao deixa um objeto sair
 --da tela
 function n_sai_tela(oque)
-	if(oque != nil)then
+	if oque != nil then
 		esq = oque.x+oque.xoff
 		cim = oque.y+oque.yoff
 		dir = esq+oque.w-oque.woff
@@ -1230,7 +1247,7 @@ end
 
 --saiu da tela
 function saiu(oque)
-	if(oque != nil)then
+	if oque != nil then
 		esq = oque.x+oque.xoff
 		cim = oque.y+oque.yoff
 		dir = esq+oque.w-oque.woff
@@ -1246,6 +1263,7 @@ end
 
 --checa colisao entre dois retangulos
 function col_2ret(q1,q2)
+ if(not q1 or not q1)return
 	esq_1 = q1.x+q1.xoff
 	cim_1 = q1.y+q1.yoff
 	dir_1 = esq_1+q1.w-q1.woff
@@ -1257,8 +1275,8 @@ function col_2ret(q1,q2)
 	bax_2 = cim_2+q2.h-q2.hoff
 
 	--checar entre direita e esquerda
-	if(esq_1 < dir_2 and dir_1 > esq_2)then
-  if(cim_1 < bax_2 and bax_1 > cim_2)then
+	if esq_1 < dir_2 and dir_1 > esq_2 then
+  if cim_1 < bax_2 and bax_1 > cim_2 then
 			return true
 		end
 	end
@@ -1322,7 +1340,7 @@ function check_sel_and_mov(qual_ls,controle,tipo,pode_mover)
  pode_mover = pode_mover or false
 
  --se tem alguem selecionado
-	if(controle.qual)then
+	if controle.qual then
 		if(not controle.qual:mov_cur(mouse.esq,pode_mover) and not controle.qual:col_mouse(tipo)) controle.qual = nil
   if(controle.qual and stat(34)==3)then
    add(qual_ls,del(qual_ls,controle.qual))
@@ -1344,11 +1362,6 @@ function des_vertices(x,y,w,h,cor)
 
 end
 
---exibe x y do mouse
-function pos_mouse(cor)
-		print("("..stat(32)..","..stat(33)..")",100,120,cor)
-end
-
 --apaga uma lista
 function del_ls(qual_ls)
 	for i in all(qual_ls)do
@@ -1368,8 +1381,6 @@ function att_particulas(que_ls_part)
  	p:att() 
  	if(#que_ls_part>0 and que_ls_part.tipo == "semente")ls_jrd.val = false
  end 
-
--- if(#que_ls_part==0 and que_ls_part.tipo == "semente")ls_jrd.val = true
 		 
 end
 
@@ -1397,7 +1408,7 @@ function cool_down(tempo,context)
 
 	if context.val and not context.wait then
 
-		if(context.timer>=tempo)then
+		if context.timer>=tempo then
 		 context.wait  = true
   	context.timer = 0
  	else		
@@ -1509,7 +1520,7 @@ function init_loja()
 		i.item.y = i.y+1
 		ondex += 20
 		
-		if(i.id%4==0)then
+		if i.id%4==0 then
 			ondey+=28
 			ondex =11
 		end
@@ -1517,14 +1528,20 @@ function init_loja()
 end
 
 --on/off disponibilidade
-function toggle_disp(qual,pra_qual)
- ls_esp.esps[qual]:disp_toggle(pra_qual)
+function toggle_disp(de,ate,qual)
+	ate  = ate or de
+	qual = qual 
+	for i=de,ate do
+	 ls_esp.esps[i]:disp_toggle(qual)
+	end
 end
 
 --desenha o carrinho de compras
 function att_car()
 
-	if(count(ls_car.coisas)>0)then
+	if(#ls_atl.atls == 8) toggle_disp(1)
+
+	if count(ls_car.coisas)>0 then
 		local aux_y = 9
 		for i in all(ls_car.coisas) do
 		 i.x    = 97
@@ -1540,7 +1557,7 @@ function des_bt_comprar()
 	if(not bt_comp:col_mouse("retg"))then
 			buy:des()
 	else
-		if(#ls_car.coisas>0)then
+		if #ls_car.coisas>0 then
 		 buy_atv:des()
 		else
 			buy:des()
@@ -1550,10 +1567,15 @@ end
 
 function tool_tip()
 	--mostrar preco ao passar mouse	
-	if(ls_esp.qual)then
+	if slots == 63 then
+	 print("you are full",17,120,8)			
+		return
+	end
+	
+	if ls_esp.qual then
 		auxtip = ls_esp.qual.item.tip
 		--nome do item
-		if(auxtip >=9 and auxtip <=16)then
+		if auxtip >=9 and auxtip <=16 then
 			print("seeds",17,120,6)			
 		else
 			print(ls_esp.qual.item.nome,17,120,6)
@@ -1564,15 +1586,15 @@ function tool_tip()
   print(ls_esp.qual.item.val,69,120,cor)
 	
 	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 )then
-			local cor = 10
-			print("total",17,120,10)
-			if(ls_car.total > saldo) cor = 8
-	  print(ls_car.total,69,120,cor)
+		local cor = 10
+		print("total",17,120,10)
+		if(ls_car.total > saldo) cor = 8
+	 print(ls_car.total,69,120,cor)
 	
 	--mostrar preco ao passar mouse no carrinho
-	elseif(ls_car.val)then
+	elseif ls_car.val then
 	
-		if(ls_car.qual != nil)then			
+		if ls_car.qual != nil then			
 			print(ls_car.qual.item.nome,17,120,6)
 	  print(ls_car.qual.item.val,69,120,6)
  	end
@@ -1585,7 +1607,9 @@ function tool_tip()
 end
 
 function comprar()
-	if(ls_car.total<=saldo)then
+	if(#ls_car.coisas+slots > 63) return
+
+	if ls_car.total<=saldo then
 		saldo -= ls_car.total	
 		ls_car.total	= 0
 		
@@ -1600,7 +1624,7 @@ end
 -->8
 --inventario ===================
 function des_inv()
-	if(status==3)then
+	if status==3 then
 		foreach(ls_inv.coisas,function(obj) obj:des() end)
 	else
 		foreach(ls_jrd.coisas,function(obj) obj:des() end)
@@ -1619,7 +1643,7 @@ end
 
 function add_um_item(qual,onde)
 	
-	if(onde   == 1)then
+	if onde   == 1 then
 	 qual.onde = 1
 	 add(ls_jrd.coisas,qual)
 
@@ -1638,16 +1662,6 @@ function add_varios_itens(qual_ls,onde)
 
 end
 
-function print_inv()
-	yplus = 1
-	if(count(ls_inv.coisas)>0) then
-	 yplus += 6
-	 for i in all(ls_inv.coisas)do
- 	 print(i.nome,1,yplus,15)
- 	 yplus += 6
-	 end
-	end
-end
 
 
 -->8
@@ -1675,24 +1689,23 @@ end
 function def_pos_atls()
 
 	for i in all(ls_atl.atls)do
-  i.x =	64
-	 i.y = 64
+  i.x,i.y = 64,64
 	end
 
  local angulo = 0
 
 	local quantos = #ls_atl.atls
  	
-	if(quantos == 2)then
+	if quantos == 2 then
 	 ang_inc = 60
 	 dist    = 20
-	elseif(quantos == 4)then
+	elseif quantos == 4 then
 	 ang_inc = 90
 	 dist    = 20
-	elseif(quantos == 6)then
+	elseif quantos == 6 then
 	 ang_inc = 60
 	 dist    = 24
-	elseif(quantos == 8)then
+	elseif quantos == 8 then
 	 ang_inc = 45
 	 dist    = 28
 	end
@@ -1707,13 +1720,13 @@ end
 
 function des_atl()
 
-	if(ls_atl.show)then
+	if ls_atl.show then
 		for i in all(ls_atl.atls)do
 		 ovalfill(i.x-9, i.y-9,i.x+10,i.y+10,0)
    ovalfill(i.x-8, i.y-8,i.x+9 ,i.y+9 ,0)
    oval(i.x-8, i.y-8,i.x+9,i.y+9,i.cor1)
 
-			if(i.item !=nil)then
+			if i.item !=nil then
 			 i.item:des(i.x-7,i.y-7)
 			end
  		i:hover("circ")
@@ -1727,13 +1740,13 @@ end
 --mostrar-ocultar atalhos
 function atl_on_off(context,pode_mover)
 	pode_mover = pode_mover or false
-	if(context)then
+	if context then
 		ls_atl.show = not ls_atl.show 
 		
-		if(ls_atl.show)then 
+		if ls_atl.show then 
 			mouse:reset()
 			
-			if(pode_mover)then
+			if pode_mover then
 				ls_jrd.val   = true
 				ls_inv.val   = true
 			end
@@ -1758,7 +1771,7 @@ end
 
 function toggle_atribuir()
 	
-	if(mouse.esq_press)then	
+	if mouse.esq_press then	
   --oculta os atalhos
 	 atl_on_off(true)
 	 --poe em contexto de atribuicao
@@ -1767,8 +1780,8 @@ function toggle_atribuir()
 		--desativa o movimento do jardim e inventario
 		ls_jrd.val,ls_inv.val = false,false				
 
-		if(status == 3)then
-			if(ls_atl.qual and ls_atl.qual.item)then
+		if status == 3 then
+			if ls_atl.qual and ls_atl.qual.item then
 	   mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
 	 	else
 	   mouse:tip_set(217,"⬅️","⬆️")
@@ -1776,7 +1789,7 @@ function toggle_atribuir()
 	 	
 	 else
 
-	 	if(ls_atl.qual and ls_atl.qual.item)then
+	 	if ls_atl.qual and ls_atl.qual.item then
 	 		local aux_tip = ls_atl.qual.item.tip
 
 	 	 if(range(aux_tip,5,8)) mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
@@ -1811,7 +1824,7 @@ function funcionalidades(que_func,container)
 
 		-- se ele ja tiver efetuamos
 		-- uma troca com o jardim/inv
-		if(aux_tip)then
+		if aux_tip then
 	  atl_para_container(mouse.esq,container,true)
   -- se ele nao tiver simplesmenete
   -- bota no atalho
@@ -1820,7 +1833,7 @@ function funcionalidades(que_func,container)
 	 end	
 					 
 	--que func == 2
-	elseif(que_func == 2)then
+	elseif que_func == 2 then
 		-- mesma logica da funcao 1
 		-- exclusivo pro jardim
 		-- so vasos pode ser colocados
@@ -1828,7 +1841,7 @@ function funcionalidades(que_func,container)
 		-- as demais coisas executam suas respectivas funcoes
 	
 	 --nao tem item
- 	if(not aux_tip)then
+ 	if not aux_tip then
  	 --o item a ser guardado eh um vaso sem planta
 			if(container.qual and range(container.qual.tip,5,8) and container.qual.algo==0 and not container.qual.planta and not(pat_sem.val or pat_reg.val))then
  	  container_para_atl(mouse.esq,container)
@@ -1837,22 +1850,23 @@ function funcionalidades(que_func,container)
 		--eh um vaso
  	elseif range(aux_tip,5,8) then
 			--o que vai ser permutado  um vaso sem nada?
-			if(container.qual and container.qual.algo == 0)then
+			if container.qual and container.qual.algo == 0 then
 		  atl_para_container(mouse.esq,container,true)
 		 else
 		  atl_para_container(mouse.esq,container,false)
 		 end
 				
  	--eh um upgrade de atl
- 	elseif(aux_tip == 1)then
-	 	if(mouse.esq)then
+ 	elseif aux_tip == 1 then
+	 	if mouse.esq then
 		 
-				if(#ls_atl.atls == 8)then
+				if #ls_atl.atls == 8 then
 				 toggle_disp(1)
 				else
 					init_atl(2)
 	 		 def_pos_atls()
 				 ls_atl.qual.item = nil
+			 	if(#ls_atl.atls == 8) toggle_disp(1)
 				end
 				ls_atl.qual = nil
 	   atl_on_off(true)	   
@@ -1863,7 +1877,7 @@ function funcionalidades(que_func,container)
 			pat_sem.val = true		
 
 		--eh um regador
-		elseif(aux_tip == 17)then
+		elseif aux_tip == 17 then
 			pat_reg.val = true
 		end
 			 
@@ -1879,13 +1893,13 @@ end
 function atl_para_container(context,qual_container,permutavel)
 	permutavel = permutavel or false	
 
-	if(qual_container.qual and permutavel)then
+	if qual_container.qual and permutavel then
 	 mouse:tip_set(ls_atl.qual.item and 233 or 217,"⬅️","⬆️")		
  else
 	 mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
  end
 	 
-	if(context)then
+	if context then
 		--seta a proprieda onde
 		--para o container
 		--jardim ou deposito
@@ -1934,7 +1948,7 @@ end
 
 function container_para_atl(context,qual_container)
 	--se algo do container esta sendo selecionado		
-	if(qual_container.qual and context)then
+	if qual_container.qual and context then
 		local para_atl        = qual_container.qual
   para_atl.onde = 3
 		ls_atl.qual.item      =	del(qual_container.coisas,para_atl)
@@ -1984,7 +1998,28 @@ function des_depot()
 	end
 	
 	des_prateleiras(16,32,24)
+ bt_vend:des()
+
+	if venda then
+	 bt_vend:des(bt_vend.x,bt_vend.y-1)
+ 	pal(1,0)
+	 spr(247,121,109)
+		rect(14,117,91,126,5)
+ 	rectfill(15,118,90,125,0)
+	 rect(14,117,66,126,5)
+  tool_tip()
+	else
+	 bt_vend:des()
+		pal(11,5)
+		pal(1,0)
+		pal(7,13)
+		pal(3,1)
+	 spr(247,121,110)
+	end
+ pal()
+ 
 	des_inv()
+
 end
 
 function des_prateleiras(x_init,y_init,y_esp) 
@@ -2034,9 +2069,9 @@ end
 function def_pos(i)
 		i.x = flr(rnd(60)) + 16 
 		
-		if(i.tip <=4)then
+		if i.tip <=4 then
 			i.y = 16 
-		elseif(i.tip<=8)then
+		elseif i.tip<=8 then
 			i.y = 40
 		else
 			i.y = 64
@@ -2056,7 +2091,7 @@ function plantar(o_que)
 	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	if(qual_vaso and qual_vaso.planta)return
 	
-	if(qual_vaso)then
+	if qual_vaso then
 		qual_vaso.planta  = o_que.ls_aux.fases
  	qual_vaso.estagio = 3
  	qual_vaso.algo    = 1
@@ -2075,10 +2110,10 @@ function regar(o_que)
 	if(#pat_reg == 0) return 
 	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	
-	if(qual_vaso)then
+	if qual_vaso then
 		if(not qual_vaso.colher and qual_vaso.saturac < max_saturac) qual_vaso.saturac += 1
 	 o_que:del()
- 	if(qual_vaso.saturac >= max_saturac)then
+ 	if qual_vaso.saturac >= max_saturac then
  		qual_vaso:vasar()
 			avancar_fase(qual_vaso)
 			qual_vaso.saturac=0
@@ -2093,7 +2128,7 @@ function avancar_fase(o_que)
  if(not o_que.planta) return
 	local inc = 1 --flr(rnd(100))
 	o_que.estagio+= inc%2
- if(o_que.estagio >#o_que.planta)then
+ if o_que.estagio >#o_que.planta then
   o_que.estagio = #o_que.planta
   o_que.colher  = true
  end
@@ -2104,7 +2139,6 @@ end
 function save_obj(obj,qual_slot)
 
 	if(not obj or not obj.onde or obj.onde == 0) return
-	
 	local combinado = 0
 	--garantir cordenada dentro do range 
 	local x_aux = obj.x<0 and -obj.x or 0
@@ -2135,6 +2169,7 @@ function save_obj(obj,qual_slot)
 end
 
 function save_game()
+ del_ls(cu4)
  --salvar variaveis de jogo
 	local game_vars = 0
 	game_vars |= (saldo    & 0xfff) <<  4 --saldo
@@ -2143,40 +2178,42 @@ function save_game()
 	          |  (stat(92) & 0x1f ) >>>16 --dia
 
  dset(0,game_vars) 
- --objetos funcionais padrao	
-
+ 
+ --objetos funcionais padrao		
 	save_obj(regador,1)
 	save_obj(pa     ,2)
  --salvar objetos
  local slot = 3
+
 	for i in all(ls_inv.coisas)do
-		if(i != regador and i != pa)then
+		if i != regador and i != pa then
  		if(save_obj(i,slot))	slot+=1 
 		end
 	end	 
-
+	
 	for i in all(ls_jrd.coisas)do
-		if(i != regador and i!= pa)then
+		if i != regador and i!= pa then
  		if(save_obj(i,slot))	slot+=1  
 		end
 	end
 
 	for i in all(ls_atl.atls)do
-		if(i.item)then
-			if(i.item != regador and i.itemi!= pa)then
+		if i.item then
+			if i.item != regador and i.item != pa then
  			if(save_obj(i.item,slot))	slot+=1 
 			end
 		end
 	end	 
 
-	for i=slot,64 do dset(i,0) end
-	
+	slots = slot-1
+	if(slot < 63)	for i=slot,63 do dset(i,0) end
+
 end
 
 function load_obj(qual_slot,guardar_em_ls)
  guardar_em_ls = guardar_em_ls or true
 	local save = dget(qual_slot)
-
+	
  local onde =  (save >>> 14) & 0x03
 	if(onde == 0) return
  local x    =  (save >>>  7) & 0x7f
@@ -2198,7 +2235,7 @@ function load_obj(qual_slot,guardar_em_ls)
   novo_obj.estagio = ((save << 12) & 0x07)
  end
  
- if(guardar_em_ls)then
+ if guardar_em_ls then
 	 if(onde == 1) add(ls_jrd.coisas,novo_obj)
 	 if(onde == 2) add(ls_inv.coisas,novo_obj)
 	 if(onde == 3) then
@@ -2213,20 +2250,22 @@ end
 function load_game()
  load_aux = dget(0)
 	--primeiro carregar o saldo
- --saldo = (load_aux >> 04)&0xfff
+ saldo = (load_aux >> 04)&0xfff
+
+	--objetos padro
  regador =	load_obj(1) or criar_obj("item",17,ls_inv.coisas,nil,16,18,2)
  pa      = load_obj(2) or criar_obj("item",18,ls_inv.coisas,nil,32,18,2)
 
  --careggar regador e pa	
 	for i=3, 63 do
-  if(load_obj(i))slots+=1 else break
+  if(not load_obj(i)) break
  end
  
 end
 
 function debug_obj(obj,cor)
 
- --if(true) return
+ if(true) return
 	cor = cor or 9
  if(not obj)  return
  
@@ -2243,11 +2282,11 @@ function debug_obj(obj,cor)
 	end
 	--informaes especificas
 	--tem algo 
-	if(obj.algo == 1)then
+	if obj.algo == 1 then
   --eh algo que pode ter uma planta
 		if(range(obj.tip,4,8))then
 
-			if(obj.planta)then
+			if obj.planta then
 	 		print("planta: "..obj.planta.tip)
  			print("estagio:"..obj.estagio)
  		end
@@ -2263,36 +2302,36 @@ end
 
 __gfx__
 880008888880008800000000000bbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-888080000008088800000422200b1b00000000000000000000005577777000000000004224000000000000000000000000000000000000000000000000000000
-0888000000008880000441111bbb1bbb000000000000000000005566666000000000049119400000000066666660000000000000000000000550000000000000
-0088800000088800004111111b11111b0000000000000000000000d666d000000000024994209000000611111116600000000000000000000555555555555500
-0208880000888080041111111bbb1bbb00000000000000000000055ddd0000000000002112090000006111111161150000000500000000000051111111111500
-200088800888000804111999111b1b0044000000000000440000560dd0000000000000999929900000f1111111f1150000005555555000000051551551551500
-800008880880000800411a19114bbb00414000000000041400006060060000000000041111400000000fffffff11150000055555555500000051111111111500
-8000008880000008021411a11411111024122244442221420000070000600000000004111140000000d1111111d1150000005555555500000051155155115000
-8000000888000008021141114121112002911111111119200000070bb0600000000041113314000000d1bb1bb1d1150000000500001500000051111111115000
-20000220888000080411144411211120021999999999922000007033330d00000004111bb311200000611bbb1161150000000000011100000055555555550000
-200022200888000804111111114111200241414141414120000703b33b30d00000411113b1111200006111311161150000001111111000000050000000000000
-02022200008880800411111111411120021414141414142000060333bbb0d0000041113111111200006111311161150000001111110000000055555555555000
-00222000000888000041111114111200002121212121220000006000000d00000004111111112000006111111161150000000000000000000005500005500000
-022200000000888000044444422220000002222222222000000006666dd00000000044444222000000066666666dd00000000000000000000005500005500000
-22202000000208880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+888080000008088800000422200b1b00000000000000000000005577777000000000004224000000000000000000000000000000000000000110000000000000
+0888000000008880000441111bbb1bbb000000000000000000005566666000000000049119400000000066666660000000000000000000001551111111111100
+0088800000088800004111111b11111b0000000000000000000000d666d000000000024994209000000611111116600000000000000000001555555555555510
+0208880000888080041111111bbb1bbb00000000000000000000055ddd0000000000002112090000006111111161150000000500000000000151111111111510
+200088800888000804111999111b1b0044000000000000440000560dd0000000000000999929900000f1111111f1150000005555555000000151551551551510
+800008880880000800411a19114bbb00414000000000041400006060060000000000041111400000000fffffff11150000055555555500000151111111111510
+8000008880000008021411a11411111024122244442221420000070000600000000004111140000000d1111111d1150000005555555500000151155155115100
+8000000888000008021141114121112002911111111119200000070bb0600000000041113314000000d1bb1bb1d1150000000500001500000151111111115100
+20000220888000080411144411211120021999999999922000007033330d00000004111bb311200000611bbb1161150000000000011100000155555555551000
+200022200888000804111111114111200241414141414120000703b33b30d00000411113b1111200006111311161150000001111111000000151111111111000
+02022200008880800411111111411120021414141414142000060333bbb0d0000041113111111200006111311161150000001111110000000155555555555100
+00222000000888000041111114111200002121212121220000006000000d00000004111111112000006111111161150000000000000000000015511115511000
+022200000000888000044444422220000002222222222000000006666dd00000000044444222000000066666666dd00000000000000000000015510015510000
+22202000000208880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100001100000
 22000222222000880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111100000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000001444466444410000000000000000000770000000000000
-0000000000000000000000000000000000000dddddd00000000dddddddddd0000011111111111100011111111111111000000000000000000777777777777700
-000000000000000000000000000000000000d122221d000000d1111111111d000114444664444110019999977999991000000700000000000071111111111700
-00000000000000000002444444442000000061222216000000d1122222211d000144444664444410011111177111111000007777777000000071771771771700
-00224444444422000021111111111200000016666661000000612222222216000144444664444410011111111111111000077777777700000071111111111700
-00211111111112000041414121411400000001111110000000166666666661000144444664444410011122222222111000007777777700000071177177117000
-0041414121411400004112141214140000000d1111d00000000d11111111d0000111111661111110011122222222111000000700005700000071111111117000
-00411214121414000091214141411900000066dddddd00000066dddddddddd000141416666141410019191777719191000000000055500000077777777770000
-00912141414119000009999999999000000d66dddd6dd0000d66d6dd6ddd6dd00141416116141410019191711719191000005555555000000070000000000000
-009999999999990000011111111110000001ddddd666100001ddddddd6d666100141441661441410019199177199191000005555550000000077777777777000
-0002111111112000000024422222000000011ddddd6110000111dd6ddddd61100141444444441410019199999999191000000000000000000007700007700000
-00022444422220000000244222220000000011111111000000111666111111000141444444441410019199999999191000000000000000000007700007700000
-0002244442222000000004422220000000000111111000000001116111d110000141111111111410019111111111191000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000144444444444410019999999999991000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000001444466444410000000000000000000110000000000000
+0000000000000000000000000000000000000dddddd00000000dddddddddd0000011111111111100011111111111111000000000000000001771111111111100
+000000000000000000000000000000000000d122221d000000d1111111111d000114444664444110019999977999991000000700000000001777777777777710
+00000000000000000002444444442000000061222216000000d1122222211d000144444664444410011111177111111000007777777000000171111111111710
+00224444444422000021111111111200000016666661000000612222222216000144444664444410011111111111111000077777777700000171771771771710
+00211111111112000041414121411400000001111110000000166666666661000144444664444410011122222222111000007777777700000171111111111710
+0041414121411400004112141214140000000d1111d00000000d11111111d0000111111661111110011122222222111000000700005700000171177177117100
+00411214121414000091214141411900000066dddddd00000066dddddddddd000141416666141410019191777719191000000000055500000171111111117100
+00912141414119000009999999999000000d66dddd6dd0000d66d6dd6ddd6dd00141416116141410019191711719191000005555555000000177777777771000
+009999999999990000011111111110000001ddddd666100001ddddddd6d666100141441661441410019199177199191000005555550000000171111111111000
+0002111111112000000024422222000000011ddddd6110000111dd6ddddd61100141444444441410019199999999191000000000000000000177777777777100
+00022444422220000000244222220000000011111111000000111666111111000141444444441410019199999999191000000000000000000017711117711000
+0002244442222000000004422220000000000111111000000001116111d110000141111111111410019111111111191000000000000000000017710017710000
+00000000000000000000000000000000000000000000000000000000000000000144444444444410019999999999991000000000000000000001100001100000
 00000000000000000000000000000000000000000000000000000000000000000111111111111110011111111111111000000000000000000000000000000000
 00000000000000000000000000000000000b03000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000b0bbb30b000000000000000000b0b000000000000000000000000000000000000000000000000000000000000000000
@@ -2382,143 +2421,143 @@ __gfx__
 00000000000000000000000000000000761766110053bbbd01111110bbb11bbb1882888114411181000000000000000000000006677005000000000000624400
 0000000000000000000000000000000017171100000533350211112000b11b001881188114488881000000000000000000000065567505000000000006000000
 0000000000000000000000000000000001110000000555550244422000bbbb0011111111111111110000000000000000000006511675500000005000d0000000
-55550000500500005505000055550000777000007707000077070000000000000000000000dddd000000000000000000000006516755650000051d0d00000000
-5550000055050000550500005500000070770000770700007707000000000000000006600d111dd0000000000000000000000677757556000051d15000000000
-0555000055550000555500005500000077070000777700007777000000000000d600600dd6666d150000000000000000000000655667500000d1511d00000000
-555500005555000005500000555500007777000077770000077000000000000066ddd00dd1111d1500000000000000000076000555660000006155d150000000
-00000000000000000000000000000000000000000000000000000000000000000d61160dd1bb1d15000000000000000000675555555000000061111500000000
-00000000000000000000000000000000000000000000000000000000000000000d166160d1bb1d150000000000000000005650000000000000666d5000000000
-00000000000000000000000000000000000000000000000000000000000000000d111160d1111d15000000000000000000000000000000000000000000000000
-000000000000000000000000000000000000000000000000000000000000000000dddd000ddddd50000000000000000000000000000000000000000000000000
+55550000500500005505000055550000777000007707000077070000011bb1100000000000dddd000000000000000000000006516755650000051d0d00000000
+555000005505000055050000550000007077000077070000770700001bb77bb1000006600d111dd0000000000000000000000677757556000051d15000000000
+055500005555000055550000550000007707000077770000777700001bb331b1d600600dd6666d150000000000000000000000655667500000d1511d00000000
+5555000055550000055000005555000077770000777700000770000001b7b11066ddd00dd1111d1500000000000000000076000555660000006155d150000000
+00000000000000000000000000000000000000000000000000000000011b7b100d61160dd1bb1d15000000000000000000675555555000000061111500000000
+000000000000000000000000000000000000000000000000000000001b133bb10d166160d1bb1d150000000000000000005650000000000000666d5000000000
+000000000000000000000000000000000000000000000000000000001bb77bb10d111160d1111d15000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000011bb11000dddd000ddddd50000000000000000000000000000000000000000000000000
 __label__
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888eeeeee888eeeeee888eeeeee888eeeeee888eeeeee888eeeeee888777777888eeeeee888888888ff8ff8888228822888222822888888822888888228888
-8888ee888ee88ee88eee88ee888ee88ee888ee88ee8e8ee88ee888ee88778777788ee888ee88888888ff888ff888222222888222822888882282888888222888
-888eee8e8ee8eeee8eee8eeeee8ee8eeeee8ee8eee8e8ee8eee8eeee8777877778eeeee8ee88888888ff888ff888282282888222888888228882888888288888
-888eee8e8ee8eeee8eee8eee888ee8eeee88ee8eee888ee8eee888ee8777888778eeeee8ee88e8e888ff888ff888222222888888222888228882888822288888
-888eee8e8ee8eeee8eee8eee8eeee8eeeee8ee8eeeee8ee8eeeee8ee8777878778eeeee8ee88888888ff888ff888822228888228222888882282888222288888
-888eee888ee8eee888ee8eee888ee8eee888ee8eeeee8ee8eee888ee8777888778eeeee8ee888888888ff8ff8888828828888228222888888822888222888888
-888eeeeeeee8eeeeeeee8eeeeeeee8eeeeeeee8eeeeeeee8eeeeeeee8777777778eeeeeeee888888888888888888888888888888888888888888888888888888
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-111111111ddd1ddd1dd11d1d11111dd11ddd11111ddd1ddd1ddd1d111d1d11dd1111111111111111111111111111111111111111111111111111111111111111
-111111111ddd1d111d1d1d1d11111d1d1d1111111d1d11d11d1d1d111d1d1d1d1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd
-1ddd1ddd1d1d1dd11d1d1d1d11111d1d1dd111111ddd11d11ddd1d111ddd1d1d1111111111111111111111111111111111111111111111111111111111111111
-111111111d1d1d111d1d1d1d11111d1d1d1111111d1d11d11d1d1d111d1d1d1d1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd1ddd
-111111111d1d1ddd1d1d11dd1ddd1ddd1ddd1ddd1d1d11d11d1d1ddd1d1d1dd11111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1eee1e1e1ee111ee1eee1eee11ee1ee1111116661661166616661111166616661611117111611616166616611666116611661111166616661666166611661171
-1e111e1e1e1e1e1111e111e11e1e1e1e111111611616116111611111161611611611171116161616161616161161161616111111161616161616161116111117
-1ee11e1e1e1e1e1111e111e11e1e1e1e111111611616116111611111166611611611171116161616166616161161161616661111166616661661166116661117
-1e111e1e1e1e1e1111e111e11e1e1e1e111111611616116111611111161611611611171116611616161616161161161611161111161116161616161111161117
-1e1111ee1e1e11ee11e11eee1ee11e1e111116661616166611611666161611611666117111661166161616161161166116611666161116161616166616611171
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111161161616661661166611661166111111111111116116161666166116661166116611111666166616661666116611111771111111111cc1111111111111
-111116161616161616161161161616111111177711111616161616161616116116161611111116161616161616117111111117711111111c11c1111111111111
-1111161616161666161611611616166611111111111116161616166616161161161616661111166616661661166177161111117711111ccc11c1111111111111
-1111166116161616161611611616111611111777111116611616161616161161161611161111161116161616161177711111171711111c1111c1111111111111
-11111166116616161616116116611661111111111111116611661616161611611661166116661611161616161661777711111777111111111ccc111111111111
-11111111111188888111111111111111111111111111111111111111111111111111111111111111111111111111771111111111111111111111111111111111
-11111166166688888111111111111111111111111111111111111111111111111111111111111111111111111111117111111111111111111111111111111111
-11111611111688888111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111611166688888111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111611161188888111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111166166688888111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111eee1eee1171116116161666166116661166116617111ccc1171111111611616166616611666116611661111111111111ccc111111111111111111111111
-111111e11e111711161616161616161611611616161111711c1c1117111116161616161616161161161616111111177711111c1c111111111111111111111111
-111111e11ee11711161616161666161611611616166611171ccc1117111116161616166616161161161616661111111111111ccc111111111111111111111111
-111111e11e111711166116161616161611611616111611711c1c1117111116611616161616161161161611161111177711111c1c111111111111111111111111
-11111eee1e111171116611661616161611611661166117111ccc1171111111661166161616161161166116611111111111111ccc111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111eee1eee1171116116161666166116661166116611171ccc1171111111611616166616611666116611661111111111111ccc111111111111111111111111
-111111e11e11171116161616161616161161161616111171111c111711111616161616161616116116161611111117771111111c111111111111111111111111
-111111e11ee11711161616161666161611611616166617111ccc1117111116161616166616161161161616661111111111111ccc111111111111111111111111
-111111e11e111711166116161616161611611616111611711c111117111116611616161616161161161611161111177711111c11111111111111111111111111
-11111eee1e111171116611661616161611611661166111171ccc1171111111661166161616161161166116611111111111111ccc111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111eee11ee1eee1111166611111cc11111116116161666166116661166116611111666166616661666116611111ee111ee1111111111111111111111111111
-11111e111e1e1e1e11111161177711c11111161616161616161611611616161111111616161616161611161111111e1e1e1e1111111111111111111111111111
-11111ee11e1e1ee111111161111111c11111161616161666161611611616166611111666166616611661166611111e1e1e1e1111111111111111111111111111
-11111e111e1e1e1e11111161177711c11171166116161616161611611616111611111611161616161611111611111e1e1e1e1111111111111111111111111111
-11111e111ee11e1e1111166611111ccc1711116611661616161611611661166116661611161616161666166111111eee1ee11111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1111111116611666161611111666166616111111111111111111111111111111111111661666166616661666111111661666166611711c1c1ccc11cc1ccc1ccc
-1111111116161611161611111616116116111111111111111111111111111777111116111616116116161616111116161616116117111c1c1c111c111c1c1c1c
-11111111161616611616111116661161161111111111111111111111111111111111161116611161166616611111161616611161171111111cc11ccc1ccc1ccc
-11111111161616111666111116161161161111111111111111111111111117771111161116161161161616161111161616161161171111111c11111c1c111c1c
-11111111161616661666166616161161166611111111111111111111111111111111116616161666161616161666166116661661117111111ccc1cc11c111c1c
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-111111111661166616161111166616661611111116661666166616661111111111111cc11ccc1c11111111111111111111111111111111111111111111111111
-111111111616161116161111161611611611111111611161161116661111177711111c1c11c11c11111111111111111111111111111111111111111111111111
-111111111616166116161111166611611611111111611161166116161111111111111c1c11c11c11111111111111111111111111111111111111111111111111
-111111111616161116661111161611611611111111611161161116161111177711111c1c11c11c11111111111111111111111111111111111111111111111111
-111111111616166616661666161611611666117116661161166616161111111111111c1c1ccc1ccc111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-111111111661166616161111166616661611111111661166166616611111111111111cc111111111111111111111111111111111111111111111111111111111
-1111111116161611161611111616116116111111161116161616116111111777111111c111111111111111111111111111111111111111111111111111111111
-1111111116161661161611111666116116111111161116161661116111111111111111c111111111111111111111111111111111111111111111111111111111
-1111111116161611166611111616116116111111161116161616116111111777111111c111111111111111111111111111111111111111111111111111111111
-111111111616166616661666161611611666117111661661161616661111111111111ccc11111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-111111111661166616161111166616661611111111661166166616661111111111111ccc11111111111111111111111111111111111111111111111111111111
-11111111161616111616111116161161161111111611161616161116111117771111111c11111111111111111111111111111111111111111111111111111111
-11111111161616611616111116661161161111111611161616611666111111111111111c11111111111111111111111111111111111111111111111111111111
-11111111161616111666111116161161161111111611161616161611111117771111111c11111111111111111111111111111111111111111111111111111111
-11111111161616661666166616161161166611711166166116161666111111111111111c11111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-111111111661166616161111166616661611111111661166166616661111111111111cc111111111111111111111111111111111111111111111111111111111
-1111111116161611161611111616116116111111161116161616111611111777111111c111111111111111111111111111111111111111111111111111111111
-1111111116161661161611111666116116111111161116161661116611111111111111c111111111111111111111111111111111111111111111111111111111
-1111111116161611166611111616116116111111161116161616111611111777111111c111111111111111111111111111111111111111111111111111111111
-111111111616166616661666161611611666117111661661161616661111111111111ccc11111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111166116661616111116661666161111111666166111111111111111111111171716111166111116661666161111111666166616111166111111111111
-11111111161616111616111116161161161111111161161611111111111117771111177716111611111116161161161111111616116116111611111111111111
-11111111161616611616111116661161161111111161161611111111111111111111171716111666111116661161161111111666116116111666111111111111
-11111111161616111666111116161161161111111161161611111111111117771111177716111116111116161161161111111616116116111116111111111111
-11111111161616661666166616161161166611711666166611111111111111111111171716661661166616161161166611711616116116661661111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-111111111661166616161111166616661611111116661111111111111111111111111ccc11111ccc111111111111111111111111111111111111111111111111
-111111111616161116161111161611611611111116161111111111111111177711111c1c11111c11111111111111111111111111111111111111111111111111
-111111111616166116161111166611611611111116611111111111111111111111111ccc11111ccc111111111111111111111111111111111111111111111111
-111111111616161116661111161611611611111116161111111111111111177711111c1c1111111c111111111111111111111111111111111111111111111111
-111111111616166616661666161611611666117116161111111111111111111111111ccc11c11ccc111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111eee1ee11ee11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111e111e1e1e1e1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111ee11e1e1e1e1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111e111e1e1e1e1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111eee1e1e1eee1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1eee1ee11ee111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1e111e1e1e1e11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1ee11e1e1e1e11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1e111e1e1e1e11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-1eee1e1e1eee11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-82888222822882228888828288828222822282228888888888888888888888888888888888888888888882888222822282288882822282288222822288866688
-82888828828282888888828288288882888288828888888888888888888888888888888888888888888882888882888288288828828288288282888288888888
-82888828828282288888822288288222822288228888888888888888888888888888888888888888888882228882888288288828822288288222822288822288
-82888828828282888888888288288288828888828888888888888888888888888888888888888888888882828882888288288828828288288882828888888888
-82228222828282228888888282888222822282228888888888888888888888888888888888888888888882228882888282228288822282228882822288822288
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
+ccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000660600006606660066000006000666000606000666
+c0c00000000000000000000000000000000000000000000000000000000000000000000000000000000006000600060600600600006006000006006006000006
+c0c00000555555555555555555555555555555005555555555555555555555555555555555555555555556665655565655655666555556665666556506660666
+c0c00000500000000000000000000000000005000000000000000000000000000000000000000000000000060600060600600006006006060600006506060600
+ccc00000500555505555055550550005555005000000000000000000000000000000000000000000000006600666066000600660000006660666060506660666
+00000000500055005505055050550005550005000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+55500000500055005505055050550000555005000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+50500000500055005555055550555505555005555555555555555555555555555555555555555555555555555555000555555555555555555555500500000000
+50500000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+50500000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+55500000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
+00000000500110000000000bbb011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+55500000500100800422200b0b001001008000422400000010010080557777700000100100800000000000001005000500000000000000000000500500000000
+505000005001008840000bbb0bbb1001008804900940000010010088556666600000100100880000000000001005000500000000000000000000500500000000
+505000005001008880000b00000b100100888249942090001001008880d666d00000100100888000000000001005000500000000000000000000500500000000
+505000005001040888000bbb0bbb1001000888200209000010010008885ddd000000100100088800000000001005000500000000000000000000500500000000
+55500000500104008889000b0b001001000088899929900010010000888dd0000000100144008880000000441005000500000000000000000000500500000000
+00000000500100400888004bbb001001000008880040000010010000688806000000100140400888000004041005000500000000000000000000500500000000
+00000000500102040088840000001001000004888040000010010000078880600000100124022288842220421005000500000000000000000000500500000000
+00000000500102004008882000201001000040088804000010010000070888600000100102900008880009201005000500000000000000000000500500000000
+000000005001040004448880002010010004000b88802000100100007033888d0000100102099999888992201005000500000000000000000000500500000000
+0000000050010400000008880020100100400003b88802001001000703b33888d000100102404040488840201005000500000000000000000000500500000000
+000000005001040000000088802010010040003000888200100100060333bb888000100102040404048884201005000500000000000000000000500500000000
+00000000500100400000040888001001000400000008880010010000600000088800100100202020202888001005000500000000000000000000500500000000
+0000000050010004444442228800100100004444422288001001000006666dd08800100100022222222288001005000500000000000000000000500500000000
+00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000500500000000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500000000000000000000500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000555555555555555555555500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000555555555555555555555555500555555555555555555555555555555555555555555555555555555555000000000000000000000000000500000000
+00000000500000000000000000000000500000000000000000000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000500555505555055550555500500000000000000000000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000500550505505005500555000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000500555505505005500055500500000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000500550005555005500555500555555555555555555555555555555555555555555555555555555555555000555555555555555555555500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+00000000500100800000000000001001008000000000000010010080000000000000100100800000000000001005000500000000000000000000500500000000
+000000005001008800000000000010010088000000000000100100880dddddd0000010010088ddddddddd0001005000500000000000000000000500500000000
+000000005001008880000000000010010088800000000000100100888100001d000010010088811111111d001005000500000000000000000000500500000000
+00000000500100088800000000001001000888444444200010010008880000160000100100d8880000011d001005000500000000000000000000500500000000
+00000000500100228884444422001001002088800000020010010000888666610000100100618880000016001005000500000000000000000000500500000000
+00000000500100200888000002001001004048882040040010010000088811100000100100166888666661001005000500000000000000000000500500000000
+000000005001004040888040040010010040028882040400100100000d8881d000001001000d11888111d0001005000500000000000000000000500500000000
+0000000050010040020888040400100100902048884009001001000066d888dd000010010066ddd888dddd001005000500000000000000000000500500000000
+0000000050010090204088800900100100099999888990001001000d66dd888dd00010010d66d6dd888d6dd01005000500000000000000000000500500000000
+00000000500100999999988899001001000000000888000010010001ddddd8881000100101ddddddd88866101005000500000000000000000000500500000000
+000000005001000200000088800010010000244222888000100100011ddddd88800010010111dd6ddd8881101005000500000000000000000000500500000000
+00000000500100022444422888001001000024422228880010010000111111188800100100111666111888001005000500000000000000000000500500000000
+0000000050010002244442228800100100000442222088001001000001111110880010010001116111d188001005000500000000000000000000500500000000
+00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000500500000000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500000000000000000000500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000555555555555555555555500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000555555555555555555555555555555555550055555555555555555555555555555555555555555555555000000000000000000000000000500000000
+00000000500000000000000000000000000000000050000000000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000500555505500055550555505555055550050000000000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000500550505500055050555500550055500050000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000500555505500055550550500550005550050000000000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000500550005555055050550500550055550055555555555555555555555555555555555555555555555555000555555555555555555555500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+00000000500100800000000000001001008000000000000010010080000000000000100100800000000000001005000500000000000000000000500500000000
+00000000500100886666666000001001008866666660000010010088666666600000100100886666666000001005000500000000000000000000500500000000
+00000000500100888000000660001001008880000006600010010088800000066000100100888000000660001005000500000000000000000000500500000000
+00000000500100688800006005001001006888000060050010010068880000600500100100688800006005001005000500000000000000000000500500000000
+00000000500100f0888000f00500100100f0888000f00500100100f0888000f00500100100f0888000f005001005000500000000000000000000500500000000
+000000005001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001005000500000000000000000000500500000000
+00000000500100d0008880d00500100100d0008880d00500100100d0008880d00500100100d0008880d005001005000500000000000000000000500500000000
+00000000500100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d005001005000500000000000000000000500500000000
+00000000500100600bbb88800500100100600bbb88800500100100600bbb88800500100100600bbb888005001005000500000000000000000000500500000000
+00000000500100600030088805001001006000300888050010010060003008880500100100600030088805001005000500000000000000000000500500000000
+00000000500100600030008885001001006000300088850010010060003000888500100100600030008885001005000500000000000000000000500500000000
+00000000500100600000006888001001006000000068880010010060000000688800100100600000006888001005000580000000000000000000500500000000
+00000000500100066666666d8800100100066666666d8800100100066666666d8800100100066666666d88001005000507777770000000000000500500000000
+00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000506000700000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000506007000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000506060600000000000000500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000506606670555555555555500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000770000000000000000500000000
+00000000555555555555555555555555555555555555555500555555555555555555555555555555555555555555000000000000000000000000000500000000
+00000000500000000000000000000000000000000000000500000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000500555505500055550500505555055550555500500000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000500550005500055050550505550055050555000500000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000500555005500055050555505500055500055500500000000000000000000000000000000000000000000000000000000000000000000000500000000
+00000000500550005555055550555505555055050555500555555555555555555555555555555555555555555555000555555555555555555555500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+00000000500100800000000000001001008000000000000010010080000000000000100100800000000000001005000500000000000000000000500500000000
+00000000500100886666666000001001008866666660000010010088666666600000100100886666666000001005000500000000000000000000500500000000
+00000000500100888000000660001001008880000006600010010088800000066000100100888000000660001005000500000000000000000000500500000000
+00000000500100688800006005001001006888000060050010010068880000600500100100688800006005001005000500000000000000000000500500000000
+00000000500100f0888000f00500100100f0888000f00500100100f0888000f00500100100f0888000f005001005000500000000000000000000500500000000
+000000005001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001005000500000000000000000000500500000000
+00000000500100d0008880d00500100100d0008880d00500100100d0008880d00500100100d0008880d005001005000500000000000000000000500500000000
+00000000500100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d005001005000500000000000000000000500500000000
+00000000500100600bbb88800500100100600bbb88800500100100600bbb88800500100100600bbb888005001005000500000000000000000000500500000000
+00000000500100600030088805001001006000300888050010010060003008880500100100600030088805001005000500000000000000000000500500000000
+00000000500100600030008885001001006000300088850010010060003000888500100100600030008885001005000500000000000000000000500500000000
+00000000500100600000006888001001006000000068880010010060000000688800100100600000006888001005000500000000000000000000500500000000
+00000000500100066666666d8800100100066666666d8800100100066666666d8800100100066666666d88001005000500000000000000000000500500000000
+00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000500500000000000000500500500000000
+00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
+00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500000000000000000000500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000555555555555555555555500500000000
+00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000500000000
+00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555000000000000000000000000000500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000500500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005555555555555555550000500000000
+00000050000000555555555555555555555555555555555555555555555555555555555555555555555555555555000005000000000000000050000500000000
+00000555555500500000000000000000000000000000000000000000000000000050000000000000000000000005000005055500550505505050000500000000
+00005555555550500000000000000000000000000000000000000000000000000050000000000000000000000005000005050550550505505050000500000000
+00000555555550500808008808080000088808880888000008880808080008000050000000000000000000000005000005055050555505555050000500000000
+00000050000150500808080808080000080808080800000008000808080008000050000000000000000000000005000005055550555500550050000500000000
+00000000001110500888080808080000088808800880000008800808080008000050000000000000000000000005000005000000000000000050000500000000
+00000111111100500008080808080000080808080800000008000808080008000050000000000000000000000005000005555555555555555550000500000000
+00000111111000500888088000880000080808080888000008000088088808880050000000000000000000000005000500000000000000000000500500000000
+00000000000000500000000000000000000000000000000000000000000000000050000000000000000000000005000000000000000000000000000500000000
+00000000000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
 __sfx__
 00070000040500a05011050260501b0500705014050210502a050270501e050130500605005050150501e050160500c0500a0500e05014050200502705028050210500f0500e050140501b050230502a05027050
