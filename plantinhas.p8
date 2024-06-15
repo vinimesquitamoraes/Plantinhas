@@ -588,54 +588,22 @@ function def_tip(self,subtipo)
 		 
 		--lojinha
 		if subtipo == 1 then
- 		self.tip       = 1
-			self.x		       = 1
-			self.y         = 113
-	  self.w,self.h  = 16,16
-	  self.tam       = 2
-	  self.s,self.sr = 14,14
-		 self.sp        = 46
-		 self.ct        = 1
+ 		self.tip,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct=1,1,113,16,16,2,14,14,46,1
 		 
 	 --voltar
 		elseif subtipo == 2 then
-			self.tip       = 2
-			self.x		       = 1
-			self.y         = 113			
-	  self.w,self.h  = 16,16
-	  self.tam       = 2
-	  self.s,self.sr = 12,12
-		 self.sp        = 44
-		 self.ct        = 0
+	 	self.tip,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct = 2,1,113,16,16,2,12,12,44,0
 
 		--comprar
 		elseif subtipo == 3 then
- 		self.tip            = 3
-			self.x	            	= 97
-			self.y              = 116 		
-			self.w              = 18
-	  self.h              = 8
-	  self.cor1,self.cor3 = 5,5
-	  self.cor2           = 10
+   self.tip,self.x,self.y,self.w,self.h,self.cor1,self.cor3,self.cor2=3,97,116,18,8,5,5,10
 
 	 --depot
 		elseif subtipo == 4 then
- 		self.tip       = 4
-			self.x,self.y  = 57,57		
-			self.w,self.h  = 16,16
-	  self.tam       = 2
-   self.s,self.sr = 40,40
-		 self.sp        = 42
-	  self.ct        = 1
+  	self.tip, self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 4, 57, 57, 16, 16, 2, 40, 40, 42, 1
 	  
 		elseif subtipo == 5 then
- 		self.tip       = 5
-			self.x,self.y  = 112,113		
-   self.w,self.h  = 16,16
-	  self.tam       = 2
-	  self.s,self.sr = 14,14
-		 self.sp        = 46
-		 self.ct        = 1
+ 	self.tip, self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 5, 112, 113, 16, 16, 2, 14, 14, 46, 1
 	 end
 	
 	 --metodos de botoes
@@ -662,24 +630,12 @@ function def_tip(self,subtipo)
 				--ir depot
 				elseif self.tip == 4 and not ls_atl.val then
 					if status==1 then
-						status      = 3
-						bt_dept.s   = 12
-						bt_dept.sr  = 12
-						bt_dept.sp  = 44
-						self.ct     = 0
-						ls_inv.wait = false
-						
+						status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait = 3, 12, 12, 44, 0, false
+
 					elseif status==3 then
-						bt_dept.s   = 40
-						bt_dept.sr  = 40
-						bt_dept.sp  = 42
-						status      = 1
-						ls_atl.val  = false
-						self.ct     = 1
-					 ls_jrd.wait = false
-     	ls_atl.qual = nil      	
-				 
+		   	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual = 40, 40, 42, 1, false, 1, false     					 
 				 end				
+				 
 					ls_atl.show = false
 					foreach(ls_bts,function(obj) obj.wait = false end)
 	 		elseif self.tip == 5 then
@@ -697,23 +653,19 @@ function def_tip(self,subtipo)
 				if(self.tip == 3 and count(ls_car.coisas)>0)then				
 				 self.cor1 =	self.cor2
 				else
-				 self.cor1 =	self.cor3
-					self.s    = self.sp
+				 self.cor1,self.s  =	self.cor3,self.sp
 				end
 	
 			else
 			
-			 self.cor1 =	self.cor3
-				self.s    = self.sr	
+			 self.cor1,	self.s =	self.cor3,self.sr	
 			
 			end
 		end
 	
 	elseif self.cla == "espaco" then
-		self.w,self.h = 18,18
- 	self.tam      = 16
- 	self.disp     = true
- 	self.item     = {}
+  self.w, self.h, self.tam, self.disp, self.item = 18, 18, 16, true, {}
+
  	if(range(subtipo,1,2))then
  		function self:des()
     rect(self.x,self.y,self.x+self.w-1,self.y+self.h-1,self.cor1)	
@@ -729,8 +681,7 @@ function def_tip(self,subtipo)
 		end
  	--espaco da loja
  	if subtipo == 1 then
- 	 self.cor1,self.cor3 = 1,1
-	 	self.cor2  = 7
+ 	 self.cor1,self.cor3,self.cor2 = 1,1,7
 
 	 	function self:disp_toggle(qual)
  			self.disp = qual or false
@@ -751,8 +702,7 @@ function def_tip(self,subtipo)
 			
 		--carinho	
  	elseif subtipo == 2 then
-			self.cor1,self.cor3 = 1,1
-	 	self.cor2 = 8
+			self.cor1,self.cor3,	self.cor2 = 1,1,8
 	 	
 	 function self:del_car()
 	 	if mouse.esq_press then
@@ -764,92 +714,44 @@ function def_tip(self,subtipo)
 	 	
 		--atalho
  	elseif subtipo == 3 then
- 		self.x,self.y = 64,64
-	 	self.w,self.h = 16,16
+ 		self.x,self.y,self.w,self.h = 64,64,16,16
 		end
 
 		function self:hover(tip_col)
 
 			if(self:col_mouse(tip_col))then
-				 self.cor1 = self.cor2
+			 self.cor1 = self.cor2
 			else
-				 self.cor1 = self.cor3
-				 self.qual = nil
-				 self.val  = false
+			 self.cor1,self.qual,self.val = self.cor3,nil,false
 			end
 			
 		end
 		
 	elseif self.cla == "prateleira" then			
-			self.h = 1
-			self.w = 80
-
+		self.h,	self.w = 1,80
+		
 	elseif self.cla == "item" then				
-		self.w  = 16
-		self.h  = 16
-		self.movable = true
-	 self.desc  = 10
+		self.w, self.h, self.movable, self.desc = 16, 16, true, 10
 
-		--pa
+		--slot de atalho
 		if subtipo == 1 then
- 		self.tip   = 1
-		 self.val   = 2000
-		 self.nome  = "inv slot"
-		 self.s     = 2
-		 self.xoff  = 2
-			self.yoff  = 2
- 	 self.woff  = 5
- 		self.hoff  = 5
-	 	self.cur_s = 214
-	  self.ct    = 1
+   self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct = 1, 2000, "inv slot", 2, 2, 2, 5, 5, 214, 1
 
-		--regador
+		--fertilizante
 	 elseif subtipo == 2 then
- 	 self.tip   = 2
-	  self.val   = 800 
-		 self.nome  = "fertilizer"
-		 self.s     = 8
-		 self.xoff  = 3
-			self.yoff  = 1
- 	 self.woff  = 7
-	 	self.hoff  = 4
-	 	self.cur_s = 216
-	  self.ct    = 1	
-			self.capacity  = 1
+ 	 self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.capacity = 2, 800, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1
 			
 		--borrifador
 	 elseif subtipo == 3 then
- 		self.tip   = 3
-	  self.val   = 400
-		 self.nome  = "pesticide"
-		 self.s     = 6
-		 self.xoff  = 3
-			self.yoff  = 1
- 	 self.woff  = 7
-	 	self.hoff  = 4
-	 	self.cur_s = 229
-			self.capacity  = 5
+ 		self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 3, 400, "pesticide", 6, 3, 1, 7, 4, 229, 5
 			
 		--cesta	 	
 	 elseif subtipo == 4 then
- 	 self.tip    = 4
-		 self.val   = 300
-		 self.nome  = "basket"
-		 self.s     = 4
-		 self.xoff  = 0
-			self.yoff  = 6
- 	 self.woff  = 1
-	 	self.hoff  = 8
-	  self.ct    = 1
-	 	self.cur_s = 215
-			self.capacity  = 0
+   self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.cur_s, self.capacity = 4, 300, "basket", 4, 0, 6, 1, 8, 1, 215, 0
 			
 	 --vasos rocha
 	 elseif(range(subtipo,5,8))then
-	 	self.estagio = 1
-			self.colher  = false
-			self.saturac = 0
-			self.cur_s   = 230
+   self.estagio, self.colher, self.saturac, self.cur_s = 1, false, 0, 230
 			
   	function self:des_planta()
   		local aux = self.planta.wh[self.estagio][1]
@@ -884,130 +786,62 @@ function def_tip(self,subtipo)
 			
 			--vaso1
 		 if subtipo == 5 then
-	 	 self.tip  = 5
-			 self.val  = 500
-			 self.nome = "flowerpot 1"
-			 self.s    = 32
-			 self.xoff = 2
-				self.yoff = 5
-	 	 self.woff = 5
-		 	self.hoff = 8
-		  self.ct   = 1
-
-		  --cordenadas da plnat no vaso
-		  self.xpoff = 8 
-		  self.xesp  = 4
-		  self.ypoff = 8
+	  	self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 5, 500, "flowerpot 1", 32, 2, 5, 5, 8, 1, 8, 4, 8
 		
 			--vaso2
 		 elseif subtipo == 6 then
-		  self.tip  = 6
-			 self.val  = 500
-			 self.nome = "flowerpot 2"
-			 self.s    = 34
-			 self.xoff = 2
-				self.yoff = 5
-	 	 self.woff = 5
-		 	self.hoff = 7
-		  self.ct   = 1
-		 
-		  self.xpoff = 8
-		  self.xesp  = 4
-		  self.ypoff = 7
+		  self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 6, 500, "flowerpot 2", 34, 2, 5, 5, 7, 1, 8, 4, 7
 		 			 
 			--vaso3
 		 elseif subtipo == 7 then
-		  self.tip  = 7
-			 self.val  = 600
-			 self.nome = "flowerpot 3"
-			 self.s    = 36	
-			 self.xoff = 3
-				self.yoff = 2
-	 	 self.woff = 7
-		 	self.hoff = 5
-		  self.ct   = 2
-		 	
-		  self.xpoff = 8
-		  self.xesp  = 4
-		  self.ypoff = 5
-		 		
+		  self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 7, 600, "flowerpot 3", 36, 3, 2, 7, 5, 2, 8, 4, 5
+
 			--vaso4
 		 elseif subtipo == 8 then
-		  self.tip  = 8
-			 self.val  = 600
-			 self.nome = "flowerpot 4"
-			 self.s    = 38
-			 self.xoff = 1
-				self.yoff = 2
-	 	 self.woff = 3
-		 	self.hoff = 5
-		  self.ct   = 2
-		 
-		  self.xpoff = 8
-		  self.xesp  = 4
-		  self.ypoff = 5
-		  
+		  self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 8, 600, "flowerpot 4", 38, 1, 2, 3, 5, 2, 8, 4, 5
+ 
 	 	end	
 		--planta1
 	 elseif(range(subtipo,9,16))then
-		 self.s     = 10
-		 self.ct    = 1
-		 self.xoff  = 2
-			self.yoff  = 2
- 	 self.woff  = 5
-	 	self.hoff  = 5
-	 	self.cur_s = 249
-			self.capacity  = 1
+	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 10, 1, 2, 2, 5, 5, 249, 1
 
 		 if subtipo == 9 then
-		  self.tip  = 9
-			 self.val  = 400
-			 self.nome = "tomato"
+		  self.tip, self.val, self.nome = 9, 400, "tomato"
 		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
            wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}},
           tip = self.tip}
 		 		 
 			--planta2
 		 elseif subtipo == 10 then
-		  self.tip  = 10
-		  self.val  = 500
-			 self.nome = "bear_pawn"		
+		  self.tip, self.val, self.nome = 10, 500, "bear_pawn"	
 		 	self.fases= {64   ,65   ,66   ,67   ,68   ,74   , 
            wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2}},
           tip = self.tip}					 
 			  	
 			--planta3
 		 elseif subtipo == 11 then
-		  self.tip  = 11
-		  self.val  = 600
-			 self.nome = "pumpkin"
+	  	self.tip, self.val, self.nome = 11, 600, "pumpkin"
 		 	self.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
           tip = self.tip}			 
 			  				 		 	
 		 --planta4
 		 elseif subtipo == 12 then
-		  self.tip  = 12
-		  self.val  = 1000
-			 self.nome = "pegaxi"		
+		  self.tip, self.val, self.nome = 12, 1000, "pegaxi"
  	 	self.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
           tip = self.tip}				 
   				 		 			  	
 		 --planta5
 		 elseif subtipo == 13 then
-		  self.tip  = 13
-		  self.val  = 500
-			 self.nome = "sunflower"
+    self.tip, self.val, self.nome = 13, 500, "sunflower"
 			 self.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}},
           tip = self.tip} 					 
 		
 		 --planta6
 		 elseif subtipo == 14 then
-		  self.tip  = 14
-		  self.val  = 350
-			 self.nome = "sword"		 	
+		  self.tip, self.val, self.nome = 14, 350, "sword"	 	
 			 self.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
           tip = self.tip} 					 
@@ -1015,9 +849,7 @@ function def_tip(self,subtipo)
 
 		 --planta7
 		 elseif subtipo == 15 then
-		  self.tip  = 15
-		  self.val  = 600
-			 self.nome = "rose"
+		  self.tip, self.val, self.nome = 15, 600, "rose"
 			 self.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}},
           tip = self.tip} 					 
@@ -1025,9 +857,7 @@ function def_tip(self,subtipo)
 				
 		 --planta8
 		 elseif subtipo == 16 then
-		  self.tip  = 16
-		  self.val  = 1000
-			 self.nome = "dandelion"
+		  self.tip, self.val, self.nome = 16, 1000, "dandelion"
 			 self.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
           tip = self.tip}					 
@@ -1038,42 +868,18 @@ function def_tip(self,subtipo)
 	
 			--regador
 		 if subtipo == 17 then
-	 	 self.tip   = 17
-			 self.nome  = "watering can"
-			 self.s     = 204
-			 self.s2    = 236
-			 self.s3    = 204
-			 self.xoff  = 3
-				self.yoff  = 1
-	 	 self.woff  = 7
-		 	self.hoff  = 4
-		 	self.cur_s = 248
-		 	 			
+  	 self.tip, self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s = 17, "watering can", 204, 236, 204, 3, 1, 7, 4, 248
+ 			
 			--pa
 		 elseif subtipo == 18 then
-	 	 self.tip   = 18
-			 self.nome  = "shovel"
-			 self.s     = 206
-			 self.s2    = 238
-			 self.s3    = 206
-			 self.xoff  = 3
-				self.yoff  = 1
-	 	 self.woff  = 7
-		 	self.hoff  = 4
-		 	self.cur_s = 213
-		 	self.ct    = 9
-
-				self.x_def = 32
- 			self.y_def = 12
+	  	self.tip, self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.x_def, self.y_def = 18, "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12
 		 end 		 
 		end
 	
 	--palavra	
 	elseif self.cla == "palavra" then				
-  self.w    = count(self.ls_aux)
- 	self.h    = 4
-	 self.cor1 = 5
-		self.cor2 = 5
+  self.w, self.h, self.cor1, self.cor2 = count(self.ls_aux), 4, 5, 5
+
  	function self:des()
 			local aux = 0
 			for i in all(self.ls_aux)do
