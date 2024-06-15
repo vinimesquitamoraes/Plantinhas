@@ -17,23 +17,6 @@ function _init()
  cu1 = 0
  cu2 = 0
  cu3 = 0
- cu4 = {}
- cu5 = nil
- cu6 = nil
- cu7 = nil
- cu8 = nil
- cu9 = nil
-
- str1 = ""
- str2 = "" 
- str3 = ""
- str4 = "" 
- str5 = ""
- str6 = "" 
- str7 = ""
- str8 = "" 
- str9 = ""
-
  --status -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+	
  --[[
  status
@@ -41,14 +24,15 @@ function _init()
  2 para loja
  3 para o deposito
  ]]
- status = 3
+ status = 1
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo    = 1
  grav        = 0
 	max_saturac = 20
 	venda       = false
-	
+	venda_timer = 0
+	pisca       = false
  --variaveis de jogo --------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	saldo   = 0
 	num_atl = 6
@@ -91,7 +75,7 @@ function _init()
  
  --cursor .........................................................................................................................................................................+
  mouse = criar_obj("mouse",0)
-	
+
  --botoes .........................................................................................................................................................................+
  bt_loja = criar_obj("botao",1,ls_bts)
  bt_volt = criar_obj("botao",2,ls_bts)
@@ -120,7 +104,7 @@ end
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
-	if(btnp(❎)) saldo = 2000
+	if(btnp(❎)) saldo = 6000
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -178,21 +162,25 @@ function _update()
    end
   end
  end
-		
+ 
+ --remover planta ------------------------------------------------------------------------------------------+
+ if pa.val and not ls_atl.show then
+  if(mouse:toggle(mouse.esq,238,206)) remov_planta()
+	end
+	
  --esperando awa -------------------------------------------------------------------------------------------------------+ 	
  foreach(pat_reg,function(obj) regar(obj) end)
   
  --esperando semente -------------------------------------------------------------------------------------------------------+
  foreach(pat_sem,function(obj) plantar(obj) end)
  
- --cancelar acれせれこo/mostrar atalho
+ --cancelar atribuicao/mostrar atalho
  atl_on_off(mouse.dir_press,true)	
 
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif status == 2 then
 		--verificar disponibilidade de compra
 		if(slots == 63)toggle_disp(1,16) else toggle_disp(1,16,true)
-
 		
   --selecionar loja ................................................................................................+
  	foreach(ls_esp.esps,function(esp) esp:hover("retg" ) end)
@@ -246,7 +234,8 @@ function _update()
   if(ls_atl.show and ls_atl.qual)toggle_atribuir()
   --se o timer contou ja
   if(ls_atl.wait)funcionalidades(1,ls_inv)
-  atl_on_off(mouse.dir_press)	
+  
+  if(not venda)atl_on_off(mouse.dir_press)	
      
   if ls_atl.show then
    bt_dept:hover()
@@ -258,8 +247,14 @@ function _update()
    bt_vend:ativa()
   end
 		
- 	--venda so se algo esta sendo movido
- 	
+		if(venda and ls_inv.qual and not(mouse.eq_press) and mouse.esq_press)then
+			local vendido = ls_inv.qual
+		 if vendido != regador and vendido != pa then
+				saldo += vendido.val
+				del(ls_inv.coisas,ls_inv.qual)
+			end
+		end
+		 	
  end
 
 	save_game()
@@ -299,42 +294,11 @@ function _draw()
   
  mouse:des()
 
- if(true) then
-	 format(cu1,str1,12)
-	 format(cu2,str2)
-  format(cu3,str3)
- 	
-  print_ls(cu4)
-	
-	-- format(cu5,str5,8)
- 	--[[
-	 format(cu6,str6)
-	 
-	 format(cu7,str7)
-	 format(cu8,str8)
-	 --
-	 format(cu9,str9)
-  --]]
-	 espacamento = 0
-	end
+ print(cu1,0,0)
+ 
 	print("slots:"..slots.."/63",85,0,6)
 end
 
-function format(que_cu,str,cor)
- str = str or ""
- cor = cor or 5	
- print(str..tostr(que_cu),0,espacamento,cor)
- espacamento+=6	
-end
-
-function print_ls(que_ls)
-	if not que_ls then
-		print("ls vazia",0,espacamento,14)
-	 return
-	end
-	foreach(que_ls,function(obj) format(obj) end)
-
-end
 -->8
 --classes ==========================================================================================================+
 function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
@@ -372,17 +336,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
    self.x = newx& ~1
    self.y = newy& ~1
   end,
-  
-  --controlar objeto...............................................................................................+]
-  cont = function(self,sair_tela,vel)
-   if(btn(⬅️)) self.x -= vel
-   if(btn(➡️)) self.x += vel
-	 	if(btn(⬆️)) self.y -= vel
-	 	if(btn(⬇️)) self.y += vel
-	 	
-	 	if(sair_tela) n_sai_tela(self) 	
-	 end,
-	 
+  	 
 	 --desenhar objeto
 	 des = function(self,xop,yop)
 	 	aux_x = xop or self.x  
@@ -433,47 +387,19 @@ end
 --def_tipos ====================
 function def_tip(self,subtipo)
 
---mouse ========================		 
+ --mouse ========================		 
 	if self.cla == "mouse" then
-  self.ativ      = true
- 	self.s         = 212
-		self.ct        = 1
-		self.woff,self.hoff = 8,8
-			
-		--esperando ==================
- 	self.esq_esper = false
- 	self.mei_esper = false
- 	self.dir_esper = false
-		
-		--pressionado ================
- 	self.esq_press = false
- 	self.mei_press = false
- 	self.dir_press = false
-		
-		--estado atual ======================
- 	self.esq = false
- 	self.mei = false
- 	self.dir = false
-
-		--solto ======================
- 	self.esq_solto = false
-		self.mei_solto = false
-		self.dir_solto = false
-		
+ self.s,self.ct,self.woff,self.hoff,self.ax,self.ay,self.esq_esper,self.mei_esper,self.dir_esper,self.esq_press,self.mei_press,self.dir_press,self.esq,self.mei,self.dir,self.esq_solto,self.mei_solto,self.dir_solto = 212,1,8,8,0,0,false,false,false,false,false,false,false,false,false,false,false,false
+ 			
 	--resetar mouse ===============
  function self:reset()
-	 self.s        = 212
-	 self.tool_tip = nil
-	 self.h        = 8
-	 self.w        = 8	
-	 self.ct       = 1
+  self.s,self.tool_tip,self.h,self.w,self.ct,self.xoff,self.yoff,self.ax,self.ay = 212, nil, 8,8,1,0,0,0,0
 	end
 	
 	--mudar tool_tip
 	function self:tip_set(qual,dir_x,dir_y)
-	 self.tool_tip = qual or nil	
- 	dir_x,dir_y = dir_x,dir_y
-
+	 self.tool_tip,dir_x,dir_y  = qual or nil,dir_x,dir_y
+  
 		if dir_x == "⬅️" then
 		 self.xoff = -8		
 		elseif dir_x == "➡️" then
@@ -494,8 +420,9 @@ function def_tip(self,subtipo)
  	 
 	--desenhar mouse ==============
  function self:des()
+  local aux_x, aux_y = self.ax,self.ay
   pal(self.ct,0)
-  spr(self.s,stat(32),stat(33),self.w/8,self.h/8)
+  spr(self.s,stat(32)+aux_x,stat(33)+aux_y,self.w/8,self.h/8)
  	if(self.tool_tip)spr(self.tool_tip,stat(32)+mouse.xoff,stat(33)+mouse.yoff)
 		pal()
  end
@@ -505,6 +432,7 @@ function def_tip(self,subtipo)
  	 mouse.s = spr_2
  	 return true
  	end
+
   mouse.s = spr_1
 	 return false
  end
@@ -512,12 +440,7 @@ function def_tip(self,subtipo)
  --atualizar mouse =============
  function self:att()
  	--att posicao ================
- 	self.x = stat(32)
- 	self.y = stat(33)
- 	--att posicao ================
-		self.esq= stat(34)==1
-		self.mei= stat(34)==4
-		self.dir= stat(34)==2
+  self.x,self.y,self.esq,self.mei,self.dir = stat(32),stat(33),stat(34)==1,stat(34)==4,stat(34)==2
 	
 		--comportamento esquerdo ||||
 		--se o mouse esq foi apertado
@@ -527,7 +450,7 @@ function def_tip(self,subtipo)
 				--agora nao esta mais
 				self.esq_solto=false
 			end
-			
+
 			--se ele nao estava pressio
 			--nado
 			if not self.esq_press then
@@ -535,8 +458,7 @@ function def_tip(self,subtipo)
 				if(not self.esq_esper) then
 		 		--agora esta pressionado
 		 		--e esperando
-					self.esq_press = true
-					self.esq_esper = true
+					self.esq_press,	self.esq_esper = true,true
 				end
 			--se ja estava pressionado
 			else
@@ -557,10 +479,9 @@ function def_tip(self,subtipo)
 			if not self.esq_solto then
 				--se estava esperando
 				if self.esq_esper then
-					--agora esta solto
-					self.esq_solto = true
-					--e nao esta mais esperando
-     self.esq_esper = false
+					--agora esta solto e nao esta mais esperando
+					self.esq_solto,self.esq_esper = true,false
+		
     end
    --se estava solto
    else
@@ -568,57 +489,7 @@ function def_tip(self,subtipo)
    	self.esq_solto = false
    end
 	 end
-		
- 	--comportamento meio ||||||||
-		--se o mouse mei foi apertado
-		if self.mei then
-			--se ele estava solto
-			if self.mei then
-				--agora nao esta mais
-				self.mei_solto=false
-			end
-			
-			--se ele nao estava pressio
-			--nado
-			if not self.mei_press then
-		 	--se nao estava esperando
-				if(not self.mei_esper) then
-		 		--agora esta pressionado
-		 		--e esperando
-					self.mei_press = true
-					self.mei_esper = true
-				end
-			--se ja estava pressionado
-			else
-				--agora no esta mais
-				self.mei_press = false
-			end
-			
-		--se o mouse mei nao foi
-		--apertado
-		else
-		--se estava pressionado
-			if (self.mei_press) then
-				--agora nao esta mais
-				self.mei_press=false
-			end
-			
-			--se nao esatava solto
-			if not self.mei_solto then
-				--se estava esperando
-				if self.mei_esper then
-					--agora esta solto
-					self.mei_solto = true
-					--e nao esta mais esperando
-     self.mei_esper = false
-    end
-   --se estava solto
-   else
-   	--agora nao esta mais
-   	self.mei_solto = false
-   end
-	 end
-	 
+			 
  	--comportamento direita ||||||
 		--se o mouse dir foi apertado
 		if self.dir then
@@ -671,21 +542,13 @@ function def_tip(self,subtipo)
 	end
 
 --particula ====================
-	elseif self.cla == "particula" then
-		self.vx    = rnd(2) - 1
- 	self.vy    = 1
-		self.x_max = 128
-		self.x_mix = 0
-		self.w     = 0
-		self.h     = 0
+	elseif self.cla == "particula" then	
+		self.vx,self.vy,self.x_max,self.x_mix,self.w,self.h = rnd(2)-1,1,128,0,0,0
 
- 	if subtipo == 1 then
- 		
- 		self.cor = rnd({3,11})
-		 self.ace = 0
+ 	if subtipo == 1 then 		
+ 		self.cor,self.ace = rnd({3,11}),0
  	elseif subtipo == 2 then
- 		self.cor = 12
-		 self.ace = 0.2
+ 		self.cor,self.ace = 12, 0.2
  	end
 
 		function self:att()			
@@ -714,18 +577,14 @@ function def_tip(self,subtipo)
 	 
 	 function self:del()
 			if self then
-		 del(self.ls_gua, self)
-	  self = nil
+			 del(self.ls_gua, self)
+	 	 self = nil
 			end
-			return true
-
 	 end
 	
 --botao ========================		 
 	elseif self.cla == "botao" then
-		self.timer = 0
-		self.wait  = false
-		self.val   = true
+ 	self.timer,self.wait,self.val = 0 ,false, true
 		 
 		--lojinha
 		if subtipo == 1 then
@@ -826,6 +685,7 @@ function def_tip(self,subtipo)
 	 		elseif self.tip == 5 then
 	    	mouse:reset()
 						venda = not venda
+						ls_inv.val = not ls_inv.val
 				end
 			end
 		end
@@ -928,6 +788,8 @@ function def_tip(self,subtipo)
 		self.w  = 16
 		self.h  = 16
 		self.movable = true
+	 self.desc  = 10
+
 		--pa
 		if subtipo == 1 then
  		self.tip   = 1
@@ -1172,11 +1034,11 @@ function def_tip(self,subtipo)
 	 	end
 	 	
   elseif(range(subtipo,17,18))then
-	  	
+	  self.val   = false
+	
 			--regador
 		 if subtipo == 17 then
 	 	 self.tip   = 17
-		  self.val   = 500
 			 self.nome  = "watering can"
 			 self.s     = 204
 			 self.s2    = 236
@@ -1186,14 +1048,10 @@ function def_tip(self,subtipo)
 	 	 self.woff  = 7
 		 	self.hoff  = 4
 		 	self.cur_s = 248
-		 	
-				self.x_def = 18
- 			self.y_def = 12
- 			
-			--regador
+		 	 			
+			--pa
 		 elseif subtipo == 18 then
 	 	 self.tip   = 18
-		  self.val   = 500
 			 self.nome  = "shovel"
 			 self.s     = 206
 			 self.s2    = 238
@@ -1203,7 +1061,8 @@ function def_tip(self,subtipo)
 	 	 self.woff  = 7
 		 	self.hoff  = 4
 		 	self.cur_s = 213
-		 	
+		 	self.ct    = 9
+
 				self.x_def = 32
  			self.y_def = 12
 		 end 		 
@@ -1418,6 +1277,47 @@ function cool_down(tempo,context)
 	end
 	
 end
+
+function tool_tip(item)
+	--mostrar preco ao passar mouse	
+	if slots == 63 then
+	 print("you are full",17,120,8)			
+		return
+	end
+	
+	if item then
+		--nome do item
+		if range(item.tip,9,16) then
+			print("seeds",17,120,6)			
+		else
+			print(item.nome,17,120,6)
+		end
+		--preco
+		local cor = status == 2 and 8 or 11
+		if(item.val > saldo and status == 2) cor = 2
+	 if(item == regador or item == pa)return
+  print(item.val,69,120,cor)
+	
+	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 and status == 2)then
+		local cor = 10
+		print("total",17,120,10)
+		if(ls_car.total > saldo and status == 2) cor = 2
+	 print(ls_car.total,69,120,cor)
+	
+	--mostrar preco ao passar mouse no carrinho
+	elseif ls_car.val then
+	
+		if ls_car.qual != nil then			
+			print(ls_car.qual.item.nome,17,120,6)
+	  print(ls_car.qual.item.val,69,120,6)
+ 	end
+
+	--mostrar saldo 	
+	else
+		print("money",17,120,6)
+		print(saldo  ,69,120,3)
+	end
+end
 -->8
 --loljinha =====================
 function	des_lojinha()
@@ -1496,7 +1396,8 @@ function	des_lojinha()
 	foreach(ls_esp.esps,function(obj) obj:des() end)
 	foreach(ls_car.coisas,function(obj) obj:des() end)
 
- tool_tip()
+ tool_tip(ls_esp.qual and ls_esp.qual.item or nil)
+ 
  des_bt_comprar()
  bt_volt:des()
  
@@ -1565,47 +1466,6 @@ function des_bt_comprar()
 	end
 end
 
-function tool_tip()
-	--mostrar preco ao passar mouse	
-	if slots == 63 then
-	 print("you are full",17,120,8)			
-		return
-	end
-	
-	if ls_esp.qual then
-		auxtip = ls_esp.qual.item.tip
-		--nome do item
-		if auxtip >=9 and auxtip <=16 then
-			print("seeds",17,120,6)			
-		else
-			print(ls_esp.qual.item.nome,17,120,6)
-		end
-		--preco
-		local cor = 8
-		if(ls_esp.qual.item.val > saldo) cor = 8
-  print(ls_esp.qual.item.val,69,120,cor)
-	
-	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 )then
-		local cor = 10
-		print("total",17,120,10)
-		if(ls_car.total > saldo) cor = 8
-	 print(ls_car.total,69,120,cor)
-	
-	--mostrar preco ao passar mouse no carrinho
-	elseif ls_car.val then
-	
-		if ls_car.qual != nil then			
-			print(ls_car.qual.item.nome,17,120,6)
-	  print(ls_car.qual.item.val,69,120,6)
- 	end
-
-	--mostrar saldo 	
-	else
-		print("money",17,120,6)
-		print(saldo  ,69,120,3)
-	end
-end
-
 function comprar()
 	if(#ls_car.coisas+slots > 63) return
 
@@ -1658,6 +1518,8 @@ function add_varios_itens(qual_ls,onde)
 	
 	for i in all(qual_ls)do
 		add_um_item(i.item,onde)
+		local aux = i.item
+		i.item.val =	aux.val - ((aux.val*aux.desc)/100)
 	end
 
 end
@@ -1760,6 +1622,7 @@ function atl_on_off(context,pode_mover)
 			
 			pat_reg.val  = false
 			pat_sem.val  = false
+			pa.val       = false
 			
 			foreach(ls_bts,function(obj) obj.wait = false end)
 
@@ -1794,15 +1657,17 @@ function toggle_atribuir()
 
 	 	 if(range(aux_tip,5,8)) mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
 			 
-			 if(range(aux_tip,9,16))then
+			 if range(aux_tip,9,16) then
 			  mouse.s = 228
 			 end
 			 
-		 	if(aux_tip == 17) then
+		 	if aux_tip == 17 then
 	 			mouse.w,mouse.h = 16,16
 		 		mouse.s = 204
+		 		
+		 	elseif aux_tip == 18 then
+  			mouse.ct,mouse.w,mouse.h,mouse.s,mouse.ax,mouse.ay= 9,16,16,238,-2,-14
 		 	end
-		 	
 	 	end
 	 	
 	 end
@@ -1879,6 +1744,9 @@ function funcionalidades(que_func,container)
 		--eh um regador
 		elseif aux_tip == 17 then
 			pat_reg.val = true
+  --eh uma pa
+ 	elseif aux_tip == 18 then
+			pa.val = true
 		end
 			 
 	end
@@ -2001,13 +1869,26 @@ function des_depot()
  bt_vend:des()
 
 	if venda then
+
+		if venda_timer<30 then
+	 	venda_timer +=1
+	 else
+ 	 pisca = not pisca
+	 	venda_timer = 0
+	 end
+
 	 bt_vend:des(bt_vend.x,bt_vend.y-1)
  	pal(1,0)
+ 	
+		if(pisca)then pal(11,5) else pal(5,11) end
 	 spr(247,121,109)
+	 pal()
 		rect(14,117,91,126,5)
  	rectfill(15,118,90,125,0)
 	 rect(14,117,66,126,5)
-  tool_tip()
+	 
+  tool_tip(ls_inv.qual)
+  
 	else
 	 bt_vend:des()
 		pal(11,5)
@@ -2015,9 +1896,10 @@ function des_depot()
 		pal(7,13)
 		pal(3,1)
 	 spr(247,121,110)
+
 	end
  pal()
- 
+
 	des_inv()
 
 end
@@ -2078,6 +1960,8 @@ function def_pos(i)
 		end
 
 end
+
+
 -->8
 --jardim =======================
 function des_jardim()
@@ -2088,7 +1972,7 @@ function plantar(o_que)
 
  if(#pat_sem == 0) return 
 	ls_jrd.coisas.wait = true
-	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
+ local	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	if(qual_vaso and qual_vaso.planta)return
 	
 	if qual_vaso then
@@ -2101,6 +1985,17 @@ function plantar(o_que)
  	ls_jrd.val  = true
  	mouse:reset()
   o_que:del()
+ end
+ 
+end
+
+function remov_planta()
+	qual_vaso = ls_jrd.qual
+	if qual_vaso and qual_vaso.planta then
+		qual_vaso.planta = nil
+		qual_vaso.algo   = 0
+ else
+ cu1 = "nada negah"
  end
  
 end
@@ -2398,36 +2293,36 @@ __gfx__
 00030000000300000003000000330000000300000003000000000000000000000000113bb3330000000003333330000000000113b11000000000000000000000
 001111000011110000111100001111000011110000111100000000000000000000000113b1100000000000000000000000000000000000000000000000000000
 55550000555500005500000055550000000000000000000000000000000030000000000000000000000000000b03300000000000000000000000000000000000
-0550000055050000550000005505000000000000009000090bbb0b3000bb3b300090a00000000bbb0088828000b0077000000000000000000000000000000000
-0550000055050000550000005555000000bb03300009b039b003b3000003b3000099aa990000b0b3002000200b007066000000000000000000666d5000000000
-05500000555500005555000055050000008b3320000b303300943490007c3c6000a24290000b0b03000288000b00600600000000000000000061111500000000
-0000000000000000000000000000000008888882090000000a4949490cc766dd0aa424aa0bb0b03000008000030006600000000000000000006155d150000000
-0000000000000000000000000000000008e8888200930bb30a4a4a490cccccdd009242a00b0b030000bbb33000300000000000000000000000d1511d00000000
-0000000000000000000000000000000008ee882800330bb3094949490cdcdddd099aa9900300b0000003b0000003300000650006666607000051d15000000000
-0000000000000000000000000000000000882280000003330094949000cdcdd00000a0900333b0000000330000000000065700665557607000051d0d00000000
-55550000555500005555000055550000811111110ddd0000004444000000000000444400001111000000000000000000057500761117706000005000d0000000
-5505000055550000550000005550000017777771d776d00004111140000000000004200e111bb111000000000000000000056057777750600000000006000000
-5555000055050000555000005500000016111710d7dd6d00419911420000000000eeeee01bbbbbb1000000000000000000005655555550500000000000624400
-550000005505000055000000555500001611710056d7d50044114412400000040041120e01bbbb10000000000000000000000555675655000000000000200200
-0000000000000000000000000000000016161610056d70004144121224242424041131201c1bb1c1000000000000000000000055675650000000000000402000
-0000000000000000000000000000000016616671005506444111141222424242041311201c1111c1000000000000000000000005665600000000000000420000
-00000000000000000000000000000000161017710000020441114112242424220411112001cccc10000000000000000000000000000000000000000000000000
+0550000055050000550000005505000000000000009000090bbb0b3000bb3b300090a00000000bbb0088828000b0077000000000000000000999999000000000
+0550000055050000550000005555000000bb03300009b039b003b3000003b3000099aa990000b0b3002000200b007066000000000000000009666d5900000000
+05500000555500005555000055050000008b3320000b303300943490007c3c6000a24290000b0b03000288000b00600600000000000000000961111590000000
+0000000000000000000000000000000008888882090000000a4949490cc766dd0aa424aa0bb0b03000008000030006600000000000000000096155d159000000
+0000000000000000000000000000000008e8888200930bb30a4a4a490cccccdd009242a00b0b030000bbb33000300000000000000000000009d1511d90000000
+0000000000000000000000000000000008ee882800330bb3094949490cdcdddd099aa9900300b0000003b0000003300000650006666607000951d15900000000
+0000000000000000000000000000000000882280000003330094949000cdcdd00000a0900333b0000000330000000000065700665557607000951d9d90000000
+55550000555500005555000055550000811111110ddd0000004444000000000000444400001111000000000000000000057500761117706000095909d9000000
+5505000055550000550000005550000017777771d776d00004111140000000000004200e111bb11100000000000000000005605777775060000090009d999990
+5555000055050000555000005500000016111710d7dd6d00419911420000000000eeeee01bbbbbb1000000000000000000005655555550500000000009624490
+550000005505000055000000555500001611710056d7d50044114412400000040041120e01bbbb10000000000000000000000555675655000000000009200290
+0000000000000000000000000000000016161610056d70004144121224242424041131201c1bb1c1000000000000000000000055675650000000000009402900
+0000000000000000000000000000000016616671005506444111141222424242041311201c1111c1000000000000000000000005665600000000000009429000
+00000000000000000000000000000000161017710000020441114112242424220411112001cccc10000000000000000000000000000000000000000009990000
 00000000000000000000000000000000110001110000042204442220022222200044220000111100000000000000000000000000000000000000000000000000
 55550000555000005505000055550000011111000dddd0000000000000bbbb001111111111111111000000000000000000000000000000000000000000000000
-5505000050550000550500000550000016777611057650000000000000b11b00188118811bbbbcc1000000000000000000000000000000000000000000000000
-5550000055050000555500000550000077777777576dd50044444222bbb11bbb188828811b111cc1000000000000000000000000000000000000000000420000
-550500005555000055550000555500006776777655d7bdd041111112b111111b11888211bbb11181000000000000000000000000077700000000000000402000
-0000000000000000000000000000000067611766005b7bbd44444222b111111b112888111b111888000000000000000000000000700060000000000000200200
-00000000000000000000000000000000761766110053bbbd01111110bbb11bbb1882888114411181000000000000000000000006677005000000000000624400
-0000000000000000000000000000000017171100000533350211112000b11b001881188114488881000000000000000000000065567505000000000006000000
-0000000000000000000000000000000001110000000555550244422000bbbb0011111111111111110000000000000000000006511675500000005000d0000000
-55550000500500005505000055550000777000007707000077070000011bb1100000000000dddd000000000000000000000006516755650000051d0d00000000
-555000005505000055050000550000007077000077070000770700001bb77bb1000006600d111dd0000000000000000000000677757556000051d15000000000
-055500005555000055550000550000007707000077770000777700001bb331b1d600600dd6666d150000000000000000000000655667500000d1511d00000000
-5555000055550000055000005555000077770000777700000770000001b7b11066ddd00dd1111d1500000000000000000076000555660000006155d150000000
-00000000000000000000000000000000000000000000000000000000011b7b100d61160dd1bb1d15000000000000000000675555555000000061111500000000
-000000000000000000000000000000000000000000000000000000001b133bb10d166160d1bb1d150000000000000000005650000000000000666d5000000000
-000000000000000000000000000000000000000000000000000000001bb77bb10d111160d1111d15000000000000000000000000000000000000000000000000
+5505000050550000550500000550000016777611057650000000000000b11b00188118811bbbbcc1000000000000000000000000000000000000000009990000
+5550000055050000555500000550000077777777576dd50044444222bbb11bbb188828811b111cc1000000000000000000000000000000000000000009429000
+550500005555000055550000555500006776777655d7bdd041111112b111111b11888211bbb11181000000000000000000000000077700000000000009402900
+0000000000000000000000000000000067611766005b7bbd44444222b111111b112888111b111888000000000000000000000000700060000000000009200290
+00000000000000000000000000000000761766110053bbbd01111110bbb11bbb1882888114411181000000000000000000000006677005000000000009624490
+0000000000000000000000000000000017171100000533350211112000b11b00188118811448888100000000000000000000006556750500000090009d999990
+0000000000000000000000000000000001110000000555550244422000bbbb0011111111111111110000000000000000000006511675500000095909d9000000
+55550000500500005505000055550000777000007707000077070000011bb1100000000000dddd000000000000000000000006516755650000951d9d90000000
+555000005505000055050000550000007077000077070000770700001bb77bb1000006600d111dd0000000000000000000000677757556000951d15900000000
+055500005555000055550000550000007707000077770000777700001bb331b1d600600dd6666d150000000000000000000000655667500009d1511d90000000
+5555000055550000055000005555000077770000777700000770000001b7b11066ddd00dd1111d1500000000000000000076000555660000096155d159000000
+00000000000000000000000000000000000000000000000000000000011b7b100d61160dd1bb1d15000000000000000000675555555000000961111590000000
+000000000000000000000000000000000000000000000000000000001b133bb10d166160d1bb1d150000000000000000005650000000000009666d5900000000
+000000000000000000000000000000000000000000000000000000001bb77bb10d111160d1111d15000000000000000000000000000000000999999000000000
 00000000000000000000000000000000000000000000000000000000011bb11000dddd000ddddd50000000000000000000000000000000000000000000000000
 __label__
 ccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000660600006606660066000006000666000606000666
