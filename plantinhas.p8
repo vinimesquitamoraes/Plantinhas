@@ -957,9 +957,9 @@ function col_circ(q1,q2)
 	dist = sqrt((dx*dx)+(dy*dy))
 	if(dist <= (q1.r+q2.r))then
 		return true
-	end
+	end	
 	
-	return false
+	return 
 	
 end
 
@@ -991,10 +991,11 @@ end
 function get_obj_by_col_retg(ls_oque_1,oque_2)
 	
 	for qual in all(ls_oque_1)do
-		col = col_2ret(qual,oque_2)		if(col)return qual
-		if(col)return qual
+		if(col_2ret(qual,oque_2))return qual
 	end	
-	return nil
+	
+	return 
+	
 end
 
 --checa a selecao de objetos
@@ -1057,16 +1058,13 @@ function gerar_part(que_pat_ls, quantas, do_que, tip, ampx, item, x, y)
  
  for i=1, quantas do
 		nova = criar_obj("particula",tip,que_pat_ls,item)
-		nova.x     = x
-		nova.y     = y
-		nova.x_max = nova.x+ampx
-		nova.x_min = nova.x-ampx
+		nova.x, nova.y, nova.x_max, nova.x_min = x, y, x+ampx, x-ampx
 	end
 end
 
 function range(val,⬅️,➡️)
 	if(val >= ⬅️ and val <= ➡️)return true
-	return false
+	return 
 end
 
 function cool_down(tempo,context)
@@ -1214,19 +1212,14 @@ function init_loja()
 
 	for i=1,16 do      
   aux      = criar_obj("espaco",1,ls_esp.esps)
-		aux.item = criar_obj("item"  ,aux_tipo)
-		aux_tipo+=1		
-		aux.id = i
+		aux.item, aux_tipo, aux.id =  criar_obj("item", aux_tipo), aux_tipo + 1, i
+
 	end	
 	
  ondex,ondey =	11,10
  for i in all(ls_esp.esps)do
-		i.x = ondex
-		i.item.x = i.x+1
-		i.y = ondey
-		i.item.y = i.y+1
-		ondex += 20
-		
+ 	i.x, i.item.x, i.y, i.item.y, ondex = ondex, ondex + 1, ondey, ondey + 1, ondex + 20
+
 		if i.id%4==0 then
 			ondey+=28
 			ondex =11
@@ -1251,9 +1244,7 @@ function att_car()
 	if count(ls_car.coisas)>0 then
 		local aux_y = 9
 		for i in all(ls_car.coisas) do
-		 i.x    = 97
-			i.y    = aux_y
-			aux_y += 28
+	 	i.x, i.y, aux_y = 97, aux_y, aux_y + 28
 		end	
 	end
 	
@@ -1344,12 +1335,8 @@ function init_atl(quantos_pares)
 	
 	for i=1,quantos do
  	new_atl      =	criar_obj("espaco",3,ls_atl.atls)  	 
-	 new_atl.item = nil
-		new_atl.cor1 = 1 	
-		new_atl.cor2 = 7
-		new_atl.cor3 = 1
-		new_atl.id   = #ls_atl.atls
-		new_atl.r    = 8.5
+ 	new_atl.item, new_atl.cor1, new_atl.cor2, new_atl.cor3, new_atl.id, new_atl.r = nil, 1, 7, 1, #ls_atl.atls, 8.5
+
 	end
 
 end
@@ -1365,17 +1352,13 @@ function def_pos_atls()
 	local quantos = #ls_atl.atls
  	
 	if quantos == 2 then
-	 ang_inc = 60
-	 dist    = 20
+	 ang_inc,dist = 60,20
 	elseif quantos == 4 then
-	 ang_inc = 90
-	 dist    = 20
+	 ang_inc,dist = 90,20
 	elseif quantos == 6 then
-	 ang_inc = 60
-	 dist    = 24
+	 ang_inc,dist = 60,24
 	elseif quantos == 8 then
-	 ang_inc = 45
-	 dist    = 28
+	 ang_inc,dist = 45,28
 	end
 	
 	for i in all(ls_atl.atls)do
@@ -1415,21 +1398,11 @@ function atl_on_off(context,pode_mover)
 			mouse:reset()
 			
 			if pode_mover then
-				ls_jrd.val   = true
-				ls_inv.val   = true
+				ls_jrd.val,ls_inv.val = true,true
 			end
-			
-			ls_jrd.qual  = nil
-			ls_inv.qual  = nil
-			
-			ls_atl.val   = false
-			ls_atl.wait  = false
-			ls_atl.timer = 0
-			
-			pat_reg.val  = false
-			pat_sem.val  = false
-			pa.val       = false
-			
+		
+			ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, ls_atl.timer, pat_reg.val, pat_sem.val, pa.val = nil, nil, false, false, 0, false, false, false
+
 			foreach(ls_bts,function(obj) obj.wait = false end)
 
 		end
@@ -1783,12 +1756,7 @@ function plantar(o_que)
 	
 	if qual_vaso then
 		qual_vaso.planta  = o_que.ls_aux.fases
- 	qual_vaso.estagio = 3
- 	qual_vaso.algo    = 1
-  ls_atl.val  = false
- 	pat_sem.val = false
- 	ls_atl.wait = false
- 	ls_jrd.val  = true
+  qual_vaso.estagio, qual_vaso.algo, ls_atl.val, pat_sem.val, ls_atl.wait, ls_jrd.val = 3, 1, false, false, false, true
  	mouse:reset()
   o_que:del()
  end
@@ -1798,10 +1766,7 @@ end
 function remov_planta()
 	qual_vaso = ls_jrd.qual
 	if qual_vaso and qual_vaso.planta then
-		qual_vaso.planta = nil
-		qual_vaso.algo   = 0
- else
- cu1 = "nada negah"
+		qual_vaso.planta,qual_vaso.algo = nil,0
  end
  
 end
