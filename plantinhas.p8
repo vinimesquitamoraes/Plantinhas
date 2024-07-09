@@ -34,7 +34,7 @@ function _init()
 	dia_salvo = (load_aux  << 16) & 0x1f
 	num_atl   = ((dget(1)  << 16) & 0x1) + ((dget(2) << 17) & 0x2)
 	slots     = 0
-	
+
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo      = 1
  grav          = 0
@@ -44,7 +44,7 @@ function _init()
 	pisca         = false
 	colheita      = false
  passou_um_dia = dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
-	
+
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
  ls_bts = {["tipo"]="botao"       ,["val"]=false,["qual"]=nil}
@@ -115,6 +115,7 @@ function _update()
  mouse:att()
  
 	if(btnp(❎)) saldo = 1000
+	cu1 = ls_jrd.coisas[1].saturac
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -1843,7 +1844,8 @@ end
 function avancar_fase(o_que)
 
  if(not o_que.algo or not o_que.planta) return
-	local inc = flr(rnd(100))
+
+	local inc = 1--flr(rnd(100))
 	if o_que.saturac == max_saturac then
 		o_que.estagio += inc%2
 		o_que.saturac  = 0
@@ -1872,14 +1874,13 @@ function save_obj(obj,qual_slot,bit_extra)
 	--o item tem uma planta?
  if(range(tip,4,8) and obj.algo==1 and obj.planta)then
   combinado |= (obj.planta.tip-9  & 0x7) >>> 9
+
 		if(tip >4) aux = obj.estagio else aux = obj.capacity 
-
   combinado |= (aux-1 & 0x7) >>> 12
-
-		if(obj.saturac == max_saturac)combinado |= (1 & 0x1) >>> 16
+ 
+		if(obj.saturac == max_saturac)	combinado |= (1 & 0x1) >>> 16
  end
  
-
  --esta em um atalho?
  if(obj.onde == 3)	combinado |= (obj.qual_atl-1 & 0x7) >>> 15
 
@@ -1896,10 +1897,10 @@ end
 function save_game()
  --salvar variaveis de jogo
 	local game_vars = 0
-	game_vars |= (saldo    & 0xfff) <<  4 --saldo
-	          |  (stat(90) & 0x7ff) >>> 7 --ano
-		         |  (stat(91) & 0xf  ) >>>11 --mes
-	          |  (16 & 0x1f ) >>>16 --dia
+	game_vars |= (saldo      & 0xfff) <<  4 --saldo
+	          |  (stat(90)   & 0x7ff) >>> 7 --ano
+		         |  (stat(91)   & 0xf  ) >>>11 --mes
+	          |  ((stat(92)-1) & 0x1f ) >>>16 --dia
 
  dset(0,game_vars) 
  
@@ -1960,8 +1961,8 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
  	local aux = ((save << 12) & 0x7)+1
 		-- eh um vaso
  	if tip > 4 then
-   novo_obj.estagio = aux
-	 	if((save << 16) & 0x1 == 1)  novo_obj.saturac = max_saturac
+   novo_obj.saturac = aux
+	 	if((save << 16) & 0x1 == 1) novo_obj.saturac = max_saturac
 			if(passou_um_dia) avancar_fase(novo_obj)
   else 
    novo_obj.planta.tip = pla_salva.tip
@@ -1980,7 +1981,7 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 			ls_atl.atls[novo_obj.qual_atl].item = novo_obj		
 	 end 	
 	end
-		
+
  return novo_obj
  
 end
