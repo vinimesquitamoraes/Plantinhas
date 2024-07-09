@@ -25,18 +25,25 @@ function _init()
  3 para o deposito
  ]]
  status = 1
-
+ 
+ local load_aux = dget(0)
+	--game vars
+ saldo     = (load_aux  >>  4) & 0xfff
+ ano_salvo = (load_aux  <<  7) & 0x7ff
+	mes_salvo	= (load_aux  << 11) & 0xf  
+	dia_salvo = (load_aux  << 16) & 0x1f
+	num_atl   = ((dget(1)  << 16) & 0x1) + ((dget(2) << 17) & 0x2)
+	slots     = 0
+	
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- aux_tipo    = 1
- grav        = 0
-	max_saturac = 20
-	venda       = false
-	venda_timer = 0
-	pisca       = false
- --variaveis de jogo --------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	saldo   = 0
-	num_atl = 6
-	slots   = 0
+ aux_tipo      = 1
+ grav          = 0
+	max_saturac   = 1
+	venda         = false
+	venda_timer   = 0
+	pisca         = false
+	colheita      = false
+ passou_um_dia = dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
 	
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
@@ -50,9 +57,9 @@ function _init()
  ls_prt = {["tipo"]="prateleiras" ,["val"]=false,["qual"]=nil}
 
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
- pat_sem = {["tipo"]="semente",["val"]=false,["qual"]={} }	
- pat_reg = {["tipo"]="agua"   ,["val"]=false,["qual"]={} }	
-
+ pat_sem = {["tipo"]="semente"   ,["val"]=false,["qual"]={} }	
+ pat_reg = {["tipo"]="agua"      ,["val"]=false,["qual"]={} }	
+ 
  --init de palavras ---------------------------------------------------------------------------------------------------------------------------------------------------------------+
  p1={192,193,193,194,240}
  p2={208,193,192,240}
@@ -94,7 +101,9 @@ function _init()
  pa      = {["nome"]="invalid"}
 
 	--atalhos
- init_atl(num_atl)
+	-- 2 4 6 8
+	-- 0 1 2 3
+ init_atl(2*(num_atl+1))
  def_pos_atls()
 	--caregar save
  load_game()
@@ -104,7 +113,8 @@ end
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
-	if(btnp(❎)) saldo = 6000
+ 
+	if(btnp(❎)) saldo = 1000
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -129,20 +139,22 @@ function _update()
  end
   
  --performar atribuicao
+ --delay para a atribuicao
+ cool_down(5,ls_atl)
+
  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
  --se o timer contou ja
  if(ls_atl.wait)funcionalidades(2,ls_jrd)
 	
  --colisao atalhos ------------------------------------------------------------------------------------------------------+
- cool_down(5,ls_atl)
  if ls_atl.show then
   check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
  end
-  
+
  --colisao jardim -------------------------------------------------------------------------------------------------------+
  --delay pra comecar a mover
  cool_down(15,ls_jrd)
- 
+
  if not ls_atl.show and ls_jrd.wait then
   check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
  end
@@ -151,7 +163,7 @@ function _update()
  if pat_reg.val and not ls_atl.show then
   if(mouse:toggle(mouse.esq,204,236)) gerar_part(pat_reg, 1, nil, 2, 3, nil, stat(32)+1, stat(33)+13) 
  end
-  
+
  --semear -------------------------------------------------------------------------------------------------------+
  if pat_sem.val and not ls_atl.show and #pat_sem<1 then
   if(mouse:toggle(mouse.esq,228,228))then
@@ -165,7 +177,12 @@ function _update()
  
  --remover planta ------------------------------------------------------------------------------------------+
  if pa.val and not ls_atl.show then
-  if(mouse:toggle(mouse.esq,238,206)) remov_planta()
+  if(mouse:toggle(mouse.esq,238,206))remov_planta()
+	end
+
+	--colher planta
+	if colheita and not ls_atl.show  then
+  if(mouse:toggle(mouse.esq,218,234))	colher() 	
 	end
 	
  --esperando awa -------------------------------------------------------------------------------------------------------+ 	
@@ -180,8 +197,10 @@ function _update()
  --lojinha rocha ---------------------------------------------------------------------------------------------------+				
  elseif status == 2 then
 		--verificar disponibilidade de compra
+
 		if(slots == 63)toggle_disp(1,16) else toggle_disp(1,16,true)
-		
+		if(#ls_atl.atls == 8) toggle_disp(1)
+
   --selecionar loja ................................................................................................+
  	foreach(ls_esp.esps,function(esp) esp:hover("retg" ) end)
 	 check_sel_and_mov(ls_esp.esps,ls_esp,"retg")										
@@ -191,7 +210,7 @@ function _update()
    mouse:tip_set(231,"➡️","")
  		ls_esp.qual:add_car()	
   end  
-  
+
   --colisao no carrinho ............................................................................................+
   if(not ls_car.val and #ls_car.coisas >0) then
    foreach(ls_car.coisas,function(esp) esp:hover("retg") end)
@@ -235,7 +254,7 @@ function _update()
   --se o timer contou ja
   if(ls_atl.wait)funcionalidades(1,ls_inv)
   
-  if(not venda)atl_on_off(mouse.dir_press)	
+  if(not venda)atl_on_off(mouse.dir_press,true)	
      
   if ls_atl.show then
    bt_dept:hover()
@@ -246,12 +265,17 @@ function _update()
    bt_vend:hover()
    bt_vend:ativa()
   end
-		
-		if(venda and ls_inv.qual and not(mouse.eq_press) and mouse.esq_press)then
+
+		if(venda and ls_inv.qual and mouse:press_no_hold())then
 			local vendido = ls_inv.qual
 		 if vendido != regador and vendido != pa then
 				saldo += vendido.val
-				del(ls_inv.coisas,ls_inv.qual)
+				if vendido.capacity > 0 then
+					vendido.val,vendido.capacity, vendido.algo,	vendido.planta = 0,0,0
+				else
+					del(ls_inv.coisas,ls_inv.qual)
+ 			end
+ 			ls_inv.qual = nil
 			end
 		end
 		 	
@@ -287,15 +311,13 @@ function _draw()
   des_depot()
   des_atl()
  end
- 
- debug_obj(ls_inv.qual, 8)
- debug_obj(ls_jrd.qual, 9)
- if(ls_atl.qual)debug_obj(ls_atl.qual.item,10)
-  
+   
  mouse:des()
 
  print(cu1,0,0)
- 
+ print(cu2,0,10)
+ print(cu3,0,20)
+
 	print("slots:"..slots.."/63",85,0,6)
 end
 
@@ -323,8 +345,6 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   hoff     = 0,
   woff     = 0,
  	y_vel    = 1,
- 	flip_x   = false,
- 	flip_y   = false,
   movable  = false,
   ct       = 0,
   id       = 0,
@@ -333,14 +353,12 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   --metodos--------------------------------------------------------------------------------------------------------+ 			
   --mover objeto ..................................................................................................+
   mov = function(self, newx, newy)
-   self.x = newx& ~1
-   self.y = newy& ~1
+   self.x,self.y = newx& ~1,newy& ~1
   end,
   	 
 	 --desenhar objeto
 	 des = function(self,xop,yop)
-	 	aux_x = xop or self.x  
-	 	aux_y = yop or self.y
+		 aux_x,aux_y = xop or self.x,yop or self.y 
 	  pal(self.ct,0)
 	 	spr(self.s,aux_x,aux_y,self.w/8,self.h/8,self.flip_x,self.flip_y)
 			pal()
@@ -358,19 +376,18 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   col_mouse =	function(self,tipo)
 			if tipo == "retg" then
 				--checar entre direita e esquerda, cim e baixo
-				esq =  self.x+self.xoff
-				dir = (self.x+self.xoff)+(self.w-self.woff)
-				cim =  self.y+self.yoff
-				bax = (self.y+self.yoff)+(self.h-self.hoff)
+				local x, y, xoff, yoff = self.x,self.y,self.xoff,self.yoff
+				esq =  x+xoff
+				dir =  esq+(self.w-self.woff)
+				cim =  y+yoff
+				bax =  cim+(self.h-self.hoff)
 					
 				return (stat(32)>=esq and (stat(32)) <= dir) and
        				(stat(33)>=cim and (stat(33)) <= bax)
 	 	
 			elseif tipo == "circ" then
-				dx   = self.x - stat(32)
-				dy   = self.y - stat(33)
-				dist = flr(sqrt((dx*dx)+(dy*dy)))
-				return dist <= self.r				
+				dx,	dy = self.x - stat(32),self.y - stat(33)
+				return flr(sqrt((dx*dx)+(dy*dy))) <= self.r				
 				
 	 	end
 	 
@@ -386,7 +403,7 @@ end
 -->8
 --def_tipos ====================
 function def_tip(self,subtipo)
-
+ self.tip = subtipo
  --mouse ========================		 
 	if self.cla == "mouse" then
  self.s,self.ct,self.woff,self.hoff,self.ax,self.ay,self.esq_esper,self.mei_esper,self.dir_esper,self.esq_press,self.mei_press,self.dir_press,self.esq,self.mei,self.dir,self.esq_solto,self.mei_solto,self.dir_solto = 212,1,8,8,0,0,false,false,false,false,false,false,false,false,false,false,false,false
@@ -394,6 +411,11 @@ function def_tip(self,subtipo)
 	--resetar mouse ===============
  function self:reset()
   self.s,self.tool_tip,self.h,self.w,self.ct,self.xoff,self.yoff,self.ax,self.ay = 212, nil, 8,8,1,0,0,0,0
+	end
+	
+	--so pode clicar sem segurar
+	function  self:press_no_hold()
+		return not(mouse.eq_press) and mouse.esq_press 
 	end
 	
 	--mudar tool_tip
@@ -434,7 +456,7 @@ function def_tip(self,subtipo)
  	end
 
   mouse.s = spr_1
-	 return false
+	 return 
  end
  
  --atualizar mouse =============
@@ -455,7 +477,7 @@ function def_tip(self,subtipo)
 			--nado
 			if not self.esq_press then
 		 	--se nao estava esperando
-				if(not self.esq_esper) then
+				if not self.esq_esper then
 		 		--agora esta pressionado
 		 		--e esperando
 					self.esq_press,	self.esq_esper = true,true
@@ -470,7 +492,7 @@ function def_tip(self,subtipo)
 		--apertado
 		else
 		--se estava pressionado
-			if (self.esq_press) then
+			if self.esq_press then
 				--agora nao esta mais
 				self.esq_press=false
 			end
@@ -543,10 +565,10 @@ function def_tip(self,subtipo)
 
 --particula ====================
 	elseif self.cla == "particula" then	
-		self.vx,self.vy,self.x_max,self.x_mix,self.w,self.h = rnd(2)-1,1,128,0,0,0
+ 	self.vx,self.vy,self.x_max,self.x_mix,self.w,self.h = rnd(2)-1,1,128,0,0,0
 
  	if subtipo == 1 then 		
- 		self.cor,self.ace = rnd({3,11}),0
+ 		self.cor,self.ace =  rnd({3,11}),0
  	elseif subtipo == 2 then
  		self.cor,self.ace = 12, 0.2
  	end
@@ -588,22 +610,22 @@ function def_tip(self,subtipo)
 		 
 		--lojinha
 		if subtipo == 1 then
- 		self.tip,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct=1,1,113,16,16,2,14,14,46,1
+ 		self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct = 1,113,16,16,2,14,14,46,1
 		 
 	 --voltar
 		elseif subtipo == 2 then
-	 	self.tip,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct = 2,1,113,16,16,2,12,12,44,0
+	 	self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct = 1,113,16,16,2,12,12,44,0
 
 		--comprar
 		elseif subtipo == 3 then
-   self.tip,self.x,self.y,self.w,self.h,self.cor1,self.cor3,self.cor2=3,97,116,18,8,5,5,10
+   self.x,self.y,self.w,self.h,self.cor1,self.cor3,self.cor2           = 97,116,18,8,5,5,10
 
 	 --depot
 		elseif subtipo == 4 then
-  	self.tip, self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 4, 57, 57, 16, 16, 2, 40, 40, 42, 1
+   self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 57, 57, 16, 16, 2, 40, 40, 42, 1
 	  
 		elseif subtipo == 5 then
- 	self.tip, self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 5, 112, 113, 16, 16, 2, 14, 14, 46, 1
+ 	 self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 112, 113, 16, 16, 2, 14, 14, 46, 1
 	 end
 	
 	 --metodos de botoes
@@ -615,30 +637,31 @@ function def_tip(self,subtipo)
 			if(self:col_mouse("retg") and not(mouse.eq_press) and mouse.esq_press and self.wait)then
 				--funcoes ===================
 				--ir lojinha
-				if self.tip == 1 then
+				local tipo_bt = self.tip
+				if tipo_bt == 1 then
 					status = 2		
 	   	mouse:reset()
 	  			 
 				--voltar jogo principal
-				elseif self.tip == 2 then
+				elseif tipo_bt == 2 then
 					status = 1
 					 	 
 				--comprar
-				elseif self.tip == 3 then		
+				elseif tipo_bt == 3 then		
 					comprar()				
 							 
 				--ir depot
-				elseif self.tip == 4 and not ls_atl.val then
+				elseif tipo_bt == 4 and not ls_atl.val then
 					if status==1 then
-						status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait = 3, 12, 12, 44, 0, false
+						status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait, ls_atl.wait, ls_atl.val = 3, 12, 12, 44, 0
 
 					elseif status==3 then
-		   	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual = 40, 40, 42, 1, false, 1, false     					 
+		   	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual, ls_atl.wait, ls_atl.val = 40, 40, 42, 1, false, 1, false   					 
 				 end				
 				 
 					ls_atl.show = false
 					foreach(ls_bts,function(obj) obj.wait = false end)
-	 		elseif self.tip == 5 then
+	 		elseif tipo_bt == 5 then
 	    	mouse:reset()
 						venda = not venda
 						ls_inv.val = not ls_inv.val
@@ -688,9 +711,11 @@ function def_tip(self,subtipo)
 			end
 					 
 		 function self:add_car()
+
 				if mouse.esq_press then
 				--adiciona ao carrinho
 					if #ls_car.coisas<4 then
+					
 				 	if self.disp then
 					  new_car       = criar_obj("espaco",2,ls_car.coisas)
 							new_car.item  = criar_obj("item",self.item.tip)
@@ -731,24 +756,35 @@ function def_tip(self,subtipo)
 		self.h,	self.w = 1,80
 		
 	elseif self.cla == "item" then				
-		self.w, self.h, self.movable, self.desc = 16, 16, true, 10
+		self.w, self.h, self.movable, self.desc = 16, 16, true, 80
 
 		--slot de atalho
 		if subtipo == 1 then
-   self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct = 1, 2000, "inv slot", 2, 2, 2, 5, 5, 214, 1
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct                          = 300, "inv slot", 2, 2, 2, 5, 5, 214, 1
 
 		--fertilizante
 	 elseif subtipo == 2 then
- 	 self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.capacity = 2, 800, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1
+ 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.capacity = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1
 			
 		--borrifador
 	 elseif subtipo == 3 then
- 		self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 3, 400, "pesticide", 6, 3, 1, 7, 4, 229, 5
+ 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity          = 25, "pesticide", 6, 3, 1, 7, 4, 229, 5
 			
 		--cesta	 	
 	 elseif subtipo == 4 then
-   self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.cur_s, self.capacity = 4, 300, "basket", 4, 0, 6, 1, 8, 1, 215, 0
-			
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.cur_s, self.capacity = 300, "basket", 4, 0, 6, 1, 8, 1, 215, 0
+		
+		 function self:des(xop,yop)	
+			 aux_x,aux_y = xop or self.x,yop or self.y 
+		  pal(self.ct,0)
+	  	spr(self.s,aux_x,aux_y,self.w/8,self.h/8,self.flip_x,self.flip_y)
+				pal(0)
+				if self.planta then
+					spr(196+(self.planta.tip-9),aux_x+3,aux_y)
+					print(self.capacity,aux_x+12,aux_y+12,10)
+				end
+		 end
+		 
 	 --vasos rocha
 	 elseif(range(subtipo,5,8))then
    self.estagio, self.colher, self.saturac, self.cur_s = 1, false, 0, 230
@@ -786,19 +822,19 @@ function def_tip(self,subtipo)
 			
 			--vaso1
 		 if subtipo == 5 then
-	  	self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 5, 500, "flowerpot 1", 32, 2, 5, 5, 8, 1, 8, 4, 8
+	   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 50, "flowerpot 1", 32, 2, 5, 5, 8, 1, 8, 4, 8
 		
 			--vaso2
 		 elseif subtipo == 6 then
-		  self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 6, 500, "flowerpot 2", 34, 2, 5, 5, 7, 1, 8, 4, 7
+		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 75, "flowerpot 2", 34, 2, 5, 5, 7, 1, 8, 4, 7
 		 			 
 			--vaso3
 		 elseif subtipo == 7 then
-		  self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 7, 600, "flowerpot 3", 36, 3, 2, 7, 5, 2, 8, 4, 5
+		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 100, "flowerpot 3", 36, 3, 2, 7, 5, 2, 8, 4, 5
 
 			--vaso4
 		 elseif subtipo == 8 then
-		  self.tip, self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 8, 600, "flowerpot 4", 38, 1, 2, 3, 5, 2, 8, 4, 5
+		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 125, "flowerpot 4", 38, 1, 2, 3, 5, 2, 8, 4, 5
  
 	 	end	
 		--planta1
@@ -806,61 +842,69 @@ function def_tip(self,subtipo)
 	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 10, 1, 2, 2, 5, 5, 249, 1
 
 		 if subtipo == 9 then
-		  self.tip, self.val, self.nome = 9, 400, "tomato"
+		  self.val, self.nome = 10, "tomato"
 		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
            wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}},
-          tip = self.tip}
+          tip =  9,
+          val = 10}
 		 		 
 			--planta2
 		 elseif subtipo == 10 then
-		  self.tip, self.val, self.nome = 10, 500, "bear_pawn"	
+		  self.val, self.nome = 15, "bear_pawn"	
 		 	self.fases= {64   ,65   ,66   ,67   ,68   ,74   , 
            wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2}},
-          tip = self.tip}					 
+          tip = 10,
+          val = 15}
+					 
 			  	
 			--planta3
 		 elseif subtipo == 11 then
-	  	self.tip, self.val, self.nome = 11, 600, "pumpkin"
+	  	self.val, self.nome = 20, "pumpkin"
 		 	self.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
-          tip = self.tip}			 
-			  				 		 	
+          tip = 11,
+          val = 20}			  				 		 	
+          
 		 --planta4
 		 elseif subtipo == 12 then
-		  self.tip, self.val, self.nome = 12, 1000, "pegaxi"
+		  self.val, self.nome = 25, "pegaxi"
  	 	self.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
-          tip = self.tip}				 
-  				 		 			  	
+          tip = 12,
+          val = 25}  			
+          	 		 			  	
 		 --planta5
 		 elseif subtipo == 13 then
-    self.tip, self.val, self.nome = 13, 500, "sunflower"
+    self.val, self.nome = 50, "sunflower"
 			 self.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}},
-          tip = self.tip} 					 
-		
+          tip = 13,
+          val = 50}		
 		 --planta6
 		 elseif subtipo == 14 then
-		  self.tip, self.val, self.nome = 14, 350, "sword"	 	
+		  self.val, self.nome = 75, "sword"	 	
 			 self.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
-          tip = self.tip} 					 
+          tip = 14,
+          val = 75}
 				self.fases.ct = 2
 
 		 --planta7
 		 elseif subtipo == 15 then
-		  self.tip, self.val, self.nome = 15, 600, "rose"
+		  self.val, self.nome = 100, "rose"
 			 self.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}},
-          tip = self.tip} 					 
-				self.fases.ct = 2
+          tip = 15,
+          val = 100}
+  		self.fases.ct = 2
 				
 		 --planta8
 		 elseif subtipo == 16 then
-		  self.tip, self.val, self.nome = 16, 1000, "dandelion"
+		  self.val, self.nome = 200, "dandelion"
 			 self.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
-          tip = self.tip}					 
+          tip = 16,
+          val = 200}
 	 	end
 	 	
   elseif(range(subtipo,17,18))then
@@ -868,11 +912,11 @@ function def_tip(self,subtipo)
 	
 			--regador
 		 if subtipo == 17 then
-  	 self.tip, self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s = 17, "watering can", 204, 236, 204, 3, 1, 7, 4, 248
+  	 self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s = "watering can", 204, 236, 204, 3, 1, 7, 4, 248
  			
 			--pa
 		 elseif subtipo == 18 then
-	  	self.tip, self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.x_def, self.y_def = 18, "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12
+	  	self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.x_def, self.y_def = "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12
 		 end 		 
 		end
 	
@@ -896,48 +940,43 @@ end
 --colisor e utilitrios =========
 --nao deixa um objeto sair
 --da tela
-function n_sai_tela(oque)
-	if oque != nil then
-		esq = oque.x+oque.xoff
-		cim = oque.y+oque.yoff
-		dir = esq+oque.w-oque.woff
-		bax = cim+oque.h-oque.hoff
-	
-		if(esq <   0) oque.x = -oque.xoff
-		if(cim <   0) oque.y = -oque.yoff
- 	if(dir > 127) oque.x = oque.x+(127-dir)
- 	if(bax > 127) oque.y = oque.y+(127-bax)-1
+function n_sai_tela(self)
+	if self then
+		local x, y, xoff, yoff, esq, cim, dir, bax = self.x,self.y,self.xoff,self.yoff
+ 
+ 	esq, cim = x+xoff, y+yoff
+  dir, bax = esq+self.w-self.woff, cim+self.h-self.hoff
+
+		if(esq <   0) self.x = -xoff
+		if(cim <   0) self.y = -yoff
+ 	if(dir > 127) self.x = x+(127-dir)
+ 	if(bax > 127) self.y = y+(127-bax)-1
 	end
 end
 
 --saiu da tela
-function saiu(oque)
-	if oque != nil then
-		esq = oque.x+oque.xoff
-		cim = oque.y+oque.yoff
-		dir = esq+oque.w-oque.woff
-		bax = cim+oque.h-oque.hoff
-			
-		if(esq < 0) return true
-		if(cim < 0) return true
- 	if(dir > 127) return true
- 	if(bax > 127) return true
- 	return false
-	end
+function saiu(self)
+	if(not self ) return
+
+	local x, y, xoff, yoff = self.x,self.y,self.xoff,self.yoff
+	esq, cim = x+xoff              , y+yoff
+ dir, bax = esq+self.w-self.woff, cim+self.h-self.hoff			
+
+	if(esq < 0)   return true
+	if(cim < 0)   return true
+	if(dir > 127) return true
+	if(bax > 127) return true
+ 
 end
 
 --checa colisao entre dois retangulos
 function col_2ret(q1,q2)
  if(not q1 or not q1)return
-	esq_1 = q1.x+q1.xoff
-	cim_1 = q1.y+q1.yoff
-	dir_1 = esq_1+q1.w-q1.woff
-	bax_1 = cim_1+q1.h-q1.hoff
+	esq_1,cim_1 = q1.x+q1.xoff      , q1.y+q1.yoff
+	dir_1,bax_1 = esq_1+q1.w-q1.woff, cim_1+q1.h-q1.hoff
 	
-	esq_2 = q2.x+q2.xoff
-	cim_2 = q2.y+q2.yoff
-	dir_2 = esq_2+q2.w-q2.woff
-	bax_2 = cim_2+q2.h-q2.hoff
+	esq_2,cim_2 = q2.x+q2.xoff      , q2.y+q2.yoff
+	dir_2,bax_2 = esq_2+q2.w-q2.woff, cim_2+q2.h-q2.hoff
 
 	--checar entre direita e esquerda
 	if esq_1 < dir_2 and dir_1 > esq_2 then
@@ -945,35 +984,22 @@ function col_2ret(q1,q2)
 			return true
 		end
 	end
-
-	return false	
 	
 end
 
 --colisao de dois circulos
 function col_circ(q1,q2)
-	dx   = q1.x - q2.x
-	dy   = q1.y - q2.y
-	dist = sqrt((dx*dx)+(dy*dy))
-	if(dist <= (q1.r+q2.r))then
-		return true
-	end	
-	
-	return 
-	
+	dx,dy  = q1.x - q2.x, q1.y - q2.y
+
+	if(sqrt((dx*dx)+(dy*dy)) <= (q1.r+q2.r))	return true		
+		
 end
 
 --colisa de um circulo e 1 ponto
 function col_circ_pt(cic,pt)
-	dx   = cic.x - pt.x
-	dy   = cic.y - pt.y
-	dist = flr(sqrt((dx*dx)+(dy*dy)))
-	if(dist <= (cic.r))then
-		return true
-	end
-	
-	return false
-	
+	dx,dy  = cic.x - pt.x, cic.y - pt.y
+	if(flr(sqrt((dx*dx)+(dy*dy))) <= (cic.r))	return true
+		
 end
 
 --retorna o obejto selecionado
@@ -993,8 +1019,6 @@ function get_obj_by_col_retg(ls_oque_1,oque_2)
 	for qual in all(ls_oque_1)do
 		if(col_2ret(qual,oque_2))return qual
 	end	
-	
-	return 
 	
 end
 
@@ -1030,9 +1054,7 @@ end
 
 --apaga uma lista
 function del_ls(qual_ls)
-	for i in all(qual_ls)do
-		del(qual_ls,i)
-	end
+ foreach(qual_ls, function(i)	del(qual_ls, i)end)
 end
 
 --particulas
@@ -1052,10 +1074,10 @@ end
 
 function gerar_part(que_pat_ls, quantas, do_que, tip, ampx, item, x, y)
  tip = tip or 1
-	
+
  if(do_que and quantas>do_que.capacity or #que_pat_ls+quantas > 200)return
  if(do_que) do_que.capacity -= 1
- 
+
  for i=1, quantas do
 		nova = criar_obj("particula",tip,que_pat_ls,item)
 		nova.x, nova.y, nova.x_max, nova.x_min = x, y, x+ampx, x-ampx
@@ -1064,7 +1086,6 @@ end
 
 function range(val,⬅️,➡️)
 	if(val >= ⬅️ and val <= ➡️)return true
-	return 
 end
 
 function cool_down(tempo,context)
@@ -1072,8 +1093,7 @@ function cool_down(tempo,context)
 	if context.val and not context.wait then
 
 		if context.timer>=tempo then
-		 context.wait  = true
-  	context.timer = 0
+		 context.wait,	context.timer  = true, 0
  	else		
  		context.timer += 1
  	end
@@ -1083,8 +1103,12 @@ function cool_down(tempo,context)
 end
 
 function tool_tip(item)
+ rect(14,117,91,126,5)
+ rectfill(15,118,90,125,0)
+ rect(14,117,66,126,5)
+
 	--mostrar preco ao passar mouse	
-	if slots == 63 then
+	if slots == 63 and status ==2 then
 	 print("you are full",17,120,8)			
 		return
 	end
@@ -1097,9 +1121,9 @@ function tool_tip(item)
 			print(item.nome,17,120,6)
 		end
 		--preco
+	 if(item == regador or item == pa)return
 		local cor = status == 2 and 8 or 11
 		if(item.val > saldo and status == 2) cor = 2
-	 if(item == regador or item == pa)return
   print(item.val,69,120,cor)
 	
 	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 and status == 2)then
@@ -1129,11 +1153,11 @@ function	des_lojinha()
 	rect(8,2,119,114,5)
 	line(92,114,118,114,0)
 	--compartimentos			
-	rect(37,7,91,28,5)
-	rect(32,35,91,55,5)
-	rect(42,63,91,83,5)
+	rect(37, 7,91,28 ,5)
+	rect(32,35,91,55 ,5)
+	rect(42,63,91,83 ,5)
 	rect(47,91,91,114,5)
-	
+
 	--linhas do lado labels
 	rect(35,30,91,32,5)
 	rect(35,31,90,32,0)
@@ -1180,18 +1204,13 @@ function	des_lojinha()
 	des_vertices(95,115,22,10,5)
 	
 	--carrinho de compra
-	local y=0
+	addy=0
 	for i=1,4 do
-		rect(95,7+y,116,28+y,5)
-		des_vertices(98,10+y,16,16,5)
-		y+=28
+		rect(95,7+addy,116,28+addy,5)
+		des_vertices(98,10+addy,16,16,5)
+		addy+=28
 	end
-	
-	--precos
- rect(14,117,91,126,5)
- rectfill(15,118,90,125,0)
- rect(14,117,66,126,5)
- 
+	 
  tools:des()
 	pots:des()
  plants:des()
@@ -1211,9 +1230,8 @@ end
 function init_loja()
 
 	for i=1,16 do      
-  aux      = criar_obj("espaco",1,ls_esp.esps)
-		aux.item, aux_tipo, aux.id =  criar_obj("item", aux_tipo), aux_tipo + 1, i
-
+  aux                        = criar_obj("espaco",1,ls_esp.esps)
+		aux.item, aux_tipo, aux.id = criar_obj("item", aux_tipo), aux_tipo + 1, i
 	end	
 	
  ondex,ondey =	11,10
@@ -1238,8 +1256,6 @@ end
 
 --desenha o carrinho de compras
 function att_car()
-
-	if(#ls_atl.atls == 8) toggle_disp(1)
 
 	if count(ls_car.coisas)>0 then
 		local aux_y = 9
@@ -1316,7 +1332,7 @@ function add_varios_itens(qual_ls,onde)
 	for i in all(qual_ls)do
 		add_um_item(i.item,onde)
 		local aux = i.item
-		i.item.val =	aux.val - ((aux.val*aux.desc)/100)
+		i.item.val = flr(aux.val - ((aux.val*aux.desc)/100))
 	end
 
 end
@@ -1325,18 +1341,17 @@ end
 
 -->8
 --menu_de_atalho=================
-function init_atl(quantos_pares)	
-	local quantos = quantos_pares& ~1
-
-	if(quantos>8) quantos = 8
-	if(quantos<2) quantos = 2
+function init_atl(quantos)	
 
 	if(#ls_atl.atls+quantos>8)return
+
+ if(#ls_atl.atls>0)	num_atl += 1
+	
+	if(quantos == 0) quantos = 2
 	
 	for i=1,quantos do
- 	new_atl      =	criar_obj("espaco",3,ls_atl.atls)  	 
+ 	new_atl =	criar_obj("espaco",3,ls_atl.atls)  	 
  	new_atl.item, new_atl.cor1, new_atl.cor2, new_atl.cor3, new_atl.id, new_atl.r = nil, 1, 7, 1, #ls_atl.atls, 8.5
-
 	end
 
 end
@@ -1377,7 +1392,7 @@ function des_atl()
    ovalfill(i.x-8, i.y-8,i.x+9 ,i.y+9 ,0)
    oval(i.x-8, i.y-8,i.x+9,i.y+9,i.cor1)
 
-			if i.item !=nil then
+			if i.item then
 			 i.item:des(i.x-7,i.y-7)
 			end
  		i:hover("circ")
@@ -1400,8 +1415,9 @@ function atl_on_off(context,pode_mover)
 			if pode_mover then
 				ls_jrd.val,ls_inv.val = true,true
 			end
-		
-			ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, ls_atl.timer, pat_reg.val, pat_sem.val, pa.val = nil, nil, false, false, 0, false, false, false
+ 		ls_atl.timer, ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, pat_reg.val, pat_sem.val, pa.val, colheita = 0
+ 
+	--		ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, ls_atl.timer, pat_reg.val, pat_sem.val, pa.val,	colheita = nil, nil, false, false, 0, false, false, false, false
 
 			foreach(ls_bts,function(obj) obj.wait = false end)
 
@@ -1433,17 +1449,19 @@ function toggle_atribuir()
 
 	 	if ls_atl.qual and ls_atl.qual.item then
 	 		local aux_tip = ls_atl.qual.item.tip
-
-	 	 if(range(aux_tip,5,8)) mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
-			 
-			 if range(aux_tip,9,16) then
-			  mouse.s = 228
+				--cesta
+			 if(aux_tip == 4)then
+			 	mouse.s,mouse.ax,mouse.ay = 218,-5,-5
 			 end
-			 
+				--vasos			 				
+	 	 if(range(aux_tip,5,8))  mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
+			 --sementes
+			 if(range(aux_tip,9,16)) mouse.s = 228		
+			 --regador
 		 	if aux_tip == 17 then
 	 			mouse.w,mouse.h = 16,16
 		 		mouse.s = 204
-		 		
+		 	--pa
 		 	elseif aux_tip == 18 then
   			mouse.ct,mouse.w,mouse.h,mouse.s,mouse.ax,mouse.ay= 9,16,16,238,-2,-14
 		 	end
@@ -1456,7 +1474,7 @@ end
 function funcionalidades(que_func,container)
 	--se nao tem atalho selecionado
 	if(not ls_atl.qual) return
-
+ container.wait = true
  --tipo item do atalho
  local aux_tip = nil
 	if(ls_atl.qual.item)aux_tip = ls_atl.qual.item.tip
@@ -1513,7 +1531,7 @@ function funcionalidades(que_func,container)
 			 	if(#ls_atl.atls == 8) toggle_disp(1)
 				end
 				ls_atl.qual = nil
-	   atl_on_off(true)	   
+	   atl_on_off(true,true)	   
 			end
 			
 	 --eh uma semente
@@ -1523,9 +1541,14 @@ function funcionalidades(que_func,container)
 		--eh um regador
 		elseif aux_tip == 17 then
 			pat_reg.val = true
+ 
   --eh uma pa
  	elseif aux_tip == 18 then
 			pa.val = true
+			
+		--eh uma cesta
+ 	elseif aux_tip == 4 then
+			colheita = true
 		end
 			 
 	end
@@ -1587,7 +1610,7 @@ function atl_para_container(context,qual_container,permutavel)
 		
 			qual_container.val  = true
    qual_container.wait = false
-  	atl_on_off(true)
+	  atl_on_off(true,true)	   
   	  	  	
 		end
 	end
@@ -1595,7 +1618,9 @@ end
 
 function container_para_atl(context,qual_container)
 	--se algo do container esta sendo selecionado		
+	
 	if qual_container.qual and context then
+
 		local para_atl        = qual_container.qual
   para_atl.onde = 3
 		ls_atl.qual.item      =	del(qual_container.coisas,para_atl)
@@ -1605,8 +1630,10 @@ function container_para_atl(context,qual_container)
 		qual_container.val    = true
   qual_container.wait   = false
 
- 	atl_on_off(true)
+	 atl_on_off(true,true)	   
+ 	return
 	end
+
 end
 -->8
 --deposito======================
@@ -1635,8 +1662,7 @@ function des_depot()
 	end
 		
  --prateleiras
-	aux_1 = 11
-	aux_2 = 32
+	aux_1,aux_2  = 11, 32
 	for i=1,4 do
 		rect(16,aux_1,28,aux_2,1)
 		rect(16,aux_1,95,aux_2,4)
@@ -1662,10 +1688,7 @@ function des_depot()
 		if(pisca)then pal(11,5) else pal(5,11) end
 	 spr(247,121,109)
 	 pal()
-		rect(14,117,91,126,5)
- 	rectfill(15,118,90,125,0)
-	 rect(14,117,66,126,5)
-	 
+		 
   tool_tip(ls_inv.qual)
   
 	else
@@ -1687,8 +1710,7 @@ function des_prateleiras(x_init,y_init,y_esp)
 
 	aux_y = y_init
 	for i in all(ls_prt)do
-		i.x  = x_init
-	 i.y  = aux_y
+		i.x,i.y   = x_init, aux_y
   rect(i.x,i.y,i.x+i.w-1,i.y+i.h-1,4)
 		aux_y += y_esp
 	end
@@ -1753,10 +1775,10 @@ function plantar(o_que)
 	ls_jrd.coisas.wait = true
  local	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	if(qual_vaso and qual_vaso.planta)return
-	
+ -- saturacao da nega
 	if qual_vaso then
 		qual_vaso.planta  = o_que.ls_aux.fases
-  qual_vaso.estagio, qual_vaso.algo, ls_atl.val, pat_sem.val, ls_atl.wait, ls_jrd.val = 3, 1, false, false, false, true
+  qual_vaso.estagio, qual_vaso.algo, ls_atl.val, pat_sem.val, ls_atl.wait, ls_jrd.val,qual_vaso.saturac = 1, 1, false, false, false, true,0
  	mouse:reset()
   o_que:del()
  end
@@ -1765,8 +1787,8 @@ end
 
 function remov_planta()
 	qual_vaso = ls_jrd.qual
-	if qual_vaso and qual_vaso.planta then
-		qual_vaso.planta,qual_vaso.algo = nil,0
+	if qual_vaso and qual_vaso.planta and mouse:press_no_hold() then
+		qual_vaso.planta,qual_vaso.algo,	qual_vaso.saturac, qual_vaso.colher = nil,0,0,false
  end
  
 end
@@ -1781,73 +1803,109 @@ function regar(o_que)
 	 o_que:del()
  	if qual_vaso.saturac >= max_saturac then
  		qual_vaso:vasar()
-			avancar_fase(qual_vaso)
-			qual_vaso.saturac=0
 		end
+		
 		if(qual_vaso.colher)qual_vaso:vasar()
 		
  end
    
 end
 
+function colher()
+ local	qual_vaso  = ls_jrd.qual
+ --garantia que existe uma planta
+ if(not qual_vaso or not qual_vaso.algo or not qual_vaso.planta) return	
+ local	qual_cesta   =	ls_atl.qual.item
+
+ local tip_pla_cesta = qual_cesta.planta and qual_cesta.planta.tip
+ local	tip_pla_vaso  = qual_vaso.planta.tip
+ local aux       = qual_vaso.planta.val
+
+	--ja tem uma planta na cesta?
+	if tip_pla_cesta then
+		--a que quer colher 
+		--e do mesmo tipo?
+ 	if tip_pla_cesta == tip_pla_vaso and qual_vaso.colher then
+  	--aumenta a capacidade
+  	if qual_cesta.capacity < 8 and mouse:press_no_hold()  then 
+	  	qual_vaso.estagio   -= 2
+	  	qual_vaso.colher     = false
+   	qual_cesta.capacity += 1
+    qual_cesta.val = flr(((aux*50)/100)*qual_cesta.capacity)
+	  end
+  end
+ --nao tem planta ainda
+ elseif qual_vaso.colher then
+		qual_cesta.planta,qual_cesta.algo = qual_vaso.planta, 1
+	end
+end
+
 function avancar_fase(o_que)
- if(not o_que.planta) return
-	local inc = 1 --flr(rnd(100))
-	o_que.estagio+= inc%2
- if o_que.estagio >#o_que.planta then
-  o_que.estagio = #o_que.planta
-  o_que.colher  = true
+
+ if(not o_que.algo or not o_que.planta) return
+	local inc = flr(rnd(100))
+	if o_que.saturac == max_saturac then
+		o_que.estagio += inc%2
+		o_que.saturac  = 0
+	end
+
+ if o_que.estagio >= #o_que.planta then
+  o_que.estagio, o_que.colher = #o_que.planta, true
  end
 end
 
 -->8
 --save/load =======================
-function save_obj(obj,qual_slot)
-
-	if(not obj or not obj.onde or obj.onde == 0) return
+function save_obj(obj,qual_slot,bit_extra)
+	if(not obj or not obj.onde or obj.onde == 0 or obj.tip==0) return
 	local combinado = 0
 	--garantir cordenada dentro do range 
-	local x_aux = obj.x<0 and -obj.x or 0
-	local y_aux = obj.y<0 and -obj.y or 0
-
-	if(x_aux != 0) cu3 = x_aux
+	local x_aux,y_aux,tip,bit_extra,aux = obj.x<0 and -obj.x or 0, obj.y<0 and -obj.y or 0,obj.tip,bit_extra or nil
 
 	--salvar informacoes basicas
 	combinado |= (obj.onde    & 0x03) << 14
 	          | ((obj.x+x_aux & 0x7f) <<  7)
 		         |  (obj.y+y_aux & 0x7f) 
-	          |  (obj.tip-1   & 0x1f) >>> 5
+	          |  (tip-1       & 0x1f) >>> 5
 	          |  (obj.algo    & 0x0f) >>> 6
 	
 	--o item tem uma planta?
- if(range(obj.tip,4,8) and obj.algo==1 and obj.planta)then
+ if(range(tip,4,8) and obj.algo==1 and obj.planta)then
   combinado |= (obj.planta.tip-9  & 0x7) >>> 9
-  combinado |= (obj.estagio       & 0x7) >>> 12
+		if(tip >4) aux = obj.estagio else aux = obj.capacity 
+
+  combinado |= (aux-1 & 0x7) >>> 12
+
+		if(obj.saturac == max_saturac)combinado |= (1 & 0x1) >>> 16
  end
  
 
  --esta em um atalho?
- if(obj.onde == 3)	combinado |= (obj.qual_atl & 0x7) >>> 15
-	
+ if(obj.onde == 3)	combinado |= (obj.qual_atl-1 & 0x7) >>> 15
+
+ if(bit_extra)then
+ 	aux = 15+qual_slot
+  combinado |= (num_atl & qual_slot) >>> aux
+	end
+
 	dset(qual_slot,combinado)	
 	return obj
 	
 end
 
 function save_game()
- del_ls(cu4)
  --salvar variaveis de jogo
 	local game_vars = 0
 	game_vars |= (saldo    & 0xfff) <<  4 --saldo
 	          |  (stat(90) & 0x7ff) >>> 7 --ano
 		         |  (stat(91) & 0xf  ) >>>11 --mes
-	          |  (stat(92) & 0x1f ) >>>16 --dia
+	          |  (16 & 0x1f ) >>>16 --dia
 
  dset(0,game_vars) 
  
  --objetos funcionais padrao		
-	save_obj(regador,1)
-	save_obj(pa     ,2)
+	save_obj(regador,1,true)
+	save_obj(pa     ,2,true)
  --salvar objetos
  local slot = 3
 
@@ -1876,8 +1934,9 @@ function save_game()
 
 end
 
-function load_obj(qual_slot,guardar_em_ls)
- guardar_em_ls = guardar_em_ls or true
+function load_obj(qual_slot,guardar_em_ls,bit_extra)
+ guardar_em_ls, bit_extra = guardar_em_ls or true, bit_extra or nil
+
 	local save = dget(qual_slot)
 	
  local onde =  (save >>> 14) & 0x03
@@ -1892,80 +1951,115 @@ function load_obj(qual_slot,guardar_em_ls)
  novo_obj.algo  = algo
  
  --o item tem uma planta?
- if(range(tip,4,8) and algo==1)then
-  local tip_pla    = ((save << 9) & 0x07)+9
-  local pla_salva  = criar_obj("item",tip_pla)
-
+ if range(tip,4,8) and algo==1 then
+ 
+  local pla_salva  = criar_obj("item",((save << 9) & 0x07)+9)
   novo_obj.planta  = pla_salva.fases
- 
-  novo_obj.estagio = ((save << 12) & 0x07)
+
+  --estagio ou capacidade
+ 	local aux = ((save << 12) & 0x7)+1
+		-- eh um vaso
+ 	if tip > 4 then
+   novo_obj.estagio = aux
+	 	if((save << 16) & 0x1 == 1)  novo_obj.saturac = max_saturac
+			if(passou_um_dia) avancar_fase(novo_obj)
+  else 
+   novo_obj.planta.tip = pla_salva.tip
+   novo_obj.capacity   = aux
+   local val_pla = pla_salva.val
+   novo_obj.val = flr(((val_pla*50)/100) * novo_obj.capacity)
+ 	end		
+ 	
  end
- 
+
  if guardar_em_ls then
 	 if(onde == 1) add(ls_jrd.coisas,novo_obj)
 	 if(onde == 2) add(ls_inv.coisas,novo_obj)
 	 if(onde == 3) then
-	  novo_obj.qual_atl = (save << 15) & 0x7
+	  novo_obj.qual_atl = ((save << 15) & 0x7) +1
 			ls_atl.atls[novo_obj.qual_atl].item = novo_obj		
 	 end 	
 	end
+		
  return novo_obj
  
 end
 
 function load_game()
- load_aux = dget(0)
-	--primeiro carregar o saldo
- saldo = (load_aux >> 04)&0xfff
-
 	--objetos padro
  regador =	load_obj(1) or criar_obj("item",17,ls_inv.coisas,nil,16,18,2)
  pa      = load_obj(2) or criar_obj("item",18,ls_inv.coisas,nil,32,18,2)
 
  --careggar regador e pa	
 	for i=3, 63 do
-  if(not load_obj(i)) break
+		local loaded_obj = load_obj(i)
+  if(not loaded_obj) break
  end
  
 end
 
-function debug_obj(obj,cor)
 
- if(true) return
-	cor = cor or 9
- if(not obj)  return
- 
-	--keys basicas
-	local ls_keys = {"onde", "x", "y","tip","algo","qual_atl"}
-	print("")
-	print("")
-	print("")
-
-	--salvar infomacoes bases
-	for v,k in pairs(ls_keys)do
-		--primeiro cropar os bits extras que possam existir
-		print(k..":"..tostr(obj[k]),cor)		
+function eh_bisex(ano,aux)
+	aux = aux or nil
+ --divisivel por 4
+ --nao pode ser divisivel por 100
+ --ou divisivel por 400
+ local eh =  ano % 4   == 0 and
+									   (ano % 100 ~= 0 or
+									    ano % 400 == 0)
+	if(aux)then
+		return eh and 366 or 365
+	else
+		return eh
 	end
-	--informaes especificas
-	--tem algo 
-	if obj.algo == 1 then
-  --eh algo que pode ter uma planta
-		if(range(obj.tip,4,8))then
-
-			if obj.planta then
-	 		print("planta: "..obj.planta.tip)
- 			print("estagio:"..obj.estagio)
- 		end
-		end
-		--eh algo que pode ter uma capacidade
-		if(range(obj.tip,1,3))then
- 		print("capacidade:"..obj.planta.tip)
-		end
-	end
-
 end
 
+function que_dia_eh(dia, mes, ano,aux)
+	aux = aux or nil
+ local mes_tam =
+  {31, 28, 31, 30,
+   31, 30, 31, 31,
+   30, 31, 30, 31,
+  }
+ if(eh_bisex(ano))mes_tam[2] = 29
+ 
+ local que_dia = dia
+ 
+ for m = 1, mes - 1 do
+  que_dia += mes_tam[m]
+ end
+ 
+ if(aux)then
+		return eh_bisex(ano) and 366-que_dia or 365-que_dia
+ else
+	 return que_dia
+ end
+end
 
+--diferena de dias
+function dif_dias(d1,m1,a1,d2,m2,a2)
+ --dif de dias dos anos
+ local dias = 0
+ --se os anos forem diferntes
+ if(a1 != a2)then
+  
+	 for ano = a1, a2 do
+	 
+		 if(ano == a1)then
+		 	dias += que_dia_eh(d1,m1,a1,true)
+	 	elseif(ano == a2)then
+		 	dias += que_dia_eh(d2,m2,a2)
+	 	else
+	 		dias += eh_bisex(ano,true)
+			end
+			
+	 end
+	 
+	else
+	 dias =	que_dia_eh(d2,m2,a2) - que_dia_eh(d1,m1,a1)
+	end
+	return dias
+end
 __gfx__
 880008888880008800000000000bbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 888080000008088800000422200b1b00000000000000000000005577777000000000004224000000000000000000000000000000000000000110000000000000
@@ -2071,22 +2165,22 @@ __gfx__
 0000000000000000000000000000000008e8888200930bb30a4a4a490cccccdd009242a00b0b030000bbb33000300000000000000000000009d1511d90000000
 0000000000000000000000000000000008ee882800330bb3094949490cdcdddd099aa9900300b0000003b0000003300000650006666607000951d15900000000
 0000000000000000000000000000000000882280000003330094949000cdcdd00000a0900333b0000000330000000000065700665557607000951d9d90000000
-55550000555500005555000055550000811111110ddd0000004444000000000000444400001111000000000000000000057500761117706000095909d9000000
-5505000055550000550000005550000017777771d776d00004111140000000000004200e111bb11100000000000000000005605777775060000090009d999990
-5555000055050000555000005500000016111710d7dd6d00419911420000000000eeeee01bbbbbb1000000000000000000005655555550500000000009624490
-550000005505000055000000555500001611710056d7d50044114412400000040041120e01bbbb10000000000000000000000555675655000000000009200290
-0000000000000000000000000000000016161610056d70004144121224242424041131201c1bb1c1000000000000000000000055675650000000000009402900
-0000000000000000000000000000000016616671005506444111141222424242041311201c1111c1000000000000000000000005665600000000000009429000
-00000000000000000000000000000000161017710000020441114112242424220411112001cccc10000000000000000000000000000000000000000009990000
-00000000000000000000000000000000110001110000042204442220022222200044220000111100000000000000000000000000000000000000000000000000
+55550000555500005555000055550000811111110ddd0000004444000000000000444400001111000010101000000000057500761117706000095909d9000000
+5505000055550000550000005550000017777771d776d00004111140000000000004200e111bb11101717171000000000005605777775060000090009d999990
+5555000055050000555000005500000016111710d7dd6d00419911420000000000eeeee01bbbbbb1017171710000000000005655555550500000000009624490
+550000005505000055000000555500001611710056d7d50044114412400000040041120e01bbbb10117d7d710000000000000555675655000000000009200290
+0000000000000000000000000000000016161610056d70004144121224242424041131201c1bb1c17176767d0000000000000055675650000000000009402900
+0000000000000000000000000000000016616671005506444111141222424242041311201c1111c17767777d0000000000000005665600000000000009429000
+00000000000000000000000000000000161017710000020441114112242424220411112001cccc10167777610000000000000000000000000000000009990000
+00000000000000000000000000000000110001110000042204442220022222200044220000111100016776100000000000000000000000000000000000000000
 55550000555000005505000055550000011111000dddd0000000000000bbbb001111111111111111000000000000000000000000000000000000000000000000
-5505000050550000550500000550000016777611057650000000000000b11b00188118811bbbbcc1000000000000000000000000000000000000000009990000
-5550000055050000555500000550000077777777576dd50044444222bbb11bbb188828811b111cc1000000000000000000000000000000000000000009429000
-550500005555000055550000555500006776777655d7bdd041111112b111111b11888211bbb11181000000000000000000000000077700000000000009402900
-0000000000000000000000000000000067611766005b7bbd44444222b111111b112888111b111888000000000000000000000000700060000000000009200290
-00000000000000000000000000000000761766110053bbbd01111110bbb11bbb1882888114411181000000000000000000000006677005000000000009624490
-0000000000000000000000000000000017171100000533350211112000b11b00188118811448888100000000000000000000006556750500000090009d999990
-0000000000000000000000000000000001110000000555550244422000bbbb0011111111111111110000000000000000000006511675500000095909d9000000
+5505000050550000550500000550000016777611057650000000000000b11b00188118811bbbbcc1001010100000000000000000000000000000000009990000
+5550000055050000555500000550000077777777576dd50044444222bbb11bbb188828811b111cc1017171710000000000000000000000000000000009429000
+550500005555000055550000555500006776777655d7bdd041111112b111111b11888211bbb11181017d7d710000000000000000077700000000000009402900
+0000000000000000000000000000000067611766005b7bbd44444222b111111b112888111b1118881176767d0000000000000000700060000000000009200290
+00000000000000000000000000000000761766110053bbbd01111110bbb11bbb18828881144111811677777d0000000000000006677005000000000009624490
+0000000000000000000000000000000017171100000533350211112000b11b00188118811448888116777761000000000000006556750500000090009d999990
+0000000000000000000000000000000001110000000555550244422000bbbb0011111111111111110167761000000000000006511675500000095909d9000000
 55550000500500005505000055550000777000007707000077070000011bb1100000000000dddd000000000000000000000006516755650000951d9d90000000
 555000005505000055050000550000007077000077070000770700001bb77bb1000006600d111dd0000000000000000000000677757556000951d15900000000
 055500005555000055550000550000007707000077770000777700001bb331b1d600600dd6666d150000000000000000000000655667500009d1511d90000000
@@ -2096,133 +2190,133 @@ __gfx__
 000000000000000000000000000000000000000000000000000000001bb77bb10d111160d1111d15000000000000000000000000000000000999999000000000
 00000000000000000000000000000000000000000000000000000000011bb11000dddd000ddddd50000000000000000000000000000000000000000000000000
 __label__
-ccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000660600006606660066000006000666000606000666
-c0c00000000000000000000000000000000000000000000000000000000000000000000000000000000006000600060600600600006006000006006006000006
-c0c00000555555555555555555555555555555005555555555555555555555555555555555555555555556665655565655655666555556665666556506660666
-c0c00000500000000000000000000000000005000000000000000000000000000000000000000000000000060600060600600006006006060600006506060600
-ccc00000500555505555055550550005555005000000000000000000000000000000000000000000000006600666066000600660000006660666060506660666
-00000000500055005505055050550005550005000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-55500000500055005505055050550000555005000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-50500000500055005555055550555505555005555555555555555555555555555555555555555555555555555555000555555555555555555555500500000000
-50500000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-50500000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-55500000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
-00000000500110000000000bbb011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-55500000500100800422200b0b001001008000422400000010010080557777700000100100800000000000001005000500000000000000000000500500000000
-505000005001008840000bbb0bbb1001008804900940000010010088556666600000100100880000000000001005000500000000000000000000500500000000
-505000005001008880000b00000b100100888249942090001001008880d666d00000100100888000000000001005000500000000000000000000500500000000
-505000005001040888000bbb0bbb1001000888200209000010010008885ddd000000100100088800000000001005000500000000000000000000500500000000
-55500000500104008889000b0b001001000088899929900010010000888dd0000000100144008880000000441005000500000000000000000000500500000000
-00000000500100400888004bbb001001000008880040000010010000688806000000100140400888000004041005000500000000000000000000500500000000
-00000000500102040088840000001001000004888040000010010000078880600000100124022288842220421005000500000000000000000000500500000000
-00000000500102004008882000201001000040088804000010010000070888600000100102900008880009201005000500000000000000000000500500000000
-000000005001040004448880002010010004000b88802000100100007033888d0000100102099999888992201005000500000000000000000000500500000000
-0000000050010400000008880020100100400003b88802001001000703b33888d000100102404040488840201005000500000000000000000000500500000000
-000000005001040000000088802010010040003000888200100100060333bb888000100102040404048884201005000500000000000000000000500500000000
-00000000500100400000040888001001000400000008880010010000600000088800100100202020202888001005000500000000000000000000500500000000
-0000000050010004444442228800100100004444422288001001000006666dd08800100100022222222288001005000500000000000000000000500500000000
-00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000500500000000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500000000000000000000500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000555555555555555555555500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000555555555555555555555555500555555555555555555555555555555555555555555555555555555555000000000000000000000000000500000000
-00000000500000000000000000000000500000000000000000000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000500555505555055550555500500000000000000000000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000500550505505005500555000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000500555505505005500055500500000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000500550005555005500555500555555555555555555555555555555555555555555555555555555555555000555555555555555555555500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-00000000500100800000000000001001008000000000000010010080000000000000100100800000000000001005000500000000000000000000500500000000
-000000005001008800000000000010010088000000000000100100880dddddd0000010010088ddddddddd0001005000500000000000000000000500500000000
-000000005001008880000000000010010088800000000000100100888100001d000010010088811111111d001005000500000000000000000000500500000000
-00000000500100088800000000001001000888444444200010010008880000160000100100d8880000011d001005000500000000000000000000500500000000
-00000000500100228884444422001001002088800000020010010000888666610000100100618880000016001005000500000000000000000000500500000000
-00000000500100200888000002001001004048882040040010010000088811100000100100166888666661001005000500000000000000000000500500000000
-000000005001004040888040040010010040028882040400100100000d8881d000001001000d11888111d0001005000500000000000000000000500500000000
-0000000050010040020888040400100100902048884009001001000066d888dd000010010066ddd888dddd001005000500000000000000000000500500000000
-0000000050010090204088800900100100099999888990001001000d66dd888dd00010010d66d6dd888d6dd01005000500000000000000000000500500000000
-00000000500100999999988899001001000000000888000010010001ddddd8881000100101ddddddd88866101005000500000000000000000000500500000000
-000000005001000200000088800010010000244222888000100100011ddddd88800010010111dd6ddd8881101005000500000000000000000000500500000000
-00000000500100022444422888001001000024422228880010010000111111188800100100111666111888001005000500000000000000000000500500000000
-0000000050010002244442228800100100000442222088001001000001111110880010010001116111d188001005000500000000000000000000500500000000
-00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000500500000000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500000000000000000000500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000555555555555555555555500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000555555555555555555555555555555555550055555555555555555555555555555555555555555555555000000000000000000000000000500000000
-00000000500000000000000000000000000000000050000000000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000500555505500055550555505555055550050000000000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000500550505500055050555500550055500050000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000500555505500055550550500550005550050000000000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000500550005555055050550500550055550055555555555555555555555555555555555555555555555555000555555555555555555555500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-00000000500100800000000000001001008000000000000010010080000000000000100100800000000000001005000500000000000000000000500500000000
-00000000500100886666666000001001008866666660000010010088666666600000100100886666666000001005000500000000000000000000500500000000
-00000000500100888000000660001001008880000006600010010088800000066000100100888000000660001005000500000000000000000000500500000000
-00000000500100688800006005001001006888000060050010010068880000600500100100688800006005001005000500000000000000000000500500000000
-00000000500100f0888000f00500100100f0888000f00500100100f0888000f00500100100f0888000f005001005000500000000000000000000500500000000
-000000005001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001005000500000000000000000000500500000000
-00000000500100d0008880d00500100100d0008880d00500100100d0008880d00500100100d0008880d005001005000500000000000000000000500500000000
-00000000500100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d005001005000500000000000000000000500500000000
-00000000500100600bbb88800500100100600bbb88800500100100600bbb88800500100100600bbb888005001005000500000000000000000000500500000000
-00000000500100600030088805001001006000300888050010010060003008880500100100600030088805001005000500000000000000000000500500000000
-00000000500100600030008885001001006000300088850010010060003000888500100100600030008885001005000500000000000000000000500500000000
-00000000500100600000006888001001006000000068880010010060000000688800100100600000006888001005000580000000000000000000500500000000
-00000000500100066666666d8800100100066666666d8800100100066666666d8800100100066666666d88001005000507777770000000000000500500000000
-00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000506000700000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000506007000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000506060600000000000000500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000506606670555555555555500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000770000000000000000500000000
-00000000555555555555555555555555555555555555555500555555555555555555555555555555555555555555000000000000000000000000000500000000
-00000000500000000000000000000000000000000000000500000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000500555505500055550500505555055550555500500000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000500550005500055050550505550055050555000500000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000500555005500055050555505500055500055500500000000000000000000000000000000000000000000000000000000000000000000000500000000
-00000000500550005555055550555505555055050555500555555555555555555555555555555555555555555555000555555555555555555555500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000500000000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500500000000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-00000000500100800000000000001001008000000000000010010080000000000000100100800000000000001005000500000000000000000000500500000000
-00000000500100886666666000001001008866666660000010010088666666600000100100886666666000001005000500000000000000000000500500000000
-00000000500100888000000660001001008880000006600010010088800000066000100100888000000660001005000500000000000000000000500500000000
-00000000500100688800006005001001006888000060050010010068880000600500100100688800006005001005000500000000000000000000500500000000
-00000000500100f0888000f00500100100f0888000f00500100100f0888000f00500100100f0888000f005001005000500000000000000000000500500000000
-000000005001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001001000ff888ff0005001005000500000000000000000000500500000000
-00000000500100d0008880d00500100100d0008880d00500100100d0008880d00500100100d0008880d005001005000500000000000000000000500500000000
-00000000500100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d00500100100d0bb0888d005001005000500000000000000000000500500000000
-00000000500100600bbb88800500100100600bbb88800500100100600bbb88800500100100600bbb888005001005000500000000000000000000500500000000
-00000000500100600030088805001001006000300888050010010060003008880500100100600030088805001005000500000000000000000000500500000000
-00000000500100600030008885001001006000300088850010010060003000888500100100600030008885001005000500000000000000000000500500000000
-00000000500100600000006888001001006000000068880010010060000000688800100100600000006888001005000500000000000000000000500500000000
-00000000500100066666666d8800100100066666666d8800100100066666666d8800100100066666666d88001005000500000000000000000000500500000000
-00000000500100000000000008001001000000000000080010010000000000000800100100000000000008001005000500500000000000000500500500000000
-00000000500110000000000000011001100000000000000110011000000000000001100110000000000000011005000500000000000000000000500500000000
-00000000500111111111111111111001111111111111111110011111111111111111100111111111111111111005000500000000000000000000500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000555555555555555555555500500000000
-00000000500000000000000000000000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000500000000
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555000000000000000000000000000500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000500500000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005555555555555555550000500000000
-00000050000000555555555555555555555555555555555555555555555555555555555555555555555555555555000005000000000000000050000500000000
-00000555555500500000000000000000000000000000000000000000000000000050000000000000000000000005000005055500550505505050000500000000
-00005555555550500000000000000000000000000000000000000000000000000050000000000000000000000005000005050550550505505050000500000000
-00000555555550500808008808080000088808880888000008880808080008000050000000000000000000000005000005055050555505555050000500000000
-00000050000150500808080808080000080808080800000008000808080008000050000000000000000000000005000005055550555500550050000500000000
-00000000001110500888080808080000088808800880000008800808080008000050000000000000000000000005000005000000000000000050000500000000
-00000111111100500008080808080000080808080800000008000808080008000050000000000000000000000005000005555555555555555550000500000000
-00000111111000500888088000880000080808080888000008000088088808880050000000000000000000000005000500000000000000000000500500000000
-00000000000000500000000000000000000000000000000000000000000000000050000000000000000000000005000000000000000000000000000500000000
-00000000000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555500000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000033333333300000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000003333333333333000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000033333333333333300000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000333333333333333333000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000003333333333333333333300000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000033333333333333333333300000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000333333333333333333333300000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000003333333333333333333333110000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000033333333333333333333331110000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000033333333300000000033333333333333333333111110000000000000000000000000000000000000000
+00000000000000000000000000000000000000000003333333333333000000033333333333333333331111110000000000000000000000000000000000000000
+00000000000000000000000000000000000000000033333333333333300000003333333333333333311111110000000000000000000000000000000000000000
+00000000000000000000000000000000000000000333333333333333330000000333333333333331111111110000000000000000000000000000000000000000
+0000000000000000000000000000000000000000bbbbb33333333333331000000033333331111111111111110000000000000000000000000000000000000000
+000000000000000000000000000000000000000bbbbbbbb333333333311100000000001111111111111111110000000000000000000000000000000000000000
+000000000000000000000000000000000000000bbbbbbbbbb3333333311110000000000111111111111111110000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbb33333311111000000000011111111111111110000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbb333331111100000000011111111111111100000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbb33331111100000000001111111111111100000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbbb3333111100000000001111111111111100000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbbbb333311000110000000111111111111000000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbbbb333310001111000000011111111110000000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbb33300011111100000001111111110000000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbbbb000000011111110000000111111100000000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbbb0000000001111111000000111111000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000bbbbbbbbbbbbbbbb00000000000111111000000011110000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000bbbbbbbbbbbbbbb00000000000111111100000001100000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000bbbbbbbbbbbbbb000000000000011111100000001000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000bbbbbbbbbbbbbb000000000000011111100000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000bbbbbbbbbbbb0000000000000031111300000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000bbbbbbbbbb00000000000000033113300000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000bbbbbbbbb000000000000000033333300000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000bbbbbbb0000000000000000333333300000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000bbbbbb00000000000000003bb333000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000bbbb00000000000000003bbbb33000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000bb00000000000000000bbbbbb0000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000b0000000000000000bbbbbbb0000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000bbbbbb30000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000bbbbbb00000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000bbbbbb00000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000222222220bbbbbb00222222220000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000444444444222222220bbbbbb00222222222222222220000000000000000000000000000000000000000
+000000000000000000000000000000000000000044444444444444222222220bbbbb300222222222222222222222200000000000000000000000000000000000
+0000000000000000000000000000000000000444444444444444440000000003bbb3300000000002222222222222222200000000000000000000000000000000
+00000000000000000000000000000000000444444444400000000000000000033333300000000000000000002222222222000000000000000000000000000000
+00000000000000000000000000000000004444440000000000000000000000033333300000000000000000000000022222200000000000000000000000000000
+00000000000000000000000000000000044440000000000000000000000000033333300000000000000000000000000022220000000000000000000000000000
+00000000000000000000000000000000444000000000000000000000000000003333300000000000000000000000000000222000000000000000000000000000
+00000000000000000000000000000000444440000000000000000000000000000333000000000000000000000000000022222000000000000000000000000000
+00000000000000000000000000000000444444440000000000000000000000000000000000000000000000000000022222222000000000000000000000000000
+00000000000000000000000000000000444444444499900000000000000000000000000000000000000000002222222222222000000000000000000000000000
+00000000000000000000000000000000444004444499999999999900000000000000000000000002222222222222222200222000000000000000000000000000
+00000000000000000000000000000000444000004499999999999999444444444442222222222222222222222222200000222000000000000000000000000000
+00000000000000000000000000000000444000000000099999999999444444444442222222222222222222220000000000222000000000000000000000000000
+00000000000000000000000000000000444000000000000000000099444444444442222222222220000000000000000000222000000000000000000000000000
+00000000000000000000000000000000444000000000000000000000000000000000000000000000000000000000000002222000000000000000000000000000
+00000000000000000000000000000000444440000000000000000000000000000000000000000000000000000000000022220000000000000000000000000000
+00000000000000000000000000000000044444440000000000000000000000000000000000000000000000000000022222200000000000000000000000000000
+00000000000000000000000000000000004444444499900000000000000000000000000000000000000000002222222222000000000000000000000000000000
+00000000000000000000000000000000000004444499999999999900000000000000000000000002222222222222222200000000000000000000000000000000
+00000000000000000000000000000000000000004499999999999999444444444442222222222222222222222222200000000000000000000000000000000000
+00000000000000000000000000000000000000000000099999999999444444444442222222222222222222220000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000099444444444442222222222220000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000004400000000000000000000000000000000000000000220000000000000000000000000000000000000000
+00000000000000000000000000000000000000000044440000000000000000000000000000000000000002222000000000000000000000000000000000000000
+00000000000000000000000000000000000000000044440000000000000000000000000000000000000002222000000000000000000000000000000000000000
+00000000000000000000000000000000000000000044444000000000000000000000000000000000000022222000000000000000000000000000000000000000
+00000000000000000000000000000000000000000004444000000000000000000000000000000000000022220000000000000000000000000000000000000000
+00000000000000000000000000000000000000000004444400000000000000000000000000000000000222220000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000444400000000000000000000000000000000000222200000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000444490000000000000000000000000000000002222200000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000044490000000000000000000000000000000002222000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000044499000000000000000000000000000000022222000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000004499000000000000000000000000000000022220000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000004499900000000000000000000000000000222220000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000499900000000000000000000000000000222200000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000499990000000000000000000000000002222200000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000099990000000000000000000000000002222000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000099999999994444444222222222222222222000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000009999999994444444422222222222222220000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000009999999994444444422222222222222220000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000999999994444444222222222222222200000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
 __sfx__
