@@ -1,10 +1,10 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
---ed rocha te amo =================================================================================================================================================================+
+--anthony te amo =================================================================================================================================================================+
 function _init()
  --carrega save 
-	cartdata("edevini_plantinhas_1")
+	cartdata("vini_plantinhas_1")
  --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
   
@@ -115,7 +115,8 @@ function _update()
  mouse:att()
  
 	if(btnp(❎)) saldo = 1000
-	cu1 = ls_jrd.coisas[1].saturac
+
+//	cu1 = ls_jrd.coisas[1].saturac
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -124,7 +125,7 @@ function _update()
  att_particulas(pat_sem)
  att_particulas(pat_reg)
 
- --jogo principal rocha --------------------------------------------------------------------------------------------+	
+ --jogo principal --------------------------------------------------------------------------------------------+	
  if status == 1 then
        
  --ir depot .......................................................................................................
@@ -195,7 +196,7 @@ function _update()
  --cancelar atribuicao/mostrar atalho
  atl_on_off(mouse.dir_press,true)	
 
- --lojinha rocha ---------------------------------------------------------------------------------------------------+				
+ --lojinha ---------------------------------------------------------------------------------------------------+				
  elseif status == 2 then
 		--verificar disponibilidade de compra
 
@@ -232,7 +233,7 @@ function _update()
   if(not ls_esp.qual and not ls_car.qual)mouse:reset()
 		att_car()
 
- --deposito rocha --------------------------------------------------------------------------------------------------+
+ --deposito --------------------------------------------------------------------------------------------------+
  elseif status == 3 then
   grav_depot()
 
@@ -355,8 +356,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   --mover objeto ..................................................................................................+
   mov = function(self, newx, newy)
    self.x,self.y = newx& ~1,newy& ~1
-  end,
-  	 
+  end,   	 
 	 --desenhar objeto
 	 des = function(self,xop,yop)
 		 aux_x,aux_y = xop or self.x,yop or self.y 
@@ -388,10 +388,8 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
 	 	
 			elseif tipo == "circ" then
 				dx,	dy = self.x - stat(32),self.y - stat(33)
-				return flr(sqrt((dx*dx)+(dy*dy))) <= self.r				
-				
+				return flr(sqrt((dx*dx)+(dy*dy))) <= self.r								
 	 	end
-	 
  end	
 	}
 	
@@ -1877,7 +1875,7 @@ function save_obj(obj,qual_slot,bit_extra)
 
 		if(tip >4) aux = obj.estagio else aux = obj.capacity 
   combinado |= (aux-1 & 0x7) >>> 12
- 
+ 	cu1 = obj.saturac
 		if(obj.saturac == max_saturac)	combinado |= (1 & 0x1) >>> 16
  end
  
@@ -1953,15 +1951,12 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
  
  --o item tem uma planta?
  if range(tip,4,8) and algo==1 then
- 
   local pla_salva  = criar_obj("item",((save << 9) & 0x07)+9)
   novo_obj.planta  = pla_salva.fases
-
   --estagio ou capacidade
  	local aux = ((save << 12) & 0x7)+1
 		-- eh um vaso
  	if tip > 4 then
-   novo_obj.saturac = aux
 	 	if((save << 16) & 0x1 == 1) novo_obj.saturac = max_saturac
 			if(passou_um_dia) avancar_fase(novo_obj)
   else 
@@ -1970,9 +1965,8 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
    local val_pla = pla_salva.val
    novo_obj.val = flr(((val_pla*50)/100) * novo_obj.capacity)
  	end		
- 	
  end
-
+ 
  if guardar_em_ls then
 	 if(onde == 1) add(ls_jrd.coisas,novo_obj)
 	 if(onde == 2) add(ls_inv.coisas,novo_obj)
@@ -1981,38 +1975,30 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 			ls_atl.atls[novo_obj.qual_atl].item = novo_obj		
 	 end 	
 	end
-
  return novo_obj
- 
 end
 
 function load_game()
 	--objetos padro
  regador =	load_obj(1) or criar_obj("item",17,ls_inv.coisas,nil,16,18,2)
  pa      = load_obj(2) or criar_obj("item",18,ls_inv.coisas,nil,32,18,2)
-
  --careggar regador e pa	
 	for i=3, 63 do
 		local loaded_obj = load_obj(i)
   if(not loaded_obj) break
  end
- 
 end
-
 
 function eh_bisex(ano,aux)
 	aux = aux or nil
  --divisivel por 4
  --nao pode ser divisivel por 100
  --ou divisivel por 400
- local eh =  ano % 4   == 0 and
-									   (ano % 100 ~= 0 or
-									    ano % 400 == 0)
-	if(aux)then
-		return eh and 366 or 365
-	else
-		return eh
-	end
+ local eh = ano % 4   == 0 and
+									  (ano % 100 ~= 0 or
+									   ano % 400 == 0 )										    
+	if(aux)	return eh and 366 or 365
+	return eh
 end
 
 function que_dia_eh(dia, mes, ano,aux)
