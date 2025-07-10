@@ -11,8 +11,7 @@ function _init()
 	if false then
 		for i=0,63 do dset(i,0) end
 	end
-	
-	
+		
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento = 0
  cu1 = 0
@@ -210,7 +209,7 @@ function _update()
       
   --selecionar compra ..............................................................................................+
   if ls_esp.qual then
-   mouse:tip_set(231,"➡️","")
+   mouse:tip_set(231,8,-9)
  		ls_esp.qual:add_car()	
   end  
 
@@ -222,7 +221,7 @@ function _update()
    
   --remover carrinho ...............................................................................................+
   if ls_car.qual then
-   mouse:tip_set(232,"➡️","")
+   mouse:tip_set(232,8,-9)
   	ls_car.qual:del_car()	
   end
   			
@@ -357,7 +356,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   --mover objeto ..................................................................................................+
   mov = function(self, newx, newy)
    self.x,self.y = newx& ~1,newy& ~1
-  end,   	 
+  end,
 	 --desenhar objeto
 	 des = function(self,xop,yop)
 		 aux_x,aux_y = xop or self.x,yop or self.y 
@@ -365,7 +364,6 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
 	 	spr(self.s,aux_x,aux_y,self.w/8,self.h/8,self.flip_x,self.flip_y)
 			pal()
 	 end,
-	 
 	 --mover com o cursor
 	 mov_cur = function(self,contexto,pode_mover)
 			if(contexto and self.movable and pode_mover)self:mov((stat(32) - flr(self.w/2)),(stat(33) - flr(self.w/2)))
@@ -420,23 +418,19 @@ function def_tip(self,subtipo)
 	
 	--mudar tool_tip
 	function self:tip_set(qual,dir_x,dir_y)
-	 self.tool_tip,dir_x,dir_y  = qual or nil,dir_x,dir_y
-  
-		if dir_x == "⬅️" then
-		 self.xoff = -8		
-		elseif dir_x == "➡️" then
-			self.xoff =  8
-		else
-			self.xoff =  0
-		end
+	 self.tool_tip = qual
+  --[[
+  dir_x
+  +8 ➡️
+  -8 ⬅️
+  dir_y
+		+9 ⬇️	
+  -9 ⬆️
+  ]]
+  self.xoff = dir_x
+  self.yoff = dir_y
 
-		if dir_y == "⬆️" then
-		 self.yoff = -9		
-		elseif dir_y == "⬇️" then
-			self.yoff =  9
-		else
-			self.yoff =  0
-		end
+	
 
 	end
  	 
@@ -1440,9 +1434,9 @@ function toggle_atribuir()
 
 		if status == 3 then
 			if ls_atl.qual and ls_atl.qual.item then
-	   mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
+	   mouse:tip_set(ls_atl.qual.item.cur_s,-8,-9)
 	 	else
-	   mouse:tip_set(217,"⬅️","⬆️")
+	   mouse:tip_set(217,-8,-9)
 	 	end
 	 	
 	 else
@@ -1454,7 +1448,7 @@ function toggle_atribuir()
 			 	mouse.s,mouse.ax,mouse.ay = 218,-5,-5
 			 end
 				--vasos			 				
-	 	 if(range(aux_tip,5,8))  mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
+	 	 if(range(aux_tip,5,8))  mouse:tip_set(ls_atl.qual.item.cur_s,-8,-8)
 			 --sementes
 			 if(range(aux_tip,9,16)) mouse.s = 228		
 			 --regador
@@ -1564,9 +1558,9 @@ function atl_para_container(context,qual_container,permutavel)
 	permutavel = permutavel or false	
 
 	if qual_container.qual and permutavel then
-	 mouse:tip_set(ls_atl.qual.item and 233 or 217,"⬅️","⬆️")		
+	 mouse:tip_set(ls_atl.qual.item and 233 or 217,-8,-9)		
  else
-	 mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
+	 mouse:tip_set(ls_atl.qual.item.cur_s,-8,-9)
  end
 	 
 	if context then
