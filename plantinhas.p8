@@ -116,8 +116,6 @@ function _update()
  
 	if(btnp(❎)) saldo = 1000
 
-
-
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
 
@@ -282,7 +280,7 @@ function _update()
 		end
 		 	
  end
-
+	cu1 =  ls_jrd.coisas[1].saturac
 	save_game()
 
 end
@@ -779,7 +777,7 @@ function def_tip(self,subtipo)
 				end
 		 end
 		 
-	 --vasos rocha
+	 --vasos 
 	 elseif(range(subtipo,5,8))then
    self.estagio, self.colher, self.saturac, self.cur_s = 1, false, 0, 230
 			
@@ -1792,7 +1790,7 @@ function regar(o_que)
 	if qual_vaso then
 		--nao pode colher
 		--stuaracao nao ta no max
-		if(not qual_vaso.colher and qual_vaso.saturac < max_saturac) qual_vaso.saturac += 1
+		if(not qual_vaso.colher and qual_vaso.saturac < max_saturac) qual_vaso.saturac += 0.01
 		--deleta particula
 	 o_que:del()
 	 --se excedeu a saturao, vazar
@@ -1868,9 +1866,11 @@ function save_obj(obj,qual_slot,bit_extra)
 	--o item tem uma planta?
  if(range(tip,4,8) and obj.algo==1 and obj.planta)then
   combinado |= (obj.planta.tip-9  & 0x7) >>> 9
-		
+
+
 		--o item tem estagio ou capacidade?
-		if(tip >4) aux = obj.estagio else aux = obj.capacity 
+		if(tip >4)aux = obj.estagio	else aux = obj.capacity 
+		
   combinado |= (aux-1 & 0x7) >>> 12
 		if(obj.saturac == max_saturac)	combinado |= (1 & 0x1) >>> 16
  end
@@ -1882,7 +1882,6 @@ function save_obj(obj,qual_slot,bit_extra)
  	aux = 15+qual_slot
   combinado |= (num_atl & qual_slot) >>> aux
 	end
-
 	dset(qual_slot,combinado)	
 	return obj
 	
@@ -1951,9 +1950,10 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
   novo_obj.planta  = pla_salva.fases
   --estagio ou capacidade
  	local aux = ((save << 12) & 0x7)+1
+
 		-- eh um vaso
  	if tip > 4 then
-	 	if(aux == 1) novo_obj.saturac = max_saturac
+	 	if((save << 16) & 0x1 == 1) novo_obj.saturac = max_saturac
 			if(passou_um_dia) avancar_fase(novo_obj)
   else 
    novo_obj.planta.tip = pla_salva.tip
