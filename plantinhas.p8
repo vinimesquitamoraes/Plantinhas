@@ -28,22 +28,22 @@ function _init()
  
  local load_aux = dget(0)
 	--game vars
- saldo     = (load_aux  >>  4) & 0xfff
- ano_salvo = (load_aux  <<  7) & 0x7ff
+	saldo     = (load_aux  >>  4) & 0xfff
+	ano_salvo = (load_aux  <<  7) & 0x7ff
 	mes_salvo	= (load_aux  << 11) & 0xf  
 	dia_salvo = (load_aux  << 16) & 0x1f
 	num_atl   = ((dget(1)  << 16) & 0x1) + ((dget(2) << 17) & 0x2)
 	slots     = 0
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- aux_tipo      = 1
- grav          = 0
+	aux_tipo      = 1
+	grav          = 0
 	max_saturac   = 1
 	venda         = false
 	venda_timer   = 0
 	pisca         = false
 	colheita      = false
- passou_um_dia = dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
+	passou_um_dia = dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
 
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
@@ -116,7 +116,7 @@ function _update()
  
 	if(btnp(❎)) saldo = 1000
 
-//	cu1 = ls_jrd.coisas[1].saturac
+
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -1790,8 +1790,12 @@ function regar(o_que)
 	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	
 	if qual_vaso then
+		--nao pode colher
+		--stuaracao nao ta no max
 		if(not qual_vaso.colher and qual_vaso.saturac < max_saturac) qual_vaso.saturac += 1
+		--deleta particula
 	 o_que:del()
+	 --se excedeu a saturao, vazar
  	if qual_vaso.saturac >= max_saturac then
  		qual_vaso:vasar()
 		end
@@ -1864,10 +1868,10 @@ function save_obj(obj,qual_slot,bit_extra)
 	--o item tem uma planta?
  if(range(tip,4,8) and obj.algo==1 and obj.planta)then
   combinado |= (obj.planta.tip-9  & 0x7) >>> 9
-
+		
+		--o item tem estagio ou capacidade?
 		if(tip >4) aux = obj.estagio else aux = obj.capacity 
   combinado |= (aux-1 & 0x7) >>> 12
- 	cu1 = obj.saturac
 		if(obj.saturac == max_saturac)	combinado |= (1 & 0x1) >>> 16
  end
  
@@ -1887,9 +1891,9 @@ end
 function save_game()
  --salvar variaveis de jogo
 	local game_vars = 0
-	game_vars |= (saldo      & 0xfff) <<  4 --saldo
-	          |  (stat(90)   & 0x7ff) >>> 7 --ano
-		         |  (stat(91)   & 0xf  ) >>>11 --mes
+	game_vars |= (saldo     		 & 0xfff) <<  4 --saldo
+	          |  (stat(90)  		 & 0x7ff) >>> 7 --ano
+		         |  (stat(91)  		 & 0xf  ) >>>11 --mes
 	          |  ((stat(92)-1) & 0x1f ) >>>16 --dia
 
  dset(0,game_vars) 
@@ -1921,7 +1925,7 @@ function save_game()
 	end	 
 
 	slots = slot-1
-	if(slot < 63)	for i=slot,63 do dset(i,0) end
+	if(slot+1 < 63)	for i=slot+1,63 do dset(i,0) end
 
 end
 
@@ -1949,7 +1953,7 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
  	local aux = ((save << 12) & 0x7)+1
 		-- eh um vaso
  	if tip > 4 then
-	 	if((save << 16) & 0x1 == 1) novo_obj.saturac = max_saturac
+	 	if(aux == 1) novo_obj.saturac = max_saturac
 			if(passou_um_dia) avancar_fase(novo_obj)
   else 
    novo_obj.planta.tip = pla_salva.tip
