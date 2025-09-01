@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 41
+version 43
 __lua__
 --anthony te amo =================================================================================================================================================================+
 function _init()
@@ -16,7 +16,7 @@ function _init()
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento = 0
  cu1 = 0
- cu2 = 0
+ cu2 = ""
  cu3 = 0
  --status -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+	
  --[[
@@ -37,7 +37,7 @@ function _init()
 	slots     = 0
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- aux_tipo      = 1
+ aux_tipo      = 0
  grav          = 0
 	max_saturac   = 1
 	venda         = false
@@ -283,8 +283,12 @@ function _update()
 		end
 		 	
  end
-
-	save_game()
+	if btnp(❎) then
+		cu1 = "jogo salvo"
+		save_game()
+	else
+		cu1 = ""
+	end
 
 end
 
@@ -759,19 +763,19 @@ function def_tip(self,subtipo)
 		self.w, self.h, self.movable, self.desc = 16, 16, true, 80
 
 		--slot de atalho
-		if subtipo == 1 then
-   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct                          = 300, "inv slot", 2, 2, 2, 5, 5, 214, 1
+		if subtipo == 0 then
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct = 300, "inv slot", 2, 2, 2, 5, 5, 214, 1
 
 		--fertilizante
-	 elseif subtipo == 2 then
+	 elseif subtipo == 1 then
  	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.capacity = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1
 			
 		--borrifador
-	 elseif subtipo == 3 then
+	 elseif subtipo == 2 then
  		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity          = 25, "pesticide", 6, 3, 1, 7, 4, 229, 5
 			
 		--cesta	 	
-	 elseif subtipo == 4 then
+	 elseif subtipo == 3 then
    self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.cur_s, self.capacity = 300, "basket", 4, 0, 6, 1, 8, 1, 215, 0
 		
 		 function self:des(xop,yop)	
@@ -785,8 +789,8 @@ function def_tip(self,subtipo)
 				end
 		 end
 		 
-	 --vasos rocha
-	 elseif(range(subtipo,5,8))then
+	 --vasos 
+	 elseif(range(subtipo,4,7))then
    self.estagio, self.colher, self.saturac, self.cur_s = 1, false, 0, 230
 			
   	function self:des_planta()
@@ -821,89 +825,88 @@ function def_tip(self,subtipo)
   	end
 			
 			--vaso1
-		 if subtipo == 5 then
+		 if subtipo == 4 then
 	   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 50, "flowerpot 1", 32, 2, 5, 5, 8, 1, 8, 4, 8
 		
 			--vaso2
-		 elseif subtipo == 6 then
+		 elseif subtipo == 5 then
 		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 75, "flowerpot 2", 34, 2, 5, 5, 7, 1, 8, 4, 7
 		 			 
 			--vaso3
-		 elseif subtipo == 7 then
+		 elseif subtipo == 6 then
 		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 100, "flowerpot 3", 36, 3, 2, 7, 5, 2, 8, 4, 5
 
 			--vaso4
-		 elseif subtipo == 8 then
+		 else
 		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 125, "flowerpot 4", 38, 1, 2, 3, 5, 2, 8, 4, 5
- 
 	 	end	
 		--planta1
-	 elseif(range(subtipo,9,16))then
+	 elseif(range(subtipo,8,15))then
 	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 10, 1, 2, 2, 5, 5, 249, 1
 
-		 if subtipo == 9 then
+		 if subtipo == 8 then
 		  self.val, self.nome = 10, "tomato"
 		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
            wh = {{1,1},{1,1},{1,2},{2,2},{2,2},{2,2}},
-          tip =  9,
+          tip =  8,
           val = 10}
 		 		 
 			--planta2
-		 elseif subtipo == 10 then
+		 elseif subtipo == 9 then
 		  self.val, self.nome = 15, "bear_pawn"	
 		 	self.fases= {64   ,65   ,66   ,67   ,68   ,74   , 
            wh = {{1,1},{1,1},{1,1},{1,1},{2,1},{2,2}},
-          tip = 10,
+          tip = 9,
           val = 15}
 					 
 			  	
 			--planta3
-		 elseif subtipo == 11 then
+		 elseif subtipo == 10 then
 	  	self.val, self.nome = 20, "pumpkin"
 		 	self.fases= {96   ,97   ,114  ,115  ,117  ,168  ,136  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
-          tip = 11,
+          tip = 10,
           val = 20}			  				 		 	
           
 		 --planta4
-		 elseif subtipo == 12 then
+		 elseif subtipo == 11 then
 		  self.val, self.nome = 25, "pegaxi"
  	 	self.fases= {96   ,97   ,114  ,115  ,117  ,106  ,108  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,1},{2,2},{2,2}},
-          tip = 12,
+          tip = 11,
           val = 25}  			
           	 		 			  	
 		 --planta5
-		 elseif subtipo == 13 then
+		 elseif subtipo == 12 then
     self.val, self.nome = 50, "sunflower"
 			 self.fases= {96   ,80   ,81   ,82   ,83   ,84   ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2}},
-          tip = 13,
+          tip = 12,
           val = 50}		
 		 --planta6
-		 elseif subtipo == 14 then
+		 elseif subtipo == 13 then
 		  self.val, self.nome = 75, "sword"	 	
 			 self.fases= {64   ,112  ,113   ,130 ,132  ,134  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
-          tip = 14,
+          tip = 13,
           val = 75}
 				self.fases.ct = 2
 
 		 --planta7
-		 elseif subtipo == 15 then
+		 elseif subtipo == 14 then
 		  self.val, self.nome = 100, "rose"
 			 self.fases= {70   ,176  ,177  ,162  ,163  ,164  ,165  ,
            wh = {{1,1},{1,1},{1,1},{1,2},{1,2},{1,2},{1,2}},
-          tip = 15,
+          tip = 14,
           val = 100}
   		self.fases.ct = 2
 				
 		 --planta8
-		 elseif subtipo == 16 then
+		 else
 		  self.val, self.nome = 200, "dandelion"
 			 self.fases= {70   ,128  ,129  ,146  ,138  ,140  ,
            wh = {{1,1},{1,1},{1,1},{2,1},{2,2},{2,2}},
-          tip = 16,
+          tip = 15,
           val = 200}
 	 	end
 	 	
@@ -911,11 +914,11 @@ function def_tip(self,subtipo)
 	  self.val   = false
 	
 			--regador
-		 if subtipo == 17 then
+		 if subtipo == 16 then
   	 self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s = "watering can", 204, 236, 204, 3, 1, 7, 4, 248
  			
 			--pa
-		 elseif subtipo == 18 then
+		 elseif subtipo == 17 then
 	  	self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.x_def, self.y_def = "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12
 		 end 		 
 		end
@@ -1229,9 +1232,9 @@ end
 --cria vitrines
 function init_loja()
 
-	for i=1,16 do      
+	for i=0,15 do      
   aux                        = criar_obj("espaco",1,ls_esp.esps)
-		aux.item, aux_tipo, aux.id = criar_obj("item", aux_tipo), aux_tipo + 1, i
+		aux.item, aux_tipo, aux.id = criar_obj("item", aux_tipo), aux_tipo + 1, i+1
 	end	
 	
  ondex,ondey =	11,10
@@ -1876,7 +1879,7 @@ function save_obj(obj,qual_slot,bit_extra)
 
 		if(tip >4) aux = obj.estagio else aux = obj.capacity 
   combinado |= (aux-1 & 0x7) >>> 12
- 	cu1 = obj.saturac
+
 		if(obj.saturac == max_saturac)	combinado |= (1 & 0x1) >>> 16
  end
  
