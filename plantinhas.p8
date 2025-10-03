@@ -283,12 +283,11 @@ function _update()
 		end
 		 	
  end
-	if btnp(❎) then
+	if btnp(🅾️) then
 		cu1 = "jogo salvo"
 		save_game()
-	else
-		cu1 = ""
 	end
+	
 
 end
 
@@ -910,7 +909,7 @@ function def_tip(self,subtipo)
           val = 200}
 	 	end
 	 	
-  elseif(range(subtipo,17,18))then
+  else
 	  self.val   = false
 	
 			--regador
@@ -1453,19 +1452,19 @@ function toggle_atribuir()
 	 	if ls_atl.qual and ls_atl.qual.item then
 	 		local aux_tip = ls_atl.qual.item.tip
 				--cesta
-			 if(aux_tip == 4)then
+			 if(aux_tip == 3)then
 			 	mouse.s,mouse.ax,mouse.ay = 218,-5,-5
 			 end
 				--vasos			 				
-	 	 if(range(aux_tip,5,8))  mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
+	 	 if(range(aux_tip,4,7))  mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
 			 --sementes
-			 if(range(aux_tip,9,16)) mouse.s = 228		
+			 if(range(aux_tip,8,15)) mouse.s = 228		
 			 --regador
-		 	if aux_tip == 17 then
+		 	if aux_tip == 16 then
 	 			mouse.w,mouse.h = 16,16
 		 		mouse.s = 204
 		 	--pa
-		 	elseif aux_tip == 18 then
+		 	elseif aux_tip == 17 then
   			mouse.ct,mouse.w,mouse.h,mouse.s,mouse.ax,mouse.ay= 9,16,16,238,-2,-14
 		 	end
 	 	end
@@ -1513,7 +1512,7 @@ function funcionalidades(que_func,container)
  	 end
  	 
 		--eh um vaso
- 	elseif range(aux_tip,5,8) then
+ 	elseif range(aux_tip,4,7) then
 			--o que vai ser permutado  um vaso sem nada?
 			if container.qual and container.qual.algo == 0 then
 		  atl_para_container(mouse.esq,container,true)
@@ -1522,7 +1521,7 @@ function funcionalidades(que_func,container)
 		 end
 				
  	--eh um upgrade de atl
- 	elseif aux_tip == 1 then
+ 	elseif aux_tip == 0 then
 	 	if mouse.esq then
 		 
 				if #ls_atl.atls == 8 then
@@ -1538,19 +1537,19 @@ function funcionalidades(que_func,container)
 			end
 			
 	 --eh uma semente
-	 elseif(range(aux_tip,9,16))then
+	 elseif(range(aux_tip,8,15))then
 			pat_sem.val = true		
 
 		--eh um regador
-		elseif aux_tip == 17 then
+		elseif aux_tip == 16 then
 			pat_reg.val = true
  
   --eh uma pa
- 	elseif aux_tip == 18 then
+ 	elseif aux_tip == 17 then
 			pa.val = true
 			
 		--eh uma cesta
- 	elseif aux_tip == 4 then
+ 	elseif aux_tip == 3 then
 			colheita = true
 		end
 			 
@@ -1870,7 +1869,7 @@ function save_obj(obj,qual_slot,bit_extra)
 	combinado |= (obj.onde    & 0x03) << 14
 	          | ((obj.x+x_aux & 0x7f) <<  7)
 		         |  (obj.y+y_aux & 0x7f) 
-	          |  (tip-1       & 0x1f) >>> 5
+	          |  (tip         & 0x1f) >>> 5
 	          |  (obj.algo    & 0x0f) >>> 6
 	
 	--o item tem uma planta?
@@ -1946,7 +1945,7 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 	if(onde == 0) return
  local x    =  (save >>>  7) & 0x7f
  local y    =  (save >>>  0) & 0x7f
- local tip  = ((save <<   5) & 0x1f)+1
+ local tip  = 	(save <<   5) & 0x1f
 	local algo =  (save <<   6) & 0x01
 
 	--o item basico
@@ -1984,8 +1983,8 @@ end
 
 function load_game()
 	--objetos padro
- regador =	load_obj(1) or criar_obj("item",17,ls_inv.coisas,nil,16,18,2)
- pa      = load_obj(2) or criar_obj("item",18,ls_inv.coisas,nil,32,18,2)
+ regador =	load_obj(1) or criar_obj("item",16,ls_inv.coisas,nil,16,18,2)
+ pa      = load_obj(2) or criar_obj("item",17,ls_inv.coisas,nil,32,18,2)
  --careggar regador e pa	
 	for i=3, 63 do
 		local loaded_obj = load_obj(i)
