@@ -117,7 +117,8 @@ function _update()
  
 	if(btnp(❎)) saldo = 1000
 
-//	cu1 = ls_jrd.coisas[1].saturac
+	cu1 = ls_jrd.coisas[1].nome
+ cu2 = ls_jrd.coisas[1].saturac
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -783,7 +784,7 @@ function def_tip(self,subtipo)
 	  	spr(self.s,aux_x,aux_y,self.w/8,self.h/8,self.flip_x,self.flip_y)
 				pal(0)
 				if self.planta then
-					spr(196+(self.planta.tip-9),aux_x+3,aux_y)
+					spr(196+(self.planta.tip-8),aux_x+3,aux_y)
 					print(self.capacity,aux_x+12,aux_y+12,10)
 				end
 		 end
@@ -1801,14 +1802,12 @@ function regar(o_que)
 	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
 	
 	if qual_vaso then
-		if(not qual_vaso.colher and qual_vaso.saturac < max_saturac) qual_vaso.saturac += 1
+		if(not qual_vaso.colher and qual_vaso.saturac < max_saturac) qual_vaso.saturac += 0.02
 	 o_que:del()
- 	if qual_vaso.saturac >= max_saturac then
+ 	if qual_vaso.saturac >= max_saturac or qual_vaso.colher then
  		qual_vaso:vasar()
 		end
-		
-		if(qual_vaso.colher)qual_vaso:vasar()
-		
+				
  end
    
 end
@@ -1843,15 +1842,12 @@ function colher()
 end
 
 function avancar_fase(o_que)
-
  if(not o_que.algo or not o_que.planta) return
 
 	local inc = 1--flr(rnd(100))
-	if o_que.saturac == max_saturac then
-		o_que.estagio += inc%2
-		o_que.saturac  = 0
-	end
-
+	o_que.estagio += inc%2
+	o_que.saturac  = 0
+	
  if o_que.estagio >= #o_que.planta then
   o_que.estagio, o_que.colher = #o_que.planta, true
  end
@@ -1876,19 +1872,23 @@ function save_obj(obj,qual_slot,bit_extra)
  if(range(tip,4,8) and obj.algo==1 and obj.planta)then
   combinado |= (obj.planta.tip-8  & 0x7) >>> 9
 
-		if(tip >4) aux = obj.estagio else aux = obj.capacity 
-  combinado |= (aux-1 & 0x7) >>> 12
-
-		if(obj.saturac == max_saturac)	combinado |= (1 & 0x1) >>> 16
+		if(tip>=4) aux = obj.estagio else aux = obj.capacity 
+  combinado |= (aux & 0x7) >>> 12
+		cu3 = aux
+		if(obj.saturac >= max_saturac)then
+			combinado |= (1 & 0x1) >>> 16
+		end
  end
  
  --esta em um atalho?
  if(obj.onde == 3)	combinado |= (obj.qual_atl-1 & 0x7) >>> 15
 
+--[[
  if(bit_extra)then
  	aux = 15+qual_slot
   combinado |= (num_atl & qual_slot) >>> aux
 	end
+]]
 
 	dset(qual_slot,combinado)	
 	return obj
@@ -1959,9 +1959,8 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
   --estagio ou capacidade
  	local aux = ((save << 12) & 0x7)+1
 		-- eh um vaso
- 	if tip > 4 then
-	 	if((save << 16) & 0x1 == 1) novo_obj.saturac = max_saturac
-			if(passou_um_dia) avancar_fase(novo_obj)
+ 	if tip >= 4 then
+			if(passou_um_dia and (save << 16) & 0x1 == 1) avancar_fase(novo_obj)
   else 
    novo_obj.planta.tip = pla_salva.tip
    novo_obj.capacity   = aux
