@@ -1874,7 +1874,7 @@ function save_obj(obj,qual_slot,bit_extra)
 	
 	--o item tem uma planta?
  if(range(tip,4,8) and obj.algo==1 and obj.planta)then
-  combinado |= (obj.planta.tip-9  & 0x7) >>> 9
+  combinado |= (obj.planta.tip-8  & 0x7) >>> 9
 
 		if(tip >4) aux = obj.estagio else aux = obj.capacity 
   combinado |= (aux-1 & 0x7) >>> 12
@@ -1954,7 +1954,7 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
  
  --o item tem uma planta?
  if range(tip,4,8) and algo==1 then
-  local pla_salva  = criar_obj("item",((save << 9) & 0x07)+9)
+  local pla_salva  = criar_obj("item",((save << 9) & 0x07)+8)
   novo_obj.planta  = pla_salva.fases
   --estagio ou capacidade
  	local aux = ((save << 12) & 0x7)+1
