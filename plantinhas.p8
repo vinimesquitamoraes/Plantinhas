@@ -7,7 +7,13 @@ function _init()
 	cartdata("vini_plantinhas_1")
  --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
-  
+ 
+ --debug
+ save_reg= false
+ save_pa = false
+
+ if(not save_reg)dset(1,0)
+ if(not save_pa)dset(2,0)
   
 	if false then
 		for i=0,63 do dset(i,0) end
@@ -16,7 +22,7 @@ function _init()
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento = 0
  cu1 = 0
- cu2 = ""
+ cu2 = dget(1)
  cu3 = 0
  --status -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+	
  --[[
@@ -117,9 +123,11 @@ function _update()
  
 	if(btnp(❎)) saldo = 1000
 
-	cu1 = ls_jrd.coisas[1].nome
- cu2 = ls_jrd.coisas[1].saturac
-
+	if ls_jrd.coisas[1]then
+		cu1 = ls_jrd.coisas[1].nome
+	 cu2 = ls_jrd.coisas[1].saturac
+	end
+	
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
 
@@ -1874,7 +1882,7 @@ function save_obj(obj,qual_slot,bit_extra)
 
 		if(tip>=4) aux = obj.estagio else aux = obj.capacity 
   combinado |= (aux & 0x7) >>> 12
-		cu3 = aux
+
 		if(obj.saturac >= max_saturac)then
 			combinado |= (1 & 0x1) >>> 16
 		end
@@ -1896,21 +1904,22 @@ function save_obj(obj,qual_slot,bit_extra)
 end
 
 function save_game()
+
  --salvar variaveis de jogo
 	local game_vars = 0
-	game_vars |= (saldo      & 0xfff) <<  4 --saldo
-	          |  (stat(90)   & 0x7ff) >>> 7 --ano
-		         |  (stat(91)   & 0xf  ) >>>11 --mes
-	          |  ((stat(92)-1) & 0x1f ) >>>16 --dia
+	game_vars |= (saldo    & 0xfff) <<  4 --saldo
+	          |  (stat(90) & 0x7ff) >>> 7 --ano
+		         |  (stat(91) & 0xf  ) >>>11 --mes
+	          |  (stat(92) & 0x1f ) >>>16 --dia
 
  dset(0,game_vars) 
  
- --objetos funcionais padrao		
-	save_obj(regador,1,true)
-	save_obj(pa     ,2,true)
+ --objetos funcionais padrao
+ if(save_reg) save_obj(regador,1,true)
+	if(save_pa)  save_obj(pa     ,2,true)
  --salvar objetos
  local slot = 3
-
+	--[[
 	for i in all(ls_inv.coisas)do
 		if i != regador and i != pa then
  		if(save_obj(i,slot))	slot+=1 
@@ -1933,7 +1942,7 @@ function save_game()
 
 	slots = slot-1
 	if(slot < 63)	for i=slot,63 do dset(i,0) end
-
+--]]
 end
 
 function load_obj(qual_slot,guardar_em_ls,bit_extra)
@@ -1982,9 +1991,10 @@ end
 
 function load_game()
 	--objetos padro
- regador =	load_obj(1) or criar_obj("item",16,ls_inv.coisas,nil,16,18,2)
- pa      = load_obj(2) or criar_obj("item",17,ls_inv.coisas,nil,32,18,2)
  --careggar regador e pa	
+ if(save_reg) regador =	load_obj(1) or criar_obj("item",16,ls_inv.coisas,nil,16,18,2)
+ if(save_pa) pa      = load_obj(2) or criar_obj("item",17,ls_inv.coisas,nil,32,18,2)
+	--carregar demais itens
 	for i=3, 63 do
 		local loaded_obj = load_obj(i)
   if(not loaded_obj) break
