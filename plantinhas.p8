@@ -8,7 +8,6 @@ function _init()
  --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
  
-
 	if false then
 		for i=0,63 do dset(i,0) end
 	end
@@ -289,6 +288,7 @@ function _update()
 	if btnp(🅾️) then
 		cu1 = "jogo salvo"
 		save_game()
+
 	end
 	
 
@@ -1858,7 +1858,7 @@ end
 -->8
 --save/load =======================
 function save_obj(obj,qual_slot,bit_extra)
-	if(not obj or not obj.onde or obj.onde == 0 or obj.tip==0) return
+	if(not obj or not obj.onde or obj.onde == 0) return
 	local combinado = 0
 	--garantir cordenada dentro do range 
 	local x_aux,y_aux,tip,bit_extra,aux = obj.x<0 and -obj.x or 0, obj.y<0 and -obj.y or 0,obj.tip,bit_extra or nil
@@ -1869,12 +1869,12 @@ function save_obj(obj,qual_slot,bit_extra)
 		         |  (obj.y+y_aux & 0x7f) 
 	          |  (tip         & 0x1f) >>> 5
 	          |  (obj.algo    & 0x0f) >>> 6
-	
+
 	--o item tem uma planta?
- if(range(tip,4,8) and obj.algo==1 and obj.planta)then
+ if(range(tip,3,7) and obj.algo==1 and obj.planta)then
   combinado |= (obj.planta.tip-8  & 0x7) >>> 9
 
-		if(tip>=4) aux = obj.estagio else aux = obj.capacity 
+		if(tip>3) aux = obj.estagio else aux = obj.capacity 
   combinado |= (aux & 0x7) >>> 12
 
 		if(obj.saturac >= max_saturac)then
@@ -1956,11 +1956,11 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
  novo_obj.algo  = algo
  
  --o item tem uma planta?
- if range(tip,4,8) and algo==1 then
+ if algo==1 then
   local pla_salva  = criar_obj("item",((save << 9) & 0x07)+8)
   novo_obj.planta  = pla_salva.fases
   --estagio ou capacidade
- 	local aux = ((save << 12) & 0x7)+1
+ 	local aux = ((save << 12) & 0x7)
 		-- eh um vaso
  	if tip >= 4 then
 			if(passou_um_dia and (save << 16) & 0x1 == 1) avancar_fase(novo_obj)
