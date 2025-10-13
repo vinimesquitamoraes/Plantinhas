@@ -1909,8 +1909,8 @@ function save_game()
  dset(0,game_vars) 
  
  --objetos funcionais padrao
- if(save_reg) save_obj(regador,1,true)
-	if(save_pa)  save_obj(pa     ,2,true)
+ save_obj(regador,1,true)
+	save_obj(pa     ,2,true)
  --salvar objetos
  local slot = 3
 	
@@ -1979,15 +1979,17 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 	  novo_obj.qual_atl = ((save << 15) & 0x7) +1
 			ls_atl.atls[novo_obj.qual_atl].item = novo_obj		
 	 end 	
+	
 	end
+	slots+=1
  return novo_obj
 end
 
 function load_game()
 	--objetos padro
  --careggar regador e pa	
- if(save_reg) regador =	load_obj(1) or criar_obj("item",16,ls_inv.coisas,nil,16,18,2)
- if(save_pa) pa      = load_obj(2) or criar_obj("item",17,ls_inv.coisas,nil,32,18,2)
+ regador =	load_obj(1) or criar_obj("item",16,ls_inv.coisas,nil,16,18,2)
+ pa      = load_obj(2) or criar_obj("item",17,ls_inv.coisas,nil,32,18,2)
 	--carregar demais itens
 	for i=3, 63 do
 		local loaded_obj = load_obj(i)
