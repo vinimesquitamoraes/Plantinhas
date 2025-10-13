@@ -842,10 +842,10 @@ function def_tip(self,subtipo)
 		 else
 		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 125, "flowerpot 4", 38, 1, 2, 3, 5, 2, 8, 4, 5
 	 	end	
-		--planta1
+		--plantas
 	 elseif(range(subtipo,8,15))then
 	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 10, 1, 2, 2, 5, 5, 249, 1
-
+			--planta1
 		 if subtipo == 8 then
 		  self.val, self.nome = 10, "tomato"
 		 	self.fases= {70   ,71   ,87   ,85   ,72   ,104 ,
