@@ -52,6 +52,9 @@ function get_data(id)
 	 d:add_data((d.value <<  7) & 0x7ff,	"\feano")
 	 d:add_data((d.value << 11) & 0xf  ,	"\f3mes")
   d:add_data((d.value << 16) & 0x1f	,	"\f4dia")
+  
+  d:add_data(999	,	"\f4cu1")
+
  elseif id == 1 then
  	d.title = "regador"
   d.sprite= 3
@@ -115,19 +118,21 @@ function show_data_component(data_id,x,y,w)
 	
 	spr(rd.sprite,x+3,aux_y+3,rd.spr_w,rd.spr_v)
 	-- datas ==============
-	local data_y = aux_y
 	local max_str_len = get_longest_string_size(rd.data_n)
-
-	aux_y += spr_square
+	local aux_str_y = aux_y
 
 	for i=1, #rd.data_v do
 		local aux_str = max_str_len-#rd.data_n[i]
-		local aux_n = rd.data_n[i].."\*"..aux_str.." "
-  print(aux_n..':'..rd.data_v[i],x+spr_square+6,data_y)
-  data_y+=6
-	end	
+		local aux_n   = rd.data_n[i].."\*"..aux_str.." "
+  print(aux_n..':'..rd.data_v[i],x+spr_square+6,aux_str_y)
+  aux_str_y+=6
+	end
+
+	local spr_y = aux_y+ spr_square
 	
-	aux_y += aux_y -  data_y
+	if(aux_str_y<spr_y)aux_str_y = spr_y +2
+	
+	aux_y = aux_str_y
 
 	rect(x,y,x+w,aux_y,1)
 	
