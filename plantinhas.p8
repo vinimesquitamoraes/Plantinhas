@@ -11,6 +11,10 @@ function _init()
 	if false then
 		for i=0,63 do dset(i,0) end
 	end
+	
+	if false then
+		for i=3,63 do dset(i,0) end
+	end
 
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  espacamento = 0
@@ -116,11 +120,6 @@ function _update()
  
 	if(btnp(❎)) saldo = 1000
 
-	if ls_jrd.coisas[1]then
-		cu1 = ls_jrd.coisas[1].nome
-	 cu2 = ls_jrd.coisas[1].saturac
-	end
-	
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
 
@@ -253,6 +252,7 @@ function _update()
 		if(not ls_atl.show and ls_inv.wait) then
    check_sel_and_mov(ls_inv.coisas,ls_inv,"retg",ls_inv.val)	 
   end
+  
 
   --performar atribuicao
   if(ls_atl.show and ls_atl.qual)toggle_atribuir()
@@ -286,7 +286,7 @@ function _update()
 		 	
  end
 	if btnp(🅾️) then
-		cu1 = "jogo salvo"
+		
 		save_game()
 
 	end
@@ -355,7 +355,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   woff     = 0,
  	y_vel    = 1,
   movable  = false,
-  ct       = 0,
+  ct       = 1,
   id       = 0,
   ls_gua   = ls_guardar,
   ls_aux   = ls_aux or nil,
@@ -770,15 +770,13 @@ function def_tip(self,subtipo)
 
 		--fertilizante
 	 elseif subtipo == 1 then
- 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.capacity = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1
-			
+ 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity, self.algo = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1 
 		--borrifador
 	 elseif subtipo == 2 then
- 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity          = 25, "pesticide", 6, 3, 1, 7, 4, 229, 5
-			
+ 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity, self.algo = 25 , "pesticide" , 6, 3, 1, 7, 4, 229, 5, 1
 		--cesta	 	
 	 elseif subtipo == 3 then
-   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.cur_s, self.capacity = 300, "basket", 4, 0, 6, 1, 8, 1, 215, 0
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity, self.algo = 300, "basket"    , 4, 0, 6, 1, 8, 215, 0, 0
 		
 		 function self:des(xop,yop)	
 			 aux_x,aux_y = xop or self.x,yop or self.y 
@@ -1839,7 +1837,7 @@ function colher()
   end
  --nao tem planta ainda
  elseif qual_vaso.colher then
-		qual_cesta.planta,qual_cesta.algo = qual_vaso.planta, 1
+		qual_cesta.planta = qual_vaso.planta
 	end
 end
 
@@ -1869,17 +1867,31 @@ function save_obj(obj,qual_slot,bit_extra)
 		         |  (obj.y+y_aux & 0x7f) 
 	          |  (tip         & 0x1f) >>> 5
 	          |  (obj.algo    & 0x0f) >>> 6
+	
+	--o item tem estagio ou capacidade
+ if range(tip,1,7) then
+ 	
+ 	--tem estagio ou capacidade
+ 	--estagio
+ 	if(tip>3)then
+ 	 aux = obj.estagio  
+   combinado |= (obj.planta.tip-8  & 0x7) >>> 9
 
-	--o item tem uma planta?
- if(range(tip,3,7) and obj.algo==1 and obj.planta)then
-  combinado |= (obj.planta.tip-8  & 0x7) >>> 9
+ 	 cu2 = "estagio "..obj.estagio
 
-		if(tip>3) aux = obj.estagio else aux = obj.capacity 
-  combinado |= (aux & 0x7) >>> 12
+  --capacidae
+		else
+			aux = obj.capacity 
+		 cu3 = "capacity "..obj.capacity
 
-		if(obj.saturac >= max_saturac)then
-			combinado |= (1 & 0x1) >>> 16
 		end
+  
+  combinado |= (aux & 0x7) >>> 12
+	 cu1 = "nome "..obj.nome
+
+--		if(obj.saturac >= max_saturac)then
+		--	combinado |= (1 & 0x1) >>> 16
+--		end
  end
  
  --esta em um atalho?
