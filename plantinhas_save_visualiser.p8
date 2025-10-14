@@ -101,11 +101,14 @@ function get_data(id)
  		
  	if tem_algo==1 then
 			local cap_estg = (d.value << 12) & 0x7
-			if tip >2 then
- 			local algo_tip = ((d.value << 9) & 0x07)+8
+			if tip >3 then
+ 			local algo_tip = ((d.value << 9)  & 0x07)+8
+ 			local saturac  = ((d.value << 16) & 0x1) 
 				local nome =  get_item_props(algo_tip).tipo
 	 		d:add_data(nome ,	"\fbalgo_tip")
 				d:add_data(cap_estg ,	"\fbestagio")
+				d:add_data(saturac ,	"\fbsaturac")
+
 			else
 		 	d:add_data(cap_estg ,	"\fbcapacidade")
 			end

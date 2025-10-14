@@ -47,7 +47,7 @@ function _init()
 	venda_timer   = 0
 	pisca         = false
 	colheita      = false
- passou_um_dia = dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
+ passou_um_dia = true -- dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
 
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
@@ -135,7 +135,14 @@ function _update()
   bt_dept:hover()
   bt_dept:ativa()
  end
-  
+ 
+ if ls_jrd.qual then
+  	cu1 = ls_jrd.qual.nome
+  	if ls_jrd.qual.planta then
+	  	cu2 = ls_jrd.qual.planta
+  	end
+ end 
+ 
  --ir loja ........................................................................................................   
  if not ls_atl.show and not ls_atl.val and not ls_jrd.qual then
   bt_loja:hover()
@@ -172,7 +179,7 @@ function _update()
  if pat_sem.val and not ls_atl.show and #pat_sem<1 then
   if(mouse:toggle(mouse.esq,228,228))then
    gerar_part(pat_sem,1,ls_atl.qual.item,1,5,ls_atl.qual.item, stat(32)+2, stat(33)+7)
-   if ls_atl.qual.item.capacity == 0 then
+   if ls_atl.qual.item.cont == 0 then
     ls_atl.qual.item = nil
     ls_atl.qual = nil
    end
@@ -252,8 +259,13 @@ function _update()
 		if(not ls_atl.show and ls_inv.wait) then
    check_sel_and_mov(ls_inv.coisas,ls_inv,"retg",ls_inv.val)	 
   end
-  
 
+ --[[
+  if ls_inv.qual then
+  	cu1 = ls_inv.qual.nome
+  	cu2 = ls_inv.qual.algo
+  end
+]]
   --performar atribuicao
   if(ls_atl.show and ls_atl.qual)toggle_atribuir()
   --se o timer contou ja
@@ -275,8 +287,8 @@ function _update()
 			local vendido = ls_inv.qual
 		 if vendido != regador and vendido != pa then
 				saldo += vendido.val
-				if vendido.capacity > 0 then
-					vendido.val,vendido.capacity, vendido.algo,	vendido.planta = 0,0,0
+				if vendido.cont > 0 then
+					vendido.val,vendido.cont, vendido.algo,	vendido.planta = 0,0,0
 				else
 					del(ls_inv.coisas,ls_inv.qual)
  			end
@@ -341,7 +353,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
   cla      = que_classe,
   tip      = 0,
   algo     = 0,
-  capacity = 0,
+  cont     = 0,
   qual_atl = 0,
   s        = 0,
   cur_s    = 0,
@@ -770,13 +782,13 @@ function def_tip(self,subtipo)
 
 		--fertilizante
 	 elseif subtipo == 1 then
- 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity, self.algo = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1 
+ 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1 
 		--borrifador
 	 elseif subtipo == 2 then
- 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity, self.algo = 25 , "pesticide" , 6, 3, 1, 7, 4, 229, 5, 1
+ 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = 25 , "pesticide" , 6, 3, 1, 7, 4, 229, 5, 1
 		--cesta	 	
 	 elseif subtipo == 3 then
-   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity, self.algo = 300, "basket"    , 4, 0, 6, 1, 8, 215, 0, 0
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = 300, "basket"    , 4, 0, 6, 1, 8, 215, 0, 0
 		
 		 function self:des(xop,yop)	
 			 aux_x,aux_y = xop or self.x,yop or self.y 
@@ -785,21 +797,21 @@ function def_tip(self,subtipo)
 				pal(0)
 				if self.planta then
 					spr(196+(self.planta.tip-8),aux_x+3,aux_y)
-					print(self.capacity,aux_x+12,aux_y+12,10)
+					print(self.cont,aux_x+12,aux_y+12,10)
 				end
 		 end
 		 
 	 --vasos 
 	 elseif(range(subtipo,4,7))then
-   self.estagio, self.colher, self.saturac, self.cur_s = 1, false, 0, 230
+    self.colher, self.saturac, self.cur_s = false, 0, 230
 			
   	function self:des_planta()
-  		local aux = self.planta.wh[self.estagio][1]
+  		local aux = self.planta.wh[self.cont][1]
 		  pal(self.planta.ct,0)
   		if aux > 1 then
-  		 spr(self.planta[self.estagio],self.x          ,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
+  		 spr(self.planta[self.cont],self.x          ,self.yp-(self.planta.wh[self.cont][2]*8),self.planta.wh[self.cont][1],self.planta.wh[self.cont][2])
   		else
-  		 spr(self.planta[self.estagio],self.x+self.xesp,self.yp-(self.planta.wh[self.estagio][2]*8),self.planta.wh[self.estagio][1],self.planta.wh[self.estagio][2])
+  		 spr(self.planta[self.cont],self.x+self.xesp,self.yp-(self.planta.wh[self.cont][2]*8),self.planta.wh[self.cont][1],self.planta.wh[self.cont][2])
   		end
 				pal()
 
@@ -842,7 +854,7 @@ function def_tip(self,subtipo)
 	 	end	
 		--plantas
 	 elseif(range(subtipo,8,15))then
-	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.capacity = 10, 1, 2, 2, 5, 5, 249, 1
+	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont = 10, 1, 2, 2, 5, 5, 249, 1
 			--planta1
 		 if subtipo == 8 then
 		  self.val, self.nome = 10, "tomato"
@@ -1078,8 +1090,8 @@ end
 function gerar_part(que_pat_ls, quantas, do_que, tip, ampx, item, x, y)
  tip = tip or 1
 
- if(do_que and quantas>do_que.capacity or #que_pat_ls+quantas > 200)return
- if(do_que) do_que.capacity -= 1
+ if(do_que and quantas>do_que.cont or #que_pat_ls+quantas > 200)return
+ if(do_que) do_que.cont -= 1
 
  for i=1, quantas do
 		nova = criar_obj("particula",tip,que_pat_ls,item)
@@ -1777,11 +1789,12 @@ function plantar(o_que)
  if(#pat_sem == 0) return 
 	ls_jrd.coisas.wait = true
  local	qual_vaso = get_obj_by_col_retg(ls_jrd.coisas,o_que)
-	if(qual_vaso and qual_vaso.planta)return
- -- saturacao da nega
+
+ if(qual_vaso and qual_vaso.planta)return
+		
 	if qual_vaso then
 		qual_vaso.planta  = o_que.ls_aux.fases
-  qual_vaso.estagio, qual_vaso.algo, ls_atl.val, pat_sem.val, ls_atl.wait, ls_jrd.val,qual_vaso.saturac = 1, 1, false, false, false, true,0
+  qual_vaso.cont, qual_vaso.algo, ls_atl.val, pat_sem.val, ls_atl.wait, ls_jrd.val,qual_vaso.saturac = 1, 1, false, false, false, true,0
  	mouse:reset()
   o_que:del()
  end
@@ -1828,11 +1841,11 @@ function colher()
 		--e do mesmo tipo?
  	if tip_pla_cesta == tip_pla_vaso and qual_vaso.colher then
   	--aumenta a capacidade
-  	if qual_cesta.capacity < 8 and mouse:press_no_hold()  then 
-	  	qual_vaso.estagio   -= 2
+  	if qual_cesta.cont < 8 and mouse:press_no_hold()  then 
+	  	qual_vaso.cont   -= 2
 	  	qual_vaso.colher     = false
-   	qual_cesta.capacity += 1
-    qual_cesta.val = flr(((aux*50)/100)*qual_cesta.capacity)
+   	qual_cesta.cont += 1
+    qual_cesta.val = flr(((aux*50)/100)*qual_cesta.cont)
 	  end
   end
  --nao tem planta ainda
@@ -1842,14 +1855,15 @@ function colher()
 end
 
 function avancar_fase(o_que)
- if(not o_que.algo or not o_que.planta) return
+
+ if(not o_que.algo==0 or not o_que.planta) return
 
 	local inc = 1--flr(rnd(100))
-	o_que.estagio += inc%2
+	o_que.cont += inc%2
 	o_que.saturac  = 0
 	
- if o_que.estagio >= #o_que.planta then
-  o_que.estagio, o_que.colher = #o_que.planta, true
+ if o_que.cont >= #o_que.planta then
+  o_que.cont, o_que.colher = #o_que.planta, true
  end
 end
 
@@ -1866,43 +1880,32 @@ function save_obj(obj,qual_slot,bit_extra)
 	          | ((obj.x+x_aux & 0x7f) <<  7)
 		         |  (obj.y+y_aux & 0x7f) 
 	          |  (tip         & 0x1f) >>> 5
-	          |  (obj.algo    & 0x0f) >>> 6
-	
+	          |  (obj.algo    & 0x1 ) >>> 6
+	 
 	--o item tem estagio ou capacidade
- if range(tip,1,7) then
- 	
+ if range(tip,1,7) and obj.algo==1 then
  	--tem estagio ou capacidade
  	--estagio
  	if(tip>3)then
- 	 aux = obj.estagio  
+ 	 aux = obj.cont  
    combinado |= (obj.planta.tip-8  & 0x7) >>> 9
-
- 	 cu2 = "estagio "..obj.estagio
-
+   
+   
+		 if(obj.saturac >= max_saturac)	combinado |= (1 & 0x1) >>> 16
+			
   --capacidae
 		else
-			aux = obj.capacity 
-		 cu3 = "capacity "..obj.capacity
-
+			aux = obj.cont 
 		end
   
   combinado |= (aux & 0x7) >>> 12
-	 cu1 = "nome "..obj.nome
 
---		if(obj.saturac >= max_saturac)then
-		--	combinado |= (1 & 0x1) >>> 16
---		end
  end
  
  --esta em um atalho?
  if(obj.onde == 3)	combinado |= (obj.qual_atl-1 & 0x7) >>> 15
 
---[[
- if(bit_extra)then
- 	aux = 15+qual_slot
-  combinado |= (num_atl & qual_slot) >>> aux
-	end
-]]
+
 
 	dset(qual_slot,combinado)	
 	return obj
@@ -1966,22 +1969,25 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 	--o item basico
 	local novo_obj = criar_obj("item",tip,nil,nil,x,y,onde)
  novo_obj.algo  = algo
- 
- --o item tem uma planta?
- if algo==1 then
-  local pla_salva  = criar_obj("item",((save << 9) & 0x07)+8)
-  novo_obj.planta  = pla_salva.fases
-  --estagio ou capacidade
- 	local aux = ((save << 12) & 0x7)
-		-- eh um vaso
- 	if tip >= 4 then
-			if(passou_um_dia and (save << 16) & 0x1 == 1) avancar_fase(novo_obj)
-  else 
-   novo_obj.planta.tip = pla_salva.tip
-   novo_obj.capacity   = aux
-   local val_pla = pla_salva.val
-   novo_obj.val = flr(((val_pla*50)/100) * novo_obj.capacity)
- 	end		
+
+ --o item tem estagio ou capacidade
+ if range(tip,1,7) then
+   --estagio ou capacidade
+  novo_obj.cont   = ((save << 12) & 0x7)
+	
+	 if tip>=3 then
+		 --o item armazena uma planta
+			local pla_salva = criar_obj("item",((save << 9) & 0x07)+8)
+	
+			if(algo==1)then
+			 novo_obj.planta = pla_salva.fases
+	  	-- eh um vaso
+	  	if tip > 3  then
+			  	cu3 = (save << 16) & 0x1 
+		 	 	if(passou_um_dia and (save << 16) & 0x1 == 1) avancar_fase(novo_obj)
+	   end 
+   end 
+ 	end			
  end
  
  if guardar_em_ls then
@@ -2327,7 +2333,7 @@ __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
 __sfx__
-00070000040500a05011050260501b0500705014050210502a050270501e050130500605005050150501e050160500c0500a0500e05014050200502705028050210500f0500e050140501b050230502a05027050
+00070000100500a05011050260501b0500705014050210502a050270501e050130500605005050150501e050160500c0500a0500e05014050200502705028050210500f0500e050140501b050230502a05027050
 00100000000001f6501e6501e6501d6501d6501d6501d6501d6501e6501f650216502265023650000002565026650276502765027650246501f650136501265012650126501565018650166501e6500000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0010000023650236502365025650000002765000000000002a650000002c650000002f6502f6502c65000000276500000000000226501e6501d6501c6501c6501d6501f650216500000026650286502565000000
