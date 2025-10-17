@@ -36,8 +36,8 @@ function _init()
  ano_salvo = (load_aux  <<  7) & 0x7ff
 	mes_salvo	= (load_aux  << 11) & 0xf  
 	dia_salvo = (load_aux  << 16) & 0x1f
-	num_atl   = ((dget(1)  << 16) & 0x1) + ((dget(2) << 17) & 0x2)
-	slots     = 0
+	num_atl   = ((dget(1)  <<  9) & 0x7)+1     
+	slots     = 0             
 
  --auxiliares ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  aux_tipo      = 0
@@ -107,7 +107,7 @@ function _init()
 	--atalhos
 	-- 2 4 6 8
 	-- 0 1 2 3
- init_atl(2*(num_atl+1))
+ init_atl(num_atl)
  def_pos_atls()
 	--caregar save
  load_game()
@@ -117,7 +117,6 @@ end
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
- 
 	if(btnp(❎)) saldo = 1000
 
  --cooldown para os bts
@@ -136,13 +135,7 @@ function _update()
   bt_dept:ativa()
  end
  
- if ls_jrd.qual then
-  	cu1 = ls_jrd.qual.nome
-  	if ls_jrd.qual.planta then
-	  	cu2 = ls_jrd.qual.planta
-  	end
- end 
- 
+
  --ir loja ........................................................................................................   
  if not ls_atl.show and not ls_atl.val and not ls_jrd.qual then
   bt_loja:hover()
@@ -291,12 +284,8 @@ function _update()
 		end
 		 	
  end
-	if btnp(🅾️) then
 		
-		save_game()
-
-	end
-	
+	save_game()
 
 end
 
@@ -329,9 +318,9 @@ function _draw()
    
  mouse:des()
 
- print(cu1,0,0)
- print(cu2,0,10)
- print(cu3,0,20)
+ --print(cu1,0,0)
+ --print(cu2,0,10)
+ --print(cu3,0,20)
 
 	print("slots:"..slots.."/63",85,0,6)
 end
@@ -921,11 +910,11 @@ function def_tip(self,subtipo)
 	
 			--regador
 		 if subtipo == 16 then
-  	 self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s = "watering can", 204, 236, 204, 3, 1, 7, 4, 248
+  	 self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s,self.algo = "watering can", 204, 236, 204, 3, 1, 7, 4, 248,1
  			
 			--pa
 		 elseif subtipo == 17 then
-	  	self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct, self.x_def, self.y_def = "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12
+	  	self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct,self.algo = "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12,1
 		 end 		 
 		end
 	
@@ -1350,14 +1339,9 @@ end
 
 -->8
 --menu_de_atalho=================
-function init_atl(quantos)	
+function init_atl(quantos)
+	local quantos =	mid(2, quantos, 8)
 
-	if(#ls_atl.atls+quantos>8)return
-
- if(#ls_atl.atls>0)	num_atl += 1
-	
-	if(quantos == 0) quantos = 2
-	
 	for i=1,quantos do
  	new_atl =	criar_obj("espaco",3,ls_atl.atls)  	 
  	new_atl.item, new_atl.cor1, new_atl.cor2, new_atl.cor3, new_atl.id, new_atl.r = nil, 1, 7, 1, #ls_atl.atls, 8.5
@@ -1424,9 +1408,7 @@ function atl_on_off(context,pode_mover)
 			if pode_mover then
 				ls_jrd.val,ls_inv.val = true,true
 			end
- 		ls_atl.timer, ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, pat_reg.val, pat_sem.val, pa.val, colheita = 0
- 
-	--		ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, ls_atl.timer, pat_reg.val, pat_sem.val, pa.val,	colheita = nil, nil, false, false, 0, false, false, false, false
+ 		ls_atl.timer, ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, pat_reg.val, pat_sem.val, pa.val, colheita = 	 	0           , nil        , nil        , false     , false      , false      , false      , false , false
 
 			foreach(ls_bts,function(obj) obj.wait = false end)
 
@@ -1796,6 +1778,10 @@ function plantar(o_que)
  
 end
 
+function check_colher(o_que)
+  o_que.colher = o_que.cont >= (#o_que.planta)
+end
+
 function remov_planta()
 	qual_vaso = ls_jrd.qual
 	if qual_vaso and qual_vaso.planta and mouse:press_no_hold() then
@@ -1828,19 +1814,20 @@ function colher()
 
  local tip_pla_cesta = qual_cesta.planta and qual_cesta.planta.tip
  local	tip_pla_vaso  = qual_vaso.planta.tip
- local aux       = qual_vaso.planta.val
-
+ local aux           = qual_vaso.planta.val
+	
 	--ja tem uma planta na cesta?
 	if tip_pla_cesta then
 		--a que quer colher 
 		--e do mesmo tipo?
  	if tip_pla_cesta == tip_pla_vaso and qual_vaso.colher then
   	--aumenta a capacidade
-  	if qual_cesta.cont < 8 and mouse:press_no_hold()  then 
+  	if qual_cesta.cont < 7 and mouse:press_no_hold()  then 
 	  	qual_vaso.cont   -= 2
-	  	qual_vaso.colher     = false
-   	qual_cesta.cont += 1
-    qual_cesta.val = flr(((aux*50)/100)*qual_cesta.cont)
+	  	qual_vaso.colher  = false
+   	qual_cesta.cont  += 1
+    qual_cesta.val  = flr(((aux*50)/100)*qual_cesta.cont)
+    qual_cesta.algo = 1
 	  end
   end
  --nao tem planta ainda
@@ -1857,9 +1844,7 @@ function avancar_fase(o_que)
 	o_que.cont += inc%2
 	o_que.saturac  = 0
 	
- if o_que.cont >= #o_que.planta then
-  o_que.cont, o_que.colher = #o_que.planta, true
- end
+ check_colher(o_que) 
 end
 
 -->8
@@ -1879,6 +1864,8 @@ function save_obj(obj,qual_slot,bit_extra)
 	 
 	--o item tem estagio ou capacidade
  if range(tip,1,7) and obj.algo==1 then
+
+
  	--tem estagio ou capacidade
  	--estagio
  	if(tip>3)then
@@ -1890,12 +1877,20 @@ function save_obj(obj,qual_slot,bit_extra)
 			
   --capacidae
 		else
+		 combinado |= (obj.planta.tip-8  & 0x7) >>> 9
 			aux = obj.cont 
 		end
   
   combinado |= (aux & 0x7) >>> 12
 
+ --salva o numero de atalhos
+	--no regador 
+	--na regiao reservada pra
+	--plantas	
+	elseif tip==16 then
+  combinado |= (#ls_atl.atls-1  & 0x7) >>> 9
  end
+ 
  
  --esta em um atalho?
  if(obj.onde == 3)	combinado |= (obj.qual_atl-1 & 0x7) >>> 15
@@ -1968,22 +1963,24 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
  --o item tem estagio ou capacidade
  if range(tip,1,7) then
    --estagio ou capacidade
-  novo_obj.cont   = ((save << 12) & 0x7)
+  novo_obj.cont = ((save << 12) & 0x7)
 	
 	 if tip>=3 then
 		 --o item armazena uma planta
 			local pla_salva = criar_obj("item",((save << 9) & 0x07)+8)
-	
 			if(algo==1)then
 			 novo_obj.planta = pla_salva.fases
+ 			check_colher(novo_obj) 
 	  	-- eh um vaso
 	  	if tip > 3  then
-			  	cu3 = (save << 16) & 0x1 
 		 	 	if(passou_um_dia and (save << 16) & 0x1 == 1) avancar_fase(novo_obj)
 	   end 
    end 
- 	end			
+ 	elseif tip==16 then
+		 combinado |= ((save << 9)+1) & 0x7
+	 end			
  end
+ 
  
  if guardar_em_ls then
 	 if(onde == 1) add(ls_jrd.coisas,novo_obj)
@@ -2003,6 +2000,7 @@ function load_game()
  --careggar regador e pa	
  regador =	load_obj(1) or criar_obj("item",16,ls_inv.coisas,nil,16,18,2)
  pa      = load_obj(2) or criar_obj("item",17,ls_inv.coisas,nil,32,18,2)
+	
 	--carregar demais itens
 	for i=3, 63 do
 		local loaded_obj = load_obj(i)
