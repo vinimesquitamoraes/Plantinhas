@@ -260,12 +260,6 @@ function _update()
    check_sel_and_mov(ls_inv.coisas,ls_inv,"retg",ls_inv.val)	 
   end
 
- --[[
-  if ls_inv.qual then
-  	cu1 = ls_inv.qual.nome
-  	cu2 = ls_inv.qual.algo
-  end
-]]
   --performar atribuicao
   if(ls_atl.show and ls_atl.qual)toggle_atribuir()
   --se o timer contou ja
@@ -1453,6 +1447,7 @@ function toggle_atribuir()
 		--desativa o movimento do jardim e inventario
 		ls_jrd.val,ls_inv.val = false,false				
 
+	 --deposito -==========================================
 		if status == 3 then
 			if ls_atl.qual and ls_atl.qual.item then
 	   mouse:tip_set(ls_atl.qual.item.cur_s,"⬅️","⬆️")
@@ -1499,7 +1494,7 @@ function funcionalidades(que_func,container)
 	 -- o atalho selecionado
 		-- ja tem  um item?
 
-		-- se ele ja tiver efetuamos
+		-- se ele ja tiver 	efetuamos
 		-- uma troca com o jardim/inv
 		if aux_tip then
 	  atl_para_container(mouse.esq,container,true)
@@ -1520,7 +1515,7 @@ function funcionalidades(que_func,container)
 	 --nao tem item
  	if not aux_tip then
  	 --o item a ser guardado eh um vaso sem planta
-			if(container.qual and range(container.qual.tip,5,8) and container.qual.algo==0 and not container.qual.planta and not(pat_sem.val or pat_reg.val))then
+			if(container.qual and range(container.qual.tip,4,7) and container.qual.algo==0 and not container.qual.planta and not(pat_sem.val or pat_reg.val))then
  	  container_para_atl(mouse.esq,container)
  	 end
  	 
