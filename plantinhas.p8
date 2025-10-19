@@ -127,25 +127,17 @@ function _update()
  att_particulas(pat_sem)
  att_particulas(pat_reg)
 
+	
  --jogo principal --------------------------------------------------------------------------------------------+	
  if status == 1 then
 
-	bt_atal:hover()
-	bt_atal:ativa()
-
  --ir depot .......................................................................................................
- if ls_atl.show then
-  bt_dept:hover()
-  bt_dept:ativa()
- end
+ if(ls_atl.show) bt_dept:hover_ativa()
+ 
+ --ir loja ........................................................................................................   
+ if(not ls_atl.show and not ls_atl.val and not ls_jrd.qual) bt_loja:hover_ativa()
  
 
- --ir loja ........................................................................................................   
- if not ls_atl.show and not ls_atl.val and not ls_jrd.qual then
-  bt_loja:hover()
-  bt_loja:ativa()
- end
-  
  --performar atribuicao
  --delay para a atribuicao
  cool_down(5,ls_atl)
@@ -155,10 +147,8 @@ function _update()
  if(ls_atl.wait)funcionalidades(2,ls_jrd)
 	
  --colisao atalhos ------------------------------------------------------------------------------------------------------+
- if ls_atl.show then
-  check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
- end
-
+ if(ls_atl.show)check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
+ 
  --colisao jardim -------------------------------------------------------------------------------------------------------+
  --delay pra comecar a mover
  cool_down(15,ls_jrd)
@@ -201,6 +191,8 @@ function _update()
  
  --cancelar atribuicao/mostrar atalho
  atl_on_off(mouse.dir_press,true)	
+	
+	bt_atal:hover_ativa()
 
  --lojinha ---------------------------------------------------------------------------------------------------+				
  elseif status == 2 then
@@ -231,11 +223,9 @@ function _update()
   	ls_car.qual:del_car()	
   end
   			
-  bt_comp:hover()
-  bt_comp:ativa()			
-  bt_volt:hover()
-  bt_volt:ativa()
-	
+  bt_comp:hover_ativa()		
+  bt_volt:hover_ativa()
+		
   if(not ls_esp.qual and not ls_car.qual)mouse:reset()
 		att_car()
 
@@ -264,15 +254,11 @@ function _update()
   
   if(not venda)atl_on_off(mouse.dir_press,true)	
      
-  if ls_atl.show then
-   bt_dept:hover()
-   bt_dept:ativa()
-  end
+  if(ls_atl.show)bt_dept:hover_ativa()
+
   
-  if not ls_atl.show and not ls_atl.val and not ls_inv.qual then
-   bt_vend:hover()
-   bt_vend:ativa()
-  end
+  if(not ls_atl.show and not ls_atl.val and not ls_inv.qual) bt_vend:hover_ativa()
+  
 
 		if(venda and ls_inv.qual and mouse:press_no_hold())then
 			local vendido = ls_inv.qual
@@ -286,7 +272,7 @@ function _update()
  			ls_inv.qual = nil
 			end
 		end
-		 	
+		bt_atal:hover_ativa()
  end
 		
 	save_game()
@@ -317,6 +303,7 @@ function _draw()
  --deposito -------------------------------------------------------------------------------------------------------+
  elseif status == 3 then
   des_depot()
+ 	bt_atal:des()
   des_atl()
  end
    
@@ -699,6 +686,11 @@ function def_tip(self,subtipo)
 		 self.cor1,	self.s =	self.cor3,self.sr	
 			
 			end
+		end
+		
+		function self:hover_ativa()
+			self:hover()
+			self:ativa()
 		end
 	
 	elseif self.cla == "espaco" then
