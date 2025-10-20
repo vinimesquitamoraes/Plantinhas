@@ -112,7 +112,7 @@ function _init()
  def_pos_atls()
 	--caregar save
  load_game()
-
+ saldo = 3500
 end
 
 --update ==========================================================================================================================================================================+
@@ -262,9 +262,10 @@ function _update()
 
 		if(venda and ls_inv.qual and mouse:press_no_hold())then
 			local vendido = ls_inv.qual
-		 if vendido != regador and vendido != pa then
+		 if vendido != regador and vendido != pa and saldo+vendido.val <= 4000 then
 				saldo += vendido.val
-				if vendido.cont > 0 then
+				--caso o item tenha algo pra vender
+				if vendido.tip == 3 and vendido.cont >0 then
 					vendido.val,vendido.cont, vendido.algo,	vendido.planta = 0,0,0
 				else
 					del(ls_inv.coisas,ls_inv.qual)
@@ -1098,6 +1099,7 @@ function gerar_part(que_pat_ls, quantas, do_que, tip, ampx, item, x, y)
  for i=1, quantas do
 		nova = criar_obj("particula",tip,que_pat_ls,item)
 		nova.x, nova.y, nova.x_max, nova.x_min = x, y, x+ampx, x-ampx
+		sfx(7,1)
 	end
 end
 
@@ -1139,7 +1141,14 @@ function tool_tip(item)
 		--preco
 	 if(item == regador or item == pa)return
 		if(item.val > saldo and status == 2) cor = 2
-  val_str = item.val.."$"
+	
+	 val_str = "+"..item.val.."$"
+	
+		if(item.val+saldo > 4000)then
+			cor = 8
+			tip_str = "4000$ max"
+		end
+	 
 	
 	elseif(bt_comp:col_mouse("retg") and ls_car.total!=0 and status == 2)then
 		local cor = 10
@@ -2360,5 +2369,5 @@ __sfx__
 010900000864514645070450654502204006050550005500266002460023600216001f6001d6001c6001a60018600176001660015600146000030000300003000030000300003000030000300003000030000300
 000900000864505645070450304502204006050550005500266002460023600216001f6001d6001c6001a60018600176001660015600146000030000300003000030000300003000030000300003000030000300
 00020000016100d6111c61131611146110c61108611056110261501601016050c600116001a600006000060000600006000060000600006000060000600006000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010300002f7002f7112f700347000000034700347002f711000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001a6001a6001a6001a6001b6001c6001d6001d600000001a60017600146001360013600000001360000000146000000015600000000000000000156000000000000000001560000000000001560015600
