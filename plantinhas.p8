@@ -196,10 +196,14 @@ function _update()
 
  --lojinha ---------------------------------------------------------------------------------------------------+				
  elseif status == 2 then
+	
 		--verificar disponibilidade de compra
 
 		if(slots == 63)toggle_disp(1,16) else toggle_disp(1,16,true)
 		if(#ls_atl.atls == 8) toggle_disp(1)
+   
+  ls_esp.esps[2]:disp_toggle(false)
+	 ls_esp.esps[3]:disp_toggle(false)
 
   --selecionar loja ................................................................................................+
  	foreach(ls_esp.esps,function(esp) esp:hover("retg" ) end)
@@ -266,7 +270,7 @@ function _update()
 				saldo += vendido.val
 				--caso o item tenha algo pra vender
 				if vendido.tip == 3 and vendido.cont >0 then
-					vendido.val,vendido.cont, vendido.algo,	vendido.planta = 0,0,0
+					vendido.val,vendido.cont, vendido.algo,	vendido.planta = 300,0,0
 				else
 					del(ls_inv.coisas,ls_inv.qual)
  			end
@@ -1257,6 +1261,7 @@ function	des_lojinha()
  
  des_bt_comprar()
  bt_volt:des()
+
  
 end
 
