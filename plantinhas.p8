@@ -85,7 +85,7 @@ function _init()
  --instancias ---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
  
  --cursor .........................................................................................................................................................................+
- mouse = criar_obj("mouse",0)
+ mouse = criar_obj"mouse"
 
  --botoes .........................................................................................................................................................................+
  bt_loja = criar_obj("botao",1,ls_bts)
@@ -109,6 +109,7 @@ function _init()
 	-- 2 4 6 8
 	-- 0 1 2 3
  init_atl(num_atl)
+
  def_pos_atls()
 	--caregar save
  load_game()
@@ -118,7 +119,6 @@ end
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
-	if(btnp(❎)) saldo = 1000
 
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
@@ -275,7 +275,7 @@ function _update()
 		end
 		bt_atal:hover_ativa()
  end
-		
+	
 	save_game()
 
 end
@@ -310,7 +310,7 @@ function _draw()
    
  mouse:des()
 
- --print(cu1,0,0)
+	print(cu1,0,0)
  --print(cu2,0,10)
  --print(cu3,0,20)
 
@@ -402,11 +402,11 @@ function def_tip(self,subtipo)
  self.tip = subtipo
  --mouse ========================		 
 	if self.cla == "mouse" then
- self.s,self.ct,self.woff,self.hoff,self.ax,self.ay,self.esq_esper,self.mei_esper,self.dir_esper,self.esq_press,self.mei_press,self.dir_press,self.esq,self.mei,self.dir,self.esq_solto,self.mei_solto,self.dir_solto = 212,1,8,8,0,0,false,false,false,false,false,false,false,false,false,false,false,false
+	 self.s,self.ct,self.woff,self.hoff,self.ax,self.ay,self.esq_esper,self.mei_esper,self.dir_esper,self.esq_press,self.mei_press,self.dir_press,self.esq,self.mei,self.dir,self.esq_solto,self.mei_solto,self.dir_solto = str_to_tbl("212,1,8,8,0,0,false,false,false,false,false,false,false,false,false,false,false,false")
  			
 	--resetar mouse ===============
  function self:reset()
-  self.s,self.tool_tip,self.h,self.w,self.ct,self.xoff,self.yoff,self.ax,self.ay = 212, nil, 8,8,1,0,0,0,0
+  self.s,self.tool_tip,self.h,self.w,self.ct,self.xoff,self.yoff,self.ax,self.ay = str_to_tbl("212, nil, 8,8,1,0,0,0,0")
 	end
 	
 	--so pode clicar sem segurar
@@ -438,7 +438,9 @@ function def_tip(self,subtipo)
  	 
 	--desenhar mouse ==============
  function self:des()
-  local aux_x, aux_y = self.ax,self.ay
+  local aux_x, aux_y =
+  					 self.ax,
+  					 self.ay
   pal(self.ct,0)
   spr(self.s,stat(32)+aux_x,stat(33)+aux_y,self.w/8,self.h/8)
  	if(self.tool_tip)spr(self.tool_tip,stat(32)+mouse.xoff,stat(33)+mouse.yoff)
@@ -458,7 +460,12 @@ function def_tip(self,subtipo)
  --atualizar mouse =============
  function self:att()
  	--att posicao ================
-  self.x,self.y,self.esq,self.mei,self.dir = stat(32),stat(33),stat(34)==1,stat(34)==4,stat(34)==2
+  self.x,self.y,self.esq,self.mei,self.dir =
+   stat(32),
+   stat(33),
+   stat(34)==1,
+   stat(34)==4,
+   stat(34)==2
 	
 		--comportamento esquerdo ||||
 		--se o mouse esq foi apertado
@@ -561,7 +568,13 @@ function def_tip(self,subtipo)
 
 --particula ====================
 	elseif self.cla == "particula" then	
- 	self.vx,self.vy,self.x_max,self.x_mix,self.w,self.h = rnd(2)-1,1,128,0,0,0
+ 	self.vx,self.vy,self.x_max,self.x_mix,self.w,self.h =
+ 	 rnd(2)-1,
+ 	 1,
+ 	 128,
+ 	 0,
+ 	 0,
+ 	 0
 
  	if subtipo == 1 then 		
  		self.cor,self.ace =  rnd({3,11}),0
@@ -606,25 +619,25 @@ function def_tip(self,subtipo)
 		 
 		--lojinha
 		if subtipo == 1 then
-  	self.sfx_id,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct = 1,1,113,16,16,2,14,14,46,1
+  	self.sfx_id,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct =str_to_tbl("1,1,113,16,16,2,14,14,46,1")
 		 
 	 --voltar
 		elseif subtipo == 2 then
-		 self.sfx_id,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct = 2,1,113,16,16,2,12,12,44,0
+		 self.sfx_id,self.x,self.y,self.w,self.h,self.tam,self.s,self.sr,self.sp,self.ct =str_to_tbl("2,1,113,16,16,2,12,12,44,0")
 
 		--comprar
 		elseif subtipo == 3 then
-   self.x,self.y,self.w,self.h,self.cor1,self.cor3,self.cor2           = 97,116,18,8,5,5,10
+   self.x,self.y,self.w,self.h,self.cor1,self.cor3,self.cor2                       =str_to_tbl("97,116,18,8,5,5,10")
 
 	 --depot
 		elseif subtipo == 4 then
-   self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 57, 57, 16, 16, 2, 40, 40, 42, 1
+   self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct     =str_to_tbl("57, 57, 16, 16, 2, 40, 40, 42, 1")
 	 --vender
 		elseif subtipo == 5 then
- 	 self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct = 1, 113, 16, 16, 2, 14, 14, 46, 1
+ 	 self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp, self.ct     =str_to_tbl("1, 113, 16, 16, 2, 14, 14, 46, 1")
 	 --atalho
 		elseif subtipo == 6 then	
- 	 self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp = 112   ,    113,     16,     16,        2,     166,    166,      144
+ 	 self.x, self.y, self.w, self.h, self.tam, self.s, self.sr, self.sp              =str_to_tbl("112 ,113, 16, 16, 2, 166, 166, 144")
 	 end
 	
 	 --metodos de botoes
@@ -652,10 +665,10 @@ function def_tip(self,subtipo)
 				--ir depot
 				elseif tipo_bt == 4 and not ls_atl.val then
 					if status==1 then
-					 self.sfx_id,	status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait, ls_atl.wait, ls_atl.val = 4,3, 12, 12, 44, 0
+					 self.sfx_id,	status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait, ls_atl.wait, ls_atl.val =str_to_tbl("4,3, 12, 12, 44, 0")
 
 					elseif status==3 then
-		    self.sfx_id,	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual, ls_atl.wait, ls_atl.val = 5,40, 40, 42, 1, false, 1, false   					 
+		    self.sfx_id,	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual, ls_atl.wait, ls_atl.val =str_to_tbl("5,40, 40, 42, 1, false, 1, false")
 				 end				
 				 
 					ls_atl.show = false
@@ -707,7 +720,7 @@ function def_tip(self,subtipo)
 		end
 	
 	elseif self.cla == "espaco" then
-  self.w, self.h, self.tam, self.disp, self.item = 18, 18, 16, true, {}
+  self.w, self.h, self.tam, self.disp, self.item =str_to_tbl("18, 18, 16, true,{}")
 
 		function self:hover(tip_col)
 
@@ -770,28 +783,28 @@ function def_tip(self,subtipo)
 	 	
 		--atalho
  	elseif subtipo == 3 then
- 		self.x,self.y,self.w,self.h = 64,64,16,16
+ 		self.x,self.y,self.w,self.h =str_to_tbl("64,64,16,16")
 		end
 
 	elseif self.cla == "prateleira" then			
 		self.h,	self.w = 1,80
 		
 	elseif self.cla == "item" then				
-		self.w, self.h, self.movable, self.desc = 16, 16, true, 80
+		self.w, self.h, self.movable, self.desc =str_to_tbl("16, 16, true, 80")
 
 		--slot de atalho
 		if subtipo == 0 then
-   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct = 300, "inv slot", 2, 2, 2, 5, 5, 214, 1
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct              = str_to_tbl("300,inv slot, 2, 2, 2, 5, 5, 214, 1")
 
 		--fertilizante
 	 elseif subtipo == 1 then
- 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = 100, "fertilizer", 8, 3, 1, 7, 4, 216, 1, 1 
+ 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("100,fertilizer, 8, 3, 1, 7, 4, 216, 1, 1")
 		--borrifador
 	 elseif subtipo == 2 then
- 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = 25 , "pesticide" , 6, 3, 1, 7, 4, 229, 5, 1
+ 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("25 ,pesticide, 6, 3, 1, 7, 4, 229, 5, 1")
 		--cesta	 	
 	 elseif subtipo == 3 then
-   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = 300, "basket"    , 4, 0, 6, 1, 8, 215, 0, 0
+   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("300,basket, 4, 0, 6, 1, 8, 215, 0, 0")
 		
 		 function self:des(xop,yop)	
 			 aux_x,aux_y = xop or self.x,yop or self.y 
@@ -841,23 +854,23 @@ function def_tip(self,subtipo)
 			
 			--vaso1
 		 if subtipo == 4 then
-	   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 50, "flowerpot 1", 32, 2, 5, 5, 8, 1, 8, 4, 8
+	   self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = str_to_tbl("50,flowerpot 1, 32, 2, 5, 5, 8, 1, 8, 4, 8")
 		
 			--vaso2
 		 elseif subtipo == 5 then
-		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 75, "flowerpot 2", 34, 2, 5, 5, 7, 1, 8, 4, 7
+		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = str_to_tbl("75,flowerpot 2, 34, 2, 5, 5, 7, 1, 8, 4, 7")
 		 			 
 			--vaso3
 		 elseif subtipo == 6 then
-		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 100, "flowerpot 3", 36, 3, 2, 7, 5, 2, 8, 4, 5
+		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = str_to_tbl("100,flowerpot 3, 36, 3, 2, 7, 5, 2, 8, 4, 5")
 
 			--vaso4
 		 else
-		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = 125, "flowerpot 4", 38, 1, 2, 3, 5, 2, 8, 4, 5
+		  self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.ct, self.xpoff, self.xesp, self.ypoff = str_to_tbl("125,flowerpot 4, 38, 1, 2, 3, 5, 2, 8, 4, 5")
 	 	end	
 		--plantas
 	 elseif(range(subtipo,8,15))then
-	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont = 10, 1, 2, 2, 5, 5, 249, 1
+	  self.s, self.ct, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont = str_to_tbl("10, 1, 2, 2, 5, 5, 249, 1")
 			--planta1
 		 if subtipo == 8 then
 		  self.val, self.nome = 10, "tomato"
@@ -930,11 +943,11 @@ function def_tip(self,subtipo)
 	
 			--regador
 		 if subtipo == 16 then
-  	 self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s,self.algo = "watering can", 204, 236, 204, 3, 1, 7, 4, 248,1
+  	 self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s,self.algo = str_to_tbl("watering can, 204, 236, 204, 3, 1, 7, 4, 248,1")
  			
 			--pa
 		 elseif subtipo == 17 then
-	  	self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct,self.algo = "shovel", 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12,1
+	  	self.nome, self.s, self.s2, self.s3, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct,self.algo = str_to_tbl("shovel, 206, 238, 206, 3, 1, 7, 4, 213, 9, 32, 12,1")
 		 end 		 
 		end
 	
@@ -1179,6 +1192,21 @@ function tool_tip(item)
 	print(tip_str ,22,120,6)
 	print(val_str ,69,120,cor)
 	
+end
+
+function str_to_tbl(str,not_upk)
+	local data_table = split(str)
+ for k,v in pairs(data_table) do
+ 	if(v == "true") data_table[k] = true
+ 	if(v == "false")data_table[k] = false
+ 	if(v == "nil")  data_table[k] = nil
+ 	if(v == "{}")  data_table[k]  = {}
+
+ end
+	
+	if(not_upk)	return data_table
+
+	return unpack(data_table)
 end
 -->8
 ---loljinha =====================
