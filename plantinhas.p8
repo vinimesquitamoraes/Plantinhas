@@ -275,7 +275,7 @@ function _update()
 		end
 		bt_atal:hover_ativa()
  end
-	
+
 	save_game()
 
 end
@@ -310,9 +310,9 @@ function _draw()
    
  mouse:des()
 
-	print(cu1,0,0)
- --print(cu2,0,10)
- --print(cu3,0,20)
+--	print(cu1,0,0)
+-- print(cu2,0,10)
+-- print(cu3,0,20)
 
 	print("slots:"..slots.."/63",85,0,6)
 end
@@ -406,7 +406,7 @@ function def_tip(self,subtipo)
  			
 	--resetar mouse ===============
  function self:reset()
-  self.s,self.tool_tip,self.h,self.w,self.ct,self.xoff,self.yoff,self.ax,self.ay = str_to_tbl("212, nil, 8,8,1,0,0,0,0")
+  self.s,self.tool_tip,self.h,self.w,self.ct,self.xoff,self.yoff,self.ax,self.ay = str_to_tbl("212,nil, 8,8,1,0,0,0,0")
 	end
 	
 	--so pode clicar sem segurar
@@ -665,10 +665,10 @@ function def_tip(self,subtipo)
 				--ir depot
 				elseif tipo_bt == 4 and not ls_atl.val then
 					if status==1 then
-					 self.sfx_id,	status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait, ls_atl.wait, ls_atl.val =str_to_tbl("4,3, 12, 12, 44, 0")
+					 self.sfx_id,	status, bt_dept.s, bt_dept.sr, bt_dept.sp, self.ct, ls_inv.wait, ls_atl.wait, ls_atl.val =str_to_tbl("4,3,12,12,44,0")
 
 					elseif status==3 then
-		    self.sfx_id,	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual, ls_atl.wait, ls_atl.val =str_to_tbl("5,40, 40, 42, 1, false, 1, false")
+		    self.sfx_id,	bt_dept.s, bt_dept.sr, bt_dept.sp, status, ls_atl.val, self.ct, ls_jrd.wait, ls_atl.qual, ls_atl.wait, ls_atl.val,ls_atl.show  =str_to_tbl("5,40, 40, 42, 1,false, 1,false")
 				 end				
 				 
 					ls_atl.show = false
@@ -679,7 +679,7 @@ function def_tip(self,subtipo)
 						venda = not venda
 						ls_inv.val = not ls_inv.val
 			 --abrir atl
-				elseif tipo_bt == 6 then
+				else
 					self.sfx_id,ls_atl.show = 6, not ls_atl.show 
 				end
 				sfx(self.sfx_id)
