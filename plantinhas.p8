@@ -3,13 +3,14 @@ version 43
 __lua__
 --anthony te amo =================================================================================================================================================================+
 function _init()
- --carrega save 
+	printh("---------------------")
+	 --carrega save 
 	cartdata("vini_plantinhas_1")
  --inicia o mouse -----------------------------------------------------------------------------------------------------------------------------------------------------------------+
  poke(0x5f2d, 1)
  --[[
 	if false then
-		for i=0,63 do dset(i,0) end
+		for i=0,63 do dset(i,'0) end
 	end
 	
 	if false then
@@ -50,19 +51,20 @@ function _init()
  passou_um_dia = true -- dif_dias(dia_salvo,mes_salvo,ano_salvo,stat(92),stat(91),stat(90)) > 0
 
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
- ls_tst = {["tipo"]="teste"       ,["val"]=false,["qual"]=nil}
- ls_bts = {["tipo"]="botao"       ,["val"]=false,["qual"]=nil}
- ls_esp = {["tipo"]="espaco"      ,["val"]=false,["qual"]=nil,["esps"  ]={}                              ,["timer"]=0,["wait"]=false} 
- ls_plv = {["tipo"]="palavra"     ,["val"]=false,["qual"]=nil}
- ls_atl = {["tipo"]="atalho"      ,["val"]=false,["qual"]=nil,["atls"  ]={},["show" ]=false,["timer"]=0,["wait"]=false} 
- ls_car = {["tipo"]="carrinho"    ,["val"]=false,["qual"]=nil,["coisas"]={},["total"]=0    ,["timer"]=0,["wait"]=false} 
- ls_inv = {["tipo"]="inventario"  ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
- ls_jrd = {["tipo"]="jardim"      ,["val"]=true ,["qual"]=nil,["coisas"]={},                ["timer"]=0,["wait"]=false} 
- ls_prt = {["tipo"]="prateleiras" ,["val"]=false,["qual"]=nil}
-
+	default_ls = {["tip"]="dft",["val"]=false,["qual"]=nil,["coisas"]={},["show"]=false,["total"]=0,["timer"]=0,["wait"]=false}
+ ls_tst = copy_table(default_ls,"tst")
+ ls_bts = copy_table(default_ls)
+ ls_esp = copy_table(default_ls)
+ ls_atl = copy_table(default_ls)
+ ls_plv = copy_table(default_ls)
+ ls_car = copy_table(default_ls)
+ ls_inv = copy_table(default_ls)
+ ls_jrd = copy_table(default_ls)
+ ls_prt = copy_table(default_ls)
+	
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
- pat_sem = {["tipo"]="semente"   ,["val"]=false,["qual"]={} }	
- pat_reg = {["tipo"]="agua"      ,["val"]=false,["qual"]={} }	
+ pat_sem = copy_table(default_ls)
+ pat_reg = copy_table(default_ls)
  
  --init de palavras ---------------------------------------------------------------------------------------------------------------------------------------------------------------+
  p1={192,193,193,194,240}
@@ -89,6 +91,7 @@ function _init()
 
  --botoes .........................................................................................................................................................................+
  bt_loja = criar_obj("botao",1,ls_bts)
+
  bt_volt = criar_obj("botao",2,ls_bts)
  bt_comp = criar_obj("botao",3,ls_bts)
  bt_dept = criar_obj("botao",4,ls_bts)
@@ -97,7 +100,7 @@ function _init()
 
  --espacos da lojinha .............................................................................................................................................................+
  init_loja()
- 
+
  --prateleiras ....................................................................................................................................................................+
  init_prat(4)
 
@@ -115,14 +118,23 @@ function _init()
  load_game()
  saldo = 3500
  
- p =	criar_obj("prateleira",0,ls_prt)
-
+ p =	criar_obj("prateleira",0,ls_tst)
+	p.x = 50
+	p.y = 50
+	p.h = 10
+	p.movable = true
 end
 
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
+ 
+	if(not ls_atl.show and ls_tst.wait) then
+	 check_sel_and_mov(ls_tst.coisas,ls_tst,"retg",ls_tst.val)	 
+ end
 
+	--cu1 = ls_tst.qual
+	
  --cooldown para os bts
  foreach(ls_bts,function(obj) cool_down(5,obj) end)
 
@@ -131,31 +143,30 @@ function _update()
  att_particulas(pat_reg)
 
 	
- --jogo principal --------------------------------------------------------------------------------------------+	
+ --jogo principal
  if status == 1 then
 
- --ir depot .......................................................................................................
+ --ir depot
  if(ls_atl.show) bt_dept:hover_ativa()
  
- --ir loja ........................................................................................................   
+ --ir loja
  if(not ls_atl.show and not ls_atl.val and not ls_jrd.qual) bt_loja:hover_ativa()
  
-
- --performar atribuicao
- --delay para a atribuicao
+ --atribuicao
  cool_down(5,ls_atl)
 
  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
  --se o timer contou ja
  if(ls_atl.wait)funcionalidades(2,ls_jrd)
 	
- --colisao atalhos ------------------------------------------------------------------------------------------------------+
- if(ls_atl.show)check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
+ --colisao atalhos 
+ if(ls_atl.show)check_sel_and_mov(ls_atl.coisas,ls_atl,"circ")	 
  
  --colisao jardim -------------------------------------------------------------------------------------------------------+
- --delay pra comecar a mover
  cool_down(15,ls_jrd)
-
+	
+	cu2 = ls_jrd.wait
+	
  if not ls_atl.show and ls_jrd.wait then
   check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
  end
@@ -202,11 +213,11 @@ function _update()
 		--verificar disponibilidade de compra
 
 		if(slots == 63)toggle_disp(1,16) else toggle_disp(1,16,true)
-		if(#ls_atl.atls == 8) toggle_disp(1)
+		if(#ls_atl.coisas == 8) toggle_disp(1)
 
   --selecionar loja ................................................................................................+
- 	foreach(ls_esp.esps,function(esp) esp:hover("retg" ) end)
-	 check_sel_and_mov(ls_esp.esps,ls_esp,"retg")										
+ 	foreach(ls_esp.coisas,function(esp) esp:hover("retg" ) end)
+	 check_sel_and_mov(ls_esp.coisas,ls_esp,"retg")										
       
   --selecionar compra ..............................................................................................+
   if ls_esp.qual then
@@ -240,7 +251,7 @@ function _update()
 		--atalhos --------------------------------------------------------------------------------------------------------+
   cool_down(5,ls_atl)
   if(ls_atl.show) then
-   check_sel_and_mov(ls_atl.atls,ls_atl,"circ")	 
+   check_sel_and_mov(ls_atl.coisas,ls_atl,"circ")	 
   end
   
 		--inventario -----------------------------------------------------------------------------------------------------+
@@ -286,7 +297,7 @@ end
 --draw =============================================================================================================+
 function _draw()
  cls()
-
+	p:des()
  --jogo principal --------------------------------------------------------------------------------------------------+
  if status == 1 then
  	bt_atal:des()
@@ -313,8 +324,8 @@ function _draw()
    
  mouse:des()
 
---	print(cu1,0,0)
--- print(cu2,0,10)
+	print(cu1,0,0)
+ print(cu2,0,10)
 -- print(cu3,0,20)
 
 	print("slots:"..slots.."/63",85,0,6)
@@ -776,21 +787,30 @@ function def_tip(self,subtipo)
  	elseif subtipo == 2 then
 			self.cor1,self.cor3,	self.cor2 = 1,1,8
 	 	
-	 function self:del_car()
-	 	if mouse.esq_press then
-				ls_car.total -= self.item.val
-			 del(ls_car.coisas,self)
-			 ls_car.qual = nil
-			end
-	 end
-	 	
+		 function self:del_car()
+		 	if mouse.esq_press then
+					ls_car.total -= self.item.val
+				 del(ls_car.coisas,self)
+				 ls_car.qual = nil
+				end
+		 end
+		 	
 		--atalho
  	elseif subtipo == 3 then
  		self.x,self.y,self.w,self.h =str_to_tbl("64,64,16,16")
 		end
 
 	elseif self.cla == "prateleira" then			
-		self.h,	self.w = 1,80
+	 function self:des(alt_col)
+		 alt_col = alt_col or self.ct
+	  rect(self.x,
+	  					self.y,
+	  					self.x+self.w-1,
+	  					self.y+self.h-1,
+	  					alt_col
+	  				)
+	 end
+		self.h,	self.w,self.ct = 1,80,6
 		
 	elseif self.cla == "item" then				
 		self.w, self.h, self.movable, self.desc =str_to_tbl("16, 16, true, 80")
@@ -1062,7 +1082,6 @@ end
 --nao  checado
 function check_sel_and_mov(qual_ls,controle,tipo,pode_mover)
  pode_mover = pode_mover or false
-
  --se tem alguem selecionado
 	if controle.qual then
 		if(not controle.qual:mov_cur(mouse.esq,pode_mover) and not controle.qual:col_mouse(tipo)) controle.qual = nil
@@ -1124,13 +1143,21 @@ function range(val,⬅️,➡️)
 end
 
 function cool_down(tempo,context)
+	
+	if(context.tip=="tst")then
+				printh(context.val)
+	end
 
 	if context.val and not context.wait then
-
+		
 		if context.timer>=tempo then
+		
 		 context.wait,	context.timer  = true, 0
  	else		
+
  		context.timer += 1
+ 		
+		
  	end
 		
 	end
@@ -1203,13 +1230,32 @@ function str_to_tbl(str,not_upk)
  	if(v == "true") data_table[k] = true
  	if(v == "false")data_table[k] = false
  	if(v == "nil")  data_table[k] = nil
- 	if(v == "{}")  data_table[k]  = {}
+ 	if(v == "{}")   data_table[k] = {}
 
  end
 	
 	if(not_upk)	return data_table
 
 	return unpack(data_table)
+end
+
+function copy_table(orig,tip)
+ local orig_type = type(orig)
+ local copy
+ tip = tip or "dft"
+ if orig_type == 'table' then
+  copy = {}
+  for orig_key, orig_value in pairs(orig) do
+			local value_type = type(orig_value)
+				if(value_type == 'table')orig_value={}
+
+    copy[orig_key] = orig_value
+  end
+  copy.tip = tip
+ else -- number, string, boolean, etc
+     copy = orig
+ end
+ return copy
 end
 -->8
 ---loljinha =====================
@@ -1281,7 +1327,7 @@ function	des_lojinha()
  plants:des()
  flowers:des()
 
-	foreach(ls_esp.esps,function(obj) obj:des() end)
+	foreach(ls_esp.coisas,function(obj) obj:des() end)
 	foreach(ls_car.coisas,function(obj) obj:des() end)
 
  tool_tip(ls_esp.qual and ls_esp.qual.item or nil)
@@ -1295,12 +1341,12 @@ end
 function init_loja()
 
 	for i=0,15 do      
-  aux                        = criar_obj("espaco",1,ls_esp.esps)
+  aux                        = criar_obj("espaco",1,ls_esp.coisas)
 		aux.item, aux_tipo, aux.id = criar_obj("item", aux_tipo), aux_tipo + 1, i+1
 	end	
 	
  ondex,ondey =	11,10
- for i in all(ls_esp.esps)do
+ for i in all(ls_esp.coisas)do
  	i.x, i.item.x, i.y, i.item.y, ondex = ondex, ondex + 1, ondey, ondey + 1, ondex + 20
 
 		if i.id%4==0 then
@@ -1315,7 +1361,7 @@ function toggle_disp(de,ate,qual)
 	ate  = ate or de
 	qual = qual 
 	for i=de,ate do
-	 ls_esp.esps[i]:disp_toggle(qual)
+	 ls_esp.coisas[i]:disp_toggle(qual)
 	end
 end
 
@@ -1410,22 +1456,22 @@ function init_atl(quantos)
 	local quantos =	mid(2, quantos, 8)
 
 	for i=1,quantos do
- 	new_atl =	criar_obj("espaco",3,ls_atl.atls)  	 
- 	new_atl.item, new_atl.cor1, new_atl.cor2, new_atl.cor3, new_atl.id, new_atl.r = nil, 1, 7, 1, #ls_atl.atls, 8.5
+ 	new_atl =	criar_obj("espaco",3,ls_atl.coisas)  	 
+ 	new_atl.item, new_atl.cor1, new_atl.cor2, new_atl.cor3, new_atl.id, new_atl.r = nil, 1, 7, 1, #ls_atl.coisas, 8.5
 	end
 
 end
 
 function def_pos_atls()
 
-	for i in all(ls_atl.atls)do
+	for i in all(ls_atl.coisas)do
   i.x,i.y = 64,64
 	end
 
  local angulo = 0
 
-	local quantos = #ls_atl.atls
- 	
+	local quantos = #ls_atl.coisas
+
 	if quantos == 2 then
 	 ang_inc,dist = 60,20
 	elseif quantos == 4 then
@@ -1436,7 +1482,7 @@ function def_pos_atls()
 	 ang_inc,dist = 45,28
 	end
 	
-	for i in all(ls_atl.atls)do
+	for i in all(ls_atl.coisas)do
   i.x =	i.x - dist * sin(angulo/360)
 	 i.y =	i.y - dist * cos(angulo/360) 
 		angulo += ang_inc
@@ -1447,7 +1493,7 @@ end
 function des_atl()
 
 	if ls_atl.show then
-		for i in all(ls_atl.atls)do
+		for i in all(ls_atl.coisas)do
 		 ovalfill(i.x-9, i.y-9,i.x+10,i.y+10,0)
    ovalfill(i.x-8, i.y-8,i.x+9 ,i.y+9 ,0)
    oval(i.x-8, i.y-8,i.x+9,i.y+9,i.cor1)
@@ -1473,7 +1519,7 @@ function atl_on_off(context,pode_mover)
 			mouse:reset()
 			
 			if pode_mover then
-				ls_jrd.val,ls_inv.val = true,true
+				ls_jrd.val,ls_inv.val,ls_tst.val = true,true,true
 			end
  		ls_atl.timer, ls_jrd.qual, ls_inv.qual, ls_atl.val, ls_atl.wait, pat_reg.val, pat_sem.val, pa.val, colheita = 	 	0           , nil        , nil        , false     , false      , false      , false      , false , false
 
@@ -1581,13 +1627,13 @@ function funcionalidades(que_func,container)
  	elseif aux_tip == 0 then
 	 	if mouse.esq then
 		 
-				if #ls_atl.atls == 8 then
+				if #ls_atl.coisas == 8 then
 				 toggle_disp(1)
 				else
 					init_atl(2)
 	 		 def_pos_atls()
 				 ls_atl.qual.item = nil
-			 	if(#ls_atl.atls == 8) toggle_disp(1)
+			 	if(#ls_atl.coisas == 8) toggle_disp(1)
 				end
 				ls_atl.qual = nil
 	   atl_on_off(true,true)	   
@@ -1770,7 +1816,7 @@ function des_prateleiras(x_init,y_init,y_esp)
 	aux_y = y_init
 	for i in all(ls_prt)do
 		i.x,i.y   = x_init, aux_y
-  rect(i.x,i.y,i.x+i.w-1,i.y+i.h-1,4)
+  i:des(4)
 		aux_y += y_esp
 	end
 	
@@ -1957,7 +2003,7 @@ function save_obj(obj,qual_slot,bit_extra)
 	--na regiao reservada pra
 	--plantas	
 	elseif tip==16 then
-  combinado |= (#ls_atl.atls-1  & 0x7) >>> 9
+  combinado |= (#ls_atl.coisas-1  & 0x7) >>> 9
  end
  
  
@@ -2000,7 +2046,7 @@ function save_game()
 		end
 	end
 
-	for i in all(ls_atl.atls)do
+	for i in all(ls_atl.coisas)do
 		if i.item then
 			if i.item != regador and i.item != pa then
  			if(save_obj(i.item,slot))	slot+=1 
@@ -2056,7 +2102,7 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 	 if(onde == 2) add(ls_inv.coisas,novo_obj)
 	 if(onde == 3) then
 	  novo_obj.qual_atl = ((save << 15) & 0x7) +1
-			ls_atl.atls[novo_obj.qual_atl].item = novo_obj		
+			ls_atl.coisas[novo_obj.qual_atl].item = novo_obj		
 	 end 	
 	
 	end
