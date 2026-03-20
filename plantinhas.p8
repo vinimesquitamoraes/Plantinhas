@@ -10,11 +10,7 @@ function _init()
  poke(0x5f2d, 1)
  --[[
 	if false then
-		for i=0,63 do dset(i,'0) end
-	end
-	
-	if false then
-		for i=3,63 do dset(i,0) end
+		for i=0,63 do dset(i,0) end
 	end
 ]]
  --cus ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -53,14 +49,18 @@ function _init()
  --listas -------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	default_ls = {["tip"]="dft",["val"]=false,["qual"]=nil,["coisas"]={},["show"]=false,["total"]=0,["timer"]=0,["wait"]=false}
  ls_tst = copy_table(default_ls,"tst")
- ls_bts = copy_table(default_ls)
- ls_esp = copy_table(default_ls)
- ls_atl = copy_table(default_ls)
- ls_plv = copy_table(default_ls)
- ls_car = copy_table(default_ls)
- ls_inv = copy_table(default_ls)
- ls_jrd = copy_table(default_ls)
- ls_prt = copy_table(default_ls)
+ ls_bts = copy_table(default_ls,"bts")
+ ls_esp = copy_table(default_ls,"esp")
+ ls_atl = copy_table(default_ls,"atl")
+ ls_plv = copy_table(default_ls,"plv")
+ ls_car = copy_table(default_ls,"car")
+ ls_inv = copy_table(default_ls,"inv")
+ ls_jrd = copy_table(default_ls,"jrd")
+ ls_prt = copy_table(default_ls,"prt")
+	
+	ls_tst.val = true
+	ls_jrd.val = true
+	ls_inv.val	= true
 	
  --listas de particulas -----------------------------------------------------------------------------------------------------------------------------------------------------------+
  pat_sem = copy_table(default_ls)
@@ -114,34 +114,37 @@ function _init()
  init_atl(num_atl)
 
  def_pos_atls()
-	--caregar save
- load_game()
+
  saldo = 3500
  
- p =	criar_obj("prateleira",0,ls_tst)
+ p =	criar_obj("prateleira",0,ls_jrd)
 	p.x = 50
 	p.y = 50
-	p.h = 10
+	p.w = 26           
+	p.h = 3
 	p.movable = true
+	
+	--caregar save
+ load_game()
 end
 
 --update ==========================================================================================================================================================================+
 function _update()
  mouse:att()
- 
-	if(not ls_atl.show and ls_tst.wait) then
-	 check_sel_and_mov(ls_tst.coisas,ls_tst,"retg",ls_tst.val)	 
- end
+ cu2 = "x:"..mouse.x.." y:"..mouse.y
 
-	--cu1 = ls_tst.qual
+ cool_down(5,ls_tst)
+
+	if(not ls_atl.show and ls_tst.wait) then
+	 check_sel_and_mov(ls_tst,"retg",ls_tst.val)	 
+ end
 	
  --cooldown para os bts
- foreach(ls_bts,function(obj) cool_down(5,obj) end)
+ foreach(ls_bts.coisas,function(obj) cool_down(5,obj) end)
 
  --atualizar particulas
  att_particulas(pat_sem)
  att_particulas(pat_reg)
-
 	
  --jogo principal
  if status == 1 then
@@ -153,22 +156,20 @@ function _update()
  if(not ls_atl.show and not ls_atl.val and not ls_jrd.qual) bt_loja:hover_ativa()
  
  --atribuicao
- cool_down(5,ls_atl)
+ cool_down(15,ls_atl)
 
  if(ls_atl.show and ls_atl.qual)toggle_atribuir()
  --se o timer contou ja
  if(ls_atl.wait)funcionalidades(2,ls_jrd)
 	
  --colisao atalhos 
- if(ls_atl.show)check_sel_and_mov(ls_atl.coisas,ls_atl,"circ")	 
+ if(ls_atl.show)check_sel_and_mov(ls_atl,"circ")	 
  
  --colisao jardim -------------------------------------------------------------------------------------------------------+
  cool_down(15,ls_jrd)
-	
-	cu2 = ls_jrd.wait
-	
+		
  if not ls_atl.show and ls_jrd.wait then
-  check_sel_and_mov(ls_jrd.coisas,ls_jrd,"retg",ls_jrd.val)	 
+  check_sel_and_mov(ls_jrd,"retg",ls_jrd.val)	 
  end
 
  --regar -------------------------------------------------------------------------------------------------------+
@@ -217,7 +218,7 @@ function _update()
 
   --selecionar loja ................................................................................................+
  	foreach(ls_esp.coisas,function(esp) esp:hover("retg" ) end)
-	 check_sel_and_mov(ls_esp.coisas,ls_esp,"retg")										
+	 check_sel_and_mov(ls_esp,"retg")										
       
   --selecionar compra ..............................................................................................+
   if ls_esp.qual then
@@ -228,7 +229,7 @@ function _update()
   --colisao no carrinho ............................................................................................+
   if(not ls_car.val and #ls_car.coisas >0) then
    foreach(ls_car.coisas,function(esp) esp:hover("retg") end)
-   check_sel_and_mov(ls_car.coisas,ls_car,"retg")
+   check_sel_and_mov(ls_car,"retg")
   end
    
   --remover carrinho ...............................................................................................+
@@ -251,14 +252,14 @@ function _update()
 		--atalhos --------------------------------------------------------------------------------------------------------+
   cool_down(5,ls_atl)
   if(ls_atl.show) then
-   check_sel_and_mov(ls_atl.coisas,ls_atl,"circ")	 
+   check_sel_and_mov(ls_atl,"circ")	 
   end
   
 		--inventario -----------------------------------------------------------------------------------------------------+
 	 --delay pra comecar a mover
 	 cool_down(5,ls_inv)
 		if(not ls_atl.show and ls_inv.wait) then
-   check_sel_and_mov(ls_inv.coisas,ls_inv,"retg",ls_inv.val)	 
+   check_sel_and_mov(ls_inv,"retg",ls_inv.val)	 
   end
 
   --performar atribuicao
@@ -297,13 +298,13 @@ end
 --draw =============================================================================================================+
 function _draw()
  cls()
-	p:des()
+
  --jogo principal --------------------------------------------------------------------------------------------------+
  if status == 1 then
  	bt_atal:des()
   bt_loja:des() 
-  des_jardim()
-  
+  des_inv()
+ 	
   --particulas -----------------------------------------------------------------------------------------------------+
   des_particulas(pat_sem)
  	des_particulas(pat_reg)
@@ -378,7 +379,7 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
 	 
 	 --mover com o cursor
 	 mov_cur = function(self,contexto,pode_mover)
-			if(contexto and self.movable and pode_mover)self:mov((stat(32) - flr(self.w/2)),(stat(33) - flr(self.w/2)))
+			if(contexto and self.movable and pode_mover)self:mov((stat(32) - flr(self.w/2)),(stat(33) - flr(self.h/2)))
 			n_sai_tela(self)
 			return que_botao
 	 end,
@@ -404,10 +405,12 @@ function criar_obj(que_classe,subtipo,ls_guardar,ls_aux,xop,yop,onde)
  end	
 	}
 	
- def_tip(novo_obj,subtipo,ls_guardar) 
-
- add(ls_guardar,novo_obj)
-
+ def_tip(novo_obj,subtipo) 
+	
+	if ls_guardar then
+	 add(ls_guardar.coisas,novo_obj)
+	end
+	
  return novo_obj
 end
 -->8
@@ -686,7 +689,7 @@ function def_tip(self,subtipo)
 				 end				
 				 
 					ls_atl.show = false
-					foreach(ls_bts,function(obj) obj.wait = false end)
+					foreach(ls_bts.coisas,function(obj) obj.wait = false end)
 	 	 --vender
 	 		elseif tipo_bt == 5 then
 	    	mouse:reset()
@@ -740,8 +743,12 @@ function def_tip(self,subtipo)
 
 			if(self:col_mouse(tip_col))then
 			 self.cor1 = self.cor2
+			 
+				if(not	self.sfx_hover)sfx(11)
+				self.sfx_hover	= true			
+			
 			else
-			 self.cor1,self.qual,self.val = self.cor3,nil,false
+			 self.cor1,self.qual,self.val,self.sfx_hover = self.cor3,nil,false
 			end
 			
 		end
@@ -769,14 +776,16 @@ function def_tip(self,subtipo)
 			end
 					 
 		 function self:add_car()
-
+			
 				if mouse.esq_press then
+
 				--adiciona ao carrinho
 					if #ls_car.coisas<4 then
 					
 				 	if self.disp then
-					  new_car       = criar_obj("espaco",2,ls_car.coisas)
-							new_car.item  = criar_obj("item",self.item.tip)
+					 	sfx(10)
+					  new_car       = criar_obj("espaco",2            ,ls_car)
+							new_car.item  = criar_obj("item"  ,self.item.tip)
 							ls_car.total += self.item.val
 						end
 			 	end
@@ -792,6 +801,9 @@ function def_tip(self,subtipo)
 					ls_car.total -= self.item.val
 				 del(ls_car.coisas,self)
 				 ls_car.qual = nil
+				
+					sfx(9)
+		 		
 				end
 		 end
 		 	
@@ -801,14 +813,32 @@ function def_tip(self,subtipo)
 		end
 
 	elseif self.cla == "prateleira" then			
-	 function self:des(alt_col)
+	 function self:des(alt_col,ds)
 		 alt_col = alt_col or self.ct
-	  rect(self.x,
-	  					self.y,
-	  					self.x+self.w-1,
-	  					self.y+self.h-1,
+		 ds      = ds 
+		 local x,y,w,h = self.x,self.y,self.w,self.h
+		 if not ds then
+	  	rect(x+2,
+		  					y+2,
+		  					x+4,
+		  					y+5,
+		  					alt_col
+		  				)
+		 end
+
+	  rect(x,
+	  					y,
+	  					x+w-1,
+	  					y+h-1,
 	  					alt_col
 	  				)
+			rect(x+w-5,
+								y+h-1,
+								x+w-3,
+								y+h+2,
+								alt_col
+			)
+	 
 	 end
 		self.h,	self.w,self.ct = 1,80,6
 		
@@ -819,12 +849,12 @@ function def_tip(self,subtipo)
 		if subtipo == 0 then
    self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.ct              = str_to_tbl("300,inv slot, 2, 2, 2, 5, 5, 214, 1")
 
-		--fertilizante
+		--prateleira pequena
 	 elseif subtipo == 1 then
- 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("100,fertilizer, 8, 3, 1, 7, 4, 216, 1, 1")
-		--borrifador
+	 	 self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("300,small shelf, 8, 3, 1, 7, 4, 216, 1, 1")
+		--prateleira grande
 	 elseif subtipo == 2 then
- 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("25 ,pesticide, 6, 3, 1, 7, 4, 229, 5, 1")
+ 		self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("500,big shelf  , 6, 3, 1, 7, 4, 229, 5, 1")
 		--cesta	 	
 	 elseif subtipo == 3 then
    self.val, self.nome, self.s, self.xoff, self.yoff, self.woff, self.hoff, self.cur_s, self.cont, self.algo = str_to_tbl("300,basket, 4, 0, 6, 1, 8, 215, 0, 0")
@@ -1061,7 +1091,9 @@ end
 function get_obj_by_col_mos(lista,tipo)
 	
 	for qual in all(lista)do
-		
+	
+--		printh(qual.nome)
+
 		if(qual:col_mouse(tipo))return qual
 				
 	end	
@@ -1080,17 +1112,21 @@ end
 --em uma lista
 --se um deles ja estiver sido 
 --nao  checado
-function check_sel_and_mov(qual_ls,controle,tipo,pode_mover)
+function check_sel_and_mov(controle,tipo,pode_mover)
  pode_mover = pode_mover or false
+
  --se tem alguem selecionado
 	if controle.qual then
+
 		if(not controle.qual:mov_cur(mouse.esq,pode_mover) and not controle.qual:col_mouse(tipo)) controle.qual = nil
   if(controle.qual and stat(34)==3)then
-   add(qual_ls,del(qual_ls,controle.qual))
+   add(qual_ls,del(controle.coisas,controle.qual))
   end
 	--se nao tem ninguem selecionado
 	else
-		controle.qual = get_obj_by_col_mos(qual_ls,tipo) 
+ 
+		controle.qual = get_obj_by_col_mos(controle.coisas,tipo) 
+		
 	end
 	
 end
@@ -1144,10 +1180,6 @@ end
 
 function cool_down(tempo,context)
 	
-	if(context.tip=="tst")then
-				printh(context.val)
-	end
-
 	if context.val and not context.wait then
 		
 		if context.timer>=tempo then
@@ -1157,7 +1189,6 @@ function cool_down(tempo,context)
 
  		context.timer += 1
  		
-		
  	end
 		
 	end
@@ -1341,7 +1372,7 @@ end
 function init_loja()
 
 	for i=0,15 do      
-  aux                        = criar_obj("espaco",1,ls_esp.coisas)
+  aux                        = criar_obj("espaco",1,ls_esp)
 		aux.item, aux_tipo, aux.id = criar_obj("item", aux_tipo), aux_tipo + 1, i+1
 	end	
 	
@@ -1360,6 +1391,7 @@ end
 function toggle_disp(de,ate,qual)
 	ate  = ate or de
 	qual = qual 
+
 	for i=de,ate do
 	 ls_esp.coisas[i]:disp_toggle(qual)
 	end
@@ -1367,9 +1399,10 @@ end
 
 --desenha o carrinho de compras
 function att_car()
-
+ 
 	if count(ls_car.coisas)>0 then
 		local aux_y = 9
+	
 		for i in all(ls_car.coisas) do
 	 	i.x, i.y, aux_y = 97, aux_y, aux_y + 28
 		end	
@@ -1413,6 +1446,9 @@ function des_inv()
 	else
 		foreach(ls_jrd.coisas,function(obj) obj:des() end)
 	end
+	
+	foreach(ls_tst.coisas,function(obj) obj:des() end)
+
 end
 
 function espalhar_pos(ls_doque)
@@ -1456,7 +1492,7 @@ function init_atl(quantos)
 	local quantos =	mid(2, quantos, 8)
 
 	for i=1,quantos do
- 	new_atl =	criar_obj("espaco",3,ls_atl.coisas)  	 
+ 	new_atl =	criar_obj("espaco",3,ls_atl)  	 
  	new_atl.item, new_atl.cor1, new_atl.cor2, new_atl.cor3, new_atl.id, new_atl.r = nil, 1, 7, 1, #ls_atl.coisas, 8.5
 	end
 
@@ -1814,9 +1850,9 @@ end
 function des_prateleiras(x_init,y_init,y_esp) 
 
 	aux_y = y_init
-	for i in all(ls_prt)do
+	for i in all(ls_prt.coisas)do
 		i.x,i.y   = x_init, aux_y
-  i:des(4)
+  i:des(4,true)
 		aux_y += y_esp
 	end
 	
@@ -1841,11 +1877,13 @@ function grav_depot()
 			woff = 0,
 			hoff = 0,	
 		}		
+		local prt_ls = ls_prt.coisas
+
 		if(
-			not	col_2ret(it,ls_prt[1])and
-			not	col_2ret(it,ls_prt[2])and
-			not	col_2ret(it,ls_prt[3])and
-			not	col_2ret(it,ls_prt[4])
+			not	col_2ret(it,prt_ls[1])and
+			not	col_2ret(it,prt_ls[2])and
+			not	col_2ret(it,prt_ls[3])and
+			not	col_2ret(it,prt_ls[4])
 		)then
 			i.y +=grav
 			n_sai_tela(i)	
@@ -1870,9 +1908,6 @@ end
 
 -->8
 --jardim =======================
-function des_jardim()
- des_inv()
-end
 
 function plantar(o_que)
 
@@ -1983,15 +2018,16 @@ function save_obj(obj,qual_slot,bit_extra)
 
  	--tem estagio ou capacidade
  	--estagio
+ 	aux = 0
  	if(tip>3)then
- 	 aux = obj.cont  
+ 	 aux = obj.cont 
    combinado |= (obj.planta.tip-8  & 0x7) >>> 9
    
    
 		 if(obj.saturac >= max_saturac)	combinado |= (1 & 0x1) >>> 16
 			
   --capacidae
-		else
+		elseif tip == 3 then
 		 combinado |= (obj.planta.tip-8  & 0x7) >>> 9
 			aux = obj.cont 
 		end
@@ -2096,12 +2132,12 @@ function load_obj(qual_slot,guardar_em_ls,bit_extra)
 	 end			
  end
  
- 
  if guardar_em_ls then
 	 if(onde == 1) add(ls_jrd.coisas,novo_obj)
 	 if(onde == 2) add(ls_inv.coisas,novo_obj)
 	 if(onde == 3) then
 	  novo_obj.qual_atl = ((save << 15) & 0x7) +1
+
 			ls_atl.coisas[novo_obj.qual_atl].item = novo_obj		
 	 end 	
 	
@@ -2183,19 +2219,19 @@ function dif_dias(d1,m1,a1,d2,m2,a2)
 end
 __gfx__
 880008888880008800000000000bbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-888080000008088800000422200b1b00000000000000000000000000000000000000004224000000000000000000000000000000000000000110000000000000
-0888000000008880000441111bbb1bbb000000000000000000000000000000000000049119400000000066666660000000000000000000001551111111111100
-0088800000088800004111111b11111b000000000000000000000000000000000000024994209000000611111116600000000000000000001555555555555510
-0208880000888080041111111bbb1bbb000000000000000000000000000000000000002112090000006111111161150000000500000000000151111111111510
-200088800888000804111999111b1b0044000000000000440777777777777770000000999929900000f1111111f1150000005555555000000151551551551510
-800008880880000800411a19114bbb00414000000000041406222222222222600000041111400000000fffffff11150000055555555500000151111111111510
-8000008880000008021411a11411111024122244442221420622222222222260000004111140000000d1111111d1150000005555555500000151155155115100
-8000000888000008021141114121112002911111111119200066666666666600000041113314000000d1bb1bb1d1150000000500001500000151111111115100
-200002208880000804111444112111200219999999999220000d2d0000d2d0000004111bb311200000611bbb1161150000000000011100000155555555551000
-200022200888000804111111114111200241414141414120000d2d0000d2d00000411113b1111200006111311161150000001111111000000151111111111000
-0202220000888080041111111141112002141414141414200000d000000d00000041113111111200006111311161150000001111110000000155555555555100
-00222000000888000041111114111200002121212121220000000000000000000004111111112000006111111161150000000000000000000015511115511000
-0222000000008880000444444222200000022222222220000000000000000000000044444222000000066666666dd00000000000000000000015510015510000
+888080000008088800000422200b1b00000000000000000000000000000000000000000000000000000000000000000000000000000000000110000000000000
+0888000000008880000441111bbb1bbb000000000000000000000000000000000000000000000000000066666660000000000000000000001551111111111100
+0088800000088800004111111b11111b000000000000000000000000000000000000000000000000000611111116600000000000000000001555555555555510
+0208880000888080041111111bbb1bbb000000000000000000000000000000000000000000000000006111111161150000000500000000000151111111111510
+200088800888000804111999111b1b0044000000000000440000000000000000000000000000000000f1111111f1150000005555555000000151551551551510
+800008880880000800411a19114bbb00414000000000041400000000000000000000000000000000000fffffff11150000055555555500000151111111111510
+8000008880000008021411a11411111024122244442221420000000000000000000000000000000000d1111111d1150000005555555500000151155155115100
+8000000888000008021141114121112002911111111119200777777777777770000000000000000000d1bb1bb1d1150000000500001500000151111111115100
+2000022088800008041114441121112002199999999992200622222222222260007777777777770000611bbb1161150000000000011100000155555555551000
+20002220088800080411111111411120024141414141412000666666666666000062222222222600006111311161150000001111111000000151111111111000
+020222000088808004111111114111200214141414141420000d2d0000d2d0000006666666666000006111311161150000001111110000000155555555555100
+002220000008880000411111141112000021212121212200000d2d0000d2d0000000d2d00d2d0000006111111161150000000000000000000015511115511000
+0222000000008880000444444222200000022222222220000000d000000d000000000d0000d0000000066666666dd00000000000000000000015510015510000
 22202000000208880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100001100000
 22000222222000880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111100000000000000000000000000000000000
@@ -2294,14 +2330,14 @@ __gfx__
 0000000000000000000000000000000016616671005506444111141222424242041311201c1111c17767777d0000000000000005665600000000000000420000
 00000000000000000000000000000000161017710000020441114112242424220411112001cccc10167777610000000000000000000000000000000000000000
 00000000000000000000000000000000110001110000042204442220022222200044220000111100016776100000000000000000000000000000000000000000
-55550000555000005505000055550000011111000dddd0000000000000bbbb001111111111111111000000000000000000000000000000000000000000000000
-5505000050550000550500000550000016777611057650000000000000b11b00188118811bbbbcc1001010100000000000000000000000000000000000000000
-5550000055050000555500000550000077777777576dd50044444222bbb11bbb188828811b111cc1017171710000000000000000000000000000000000420000
-550500005555000055550000555500006776777655d7bdd041111112b111111b11888211bbb11181017d7d710000000000000000077700000000000000402000
-0000000000000000000000000000000067611766005b7bbd44444222b111111b112888111b1118881176767d0000000000000000700060000000000000200200
-00000000000000000000000000000000761766110053bbbd01111110bbb11bbb18828881144111811677777d0000000000000006677005000000000000624400
-0000000000000000000000000000000017171100000533350211112000b11b00188118811448888116777761000000000000006556750500000000000d000000
-0000000000000000000000000000000001110000000555550244422000bbbb0011111111111111110167761000000000000006511675500000005000d0000000
+5555000055500000550500005555000001111100000000000000000000bbbb001111111111111111000000000000000000000000000000000000000000000000
+5505000050550000550500000550000016777611000000000000000000b11b00188118811bbbbcc1001010100000000000000000000000000000000000000000
+55500000550500005555000005500000777777775555555544444222bbb11bbb188828811b111cc1017171710000000000000000000000000000000000420000
+55050000555500005555000055550000677677765777777541111112b111111b11888211bbb11181017d7d710000000000000000077700000000000000402000
+00000000000000000000000000000000676117665d5555d544444222b111111b112888111b1118881176767d0000000000000000700060000000000000200200
+00000000000000000000000000000000761766115550055501111110bbb11bbb18828881144111811677777d0000000000000006677005000000000000624400
+0000000000000000000000000000000017171100000000000211112000b11b00188118811448888116777761000000000000006556750500000000000d000000
+0000000000000000000000000000000001110000000000000244422000bbbb0011111111111111110167761000000000000006511675500000005000d0000000
 55550000500500005505000055550000777000007707000077070000011bb1100000000000dddd00000aa00000000000000006516755650000051d0d00000000
 555000005505000055050000550000007077000077070000770700001bb77bb1000006600d111dd000a447000888888800000677757556000051d15000000000
 055500005555000055550000550000007707000077770000777700001bb331b1d600600dd6666d1500aa070000777760000000655667500000d1511d00000000
@@ -2450,3 +2486,6 @@ __sfx__
 01020000016100d6111c61131611146110c61108611056110261501601016050c600116001a600006000060000600006000060000600006000060000600006000000000000000000000000000000000000000000
 010300002f7002f7112f700347000000034700347002f711000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 490800000864505605056451a6001b6001c6001d6001d600000001a60017600146001360013600000001360000000146000000015600000000000000000156000000000000000001560000000000001560015600
+011000002301500001276000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010500002301525015000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+01100000190150000627600000001b0002a6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
